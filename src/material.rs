@@ -11,9 +11,11 @@ impl CustomMaterial {
     }
 }
 
-pub fn update_material_time(mut material: ResMut<Assets<CustomMaterial>>, handle: Mut<Handle<CustomMaterial>>) {
-    for m in material.get_mut(&handle).iter_mut(){
+pub fn update_material_time(
+    mut material: ResMut<Assets<CustomMaterial>>,
+    handle: Mut<Handle<CustomMaterial>>,
+) {
+    for m in material.get_mut(&handle).iter_mut() {
         m.add();
     }
-
 }

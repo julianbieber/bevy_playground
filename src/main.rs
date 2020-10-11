@@ -10,10 +10,7 @@ use bevy::{
 };
 mod material;
 mod shaders;
-use material::{
-    CustomMaterial,
-    update_material_time
-};
+use material::{update_material_time, CustomMaterial};
 use shaders::*;
 
 fn main() {
@@ -50,9 +47,7 @@ fn setup(
         .unwrap();
 
     // Create a new material
-    let material = materials.add(CustomMaterial {
-        time: 0.0f32,
-    });
+    let material = materials.add(CustomMaterial { time: 0.0f32 });
 
     // Setup our world
     commands

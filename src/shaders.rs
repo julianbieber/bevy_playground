@@ -1,4 +1,3 @@
-
 pub const VERTEX_SHADER: &str = r#"
 #version 450
 layout(location = 0) in vec3 Vertex_Position;
