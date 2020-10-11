@@ -1,23 +1,32 @@
+mod material;
+mod shaders;
+mod world;
+
 use bevy::{
     prelude::*,
     render::{
         mesh::shape,
         pipeline::{DynamicBinding, PipelineDescriptor, PipelineSpecialization, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
     },
 };
-mod material;
-mod shaders;
+use physme::prelude3d::*;
+
 use material::{update_material_time, CustomMaterial};
 use shaders::*;
+use world::world_setup;
 
 fn main() {
     App::build()
         .add_default_plugins()
+        .add_plugin(Physics3dPlugin)
+        .add_resource(GlobalGravity(Vec3::new(0.0, -9.8, 0.0)))
+        .add_resource(GlobalFriction(0.90))
+        .add_resource(GlobalStep(0.5))
         .add_asset::<CustomMaterial>()
         .add_startup_system(setup.system())
+        .add_startup_system(world_setup.system())
         .add_system(update_material_time.system())
         .run();
 }
