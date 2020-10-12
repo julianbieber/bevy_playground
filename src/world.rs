@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
+use crate::water::WaterEffected;
+
 pub fn world_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -20,6 +22,7 @@ pub fn world_setup(
                 .with_status(Status::Semikinematic)
                 .with_position(Vec3::new(0.0, 5.0, 0.0)),
         )
+        .with(WaterEffected)
         .with_children(|parent| {
             parent.spawn((Shape::from(Size3::new(1.0, 1.0, 1.0)),));
         })

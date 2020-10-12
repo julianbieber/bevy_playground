@@ -15,7 +15,7 @@ pub struct WaterMaterial {
 
 impl WaterMaterial {
     pub fn add(&mut self) {
-        self.time += 1.0f32;
+        self.time += 0.1f32;
     }
 }
 
@@ -28,9 +28,12 @@ pub fn update_material_time(
     }
 }
 
+pub struct WaterEffected;
+
 pub fn setup_water_layer(
     mut commands: Commands,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
+    asset_server: Res<AssetServer>,
     mut shaders: ResMut<Assets<Shader>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<WaterMaterial>>,
@@ -53,12 +56,13 @@ pub fn setup_water_layer(
 
     // Create a new material
     let material = materials.add(WaterMaterial { time: 0.0f32 });
+    let mesh = asset_server.load("assets/water.gltf").unwrap();
 
     // Setup our world
     commands
         // cube
         .spawn(MeshComponents {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: mesh,
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
                 pipeline_handle,
                 // NOTE: in the future you wont need to manually declare dynamic bindings
@@ -78,7 +82,8 @@ pub fn setup_water_layer(
                     ..Default::default()
                 },
             )]),
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0))
+                .with_non_uniform_scale(Vec3::new(10.0, 1.0, 10.0)),
             ..Default::default()
         })
         .with(material);
@@ -97,7 +102,7 @@ layout(set = 1, binding = 1) uniform WaterMaterial_time {
     float time;
 };
 void main() {
-    gl_Position = ViewProj * Model * vec4(Vertex_Position.x, Vertex_Position.y + sin(time * 0.1 + Vertex_Position.x), Vertex_Position.z, 1.0);
+    gl_Position = ViewProj * Model * vec4(Vertex_Position.x, Vertex_Position.y + sin(time * 0.1 + Vertex_Position.x) + sin(time * 0.1 + Vertex_Position.z + 0.5), Vertex_Position.z, 1.0);
 }
 "#;
 
