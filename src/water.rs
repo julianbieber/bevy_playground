@@ -1,7 +1,6 @@
 use bevy::{
     prelude::*,
     render::{
-        mesh::shape,
         pipeline::{DynamicBinding, PipelineDescriptor, PipelineSpecialization, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
         renderer::RenderResources,
@@ -14,17 +13,18 @@ pub struct WaterMaterial {
 }
 
 impl WaterMaterial {
-    pub fn add(&mut self) {
-        self.time += 0.1f32;
+    pub fn add(&mut self, time: f32) {
+        self.time += time * 5.0;
     }
 }
 
 pub fn update_material_time(
     mut material: ResMut<Assets<WaterMaterial>>,
+    time: Res<Time>,
     handle: Mut<Handle<WaterMaterial>>,
 ) {
     for m in material.get_mut(&handle).iter_mut() {
-        m.add();
+        m.add(time.delta_seconds);
     }
 }
 
@@ -35,7 +35,6 @@ pub fn setup_water_layer(
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     asset_server: Res<AssetServer>,
     mut shaders: ResMut<Assets<Shader>>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<WaterMaterial>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
@@ -89,6 +88,21 @@ pub fn setup_water_layer(
         .with(material);
 }
 
+pub fn apply_water_raise(
+    material: Res<Assets<WaterMaterial>>,
+    _: &WaterEffected,
+    mut transform: Mut<Transform>,
+    handle: &Handle<WaterMaterial>,
+) {
+    let position = transform.translation();
+    for m in material.get(&handle).iter() {
+        let water_level = (m.time * 0.1 + position.x()).sin() + (position.z() + 0.5).sin();
+        if position.y() < water_level {
+            transform.translate(Vec3::new(0.0, water_level - position.y(), 0.0));
+        }
+    }
+}
+
 const VERTEX_SHADER: &str = r#"
 #version 450
 layout(location = 0) in vec3 Vertex_Position;
@@ -102,7 +116,9 @@ layout(set = 1, binding = 1) uniform WaterMaterial_time {
     float time;
 };
 void main() {
-    gl_Position = ViewProj * Model * vec4(Vertex_Position.x, Vertex_Position.y + sin(time * 0.1 + Vertex_Position.x) + sin(time * 0.1 + Vertex_Position.z + 0.5), Vertex_Position.z, 1.0);
+    vec4 world_position = Model * vec4(Vertex_Position, 1);
+    world_position.y = world_position.y + sin(time * 0.1 + world_position.x) + sin(world_position.z + 0.5);
+    gl_Position = ViewProj * world_position;
 }
 "#;
 
@@ -113,6 +129,6 @@ layout(set = 1, binding = 1) uniform WaterMaterial_time {
     float time;
 };
 void main() {
-    o_Target = vec4(0, 0, (sin(gl_FragCoord.x + gl_FragCoord.y + time) + 1) / 2 * 255, 1.0);
+    o_Target = vec4(0, 0, 255, 1.0);
 }
 "#;

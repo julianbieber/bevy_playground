@@ -4,7 +4,7 @@ mod world;
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
-use water::{setup_water_layer, update_material_time, WaterMaterial};
+use water::{apply_water_raise, setup_water_layer, update_material_time, WaterMaterial};
 use world::world_setup;
 
 fn main() {
@@ -19,6 +19,7 @@ fn main() {
         .add_startup_system(world_setup.system())
         .add_startup_system(setup_water_layer.system())
         .add_system(update_material_time.system())
+        .add_system(apply_water_raise.system())
         .run();
 }
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
