@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
-use crate::water::{WaterEffected, WaterMaterial};
+use crate::water::body_of_water::WaterMaterial;
+use crate::water::water_effect::WaterEffected;
 
 pub fn world_setup(
     mut commands: Commands,
