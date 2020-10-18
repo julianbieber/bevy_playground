@@ -4,7 +4,8 @@ mod world;
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
-use water::{apply_water_raise, setup_water_layer, update_material_time, WaterMaterial};
+use water::body_of_water::{setup_water_layer, update_material_time, WaterMaterial};
+use water::water_effect::apply_water_raise;
 use world::world_setup;
 
 fn main() {
