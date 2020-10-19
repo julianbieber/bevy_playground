@@ -26,7 +26,7 @@ pub fn world_setup(
                 .with_status(Status::Semikinematic)
                 .with_position(Vec3::new(0.0, 5.0, 0.0)),
         )
-        .with(WaterEffected)
+        .with(WaterEffected::new())
         .with(material)
         .with_children(|parent| {
             parent.spawn((Shape::from(Size3::new(1.0, 1.0, 1.0)),));
@@ -46,7 +46,7 @@ pub fn world_setup(
                 .with_status(Status::Semikinematic)
                 .with_position(Vec3::new(2.0, 5.0, 0.0)),
         )
-        .with(WaterEffected)
+        .with(WaterEffected::new())
         .with(material2)
         .with_children(|parent| {
             parent.spawn((Shape::from(Size3::new(1.0, 1.0, 1.0)),));

@@ -17,7 +17,39 @@ pub struct WaterMaterial {
 
 impl WaterMaterial {
     pub fn add(&mut self, time: f32) {
+        let diff = std::f32::consts::PI * 20.0 - self.time;
+        if diff < 0.0 {
+            self.time -= std::f32::consts::PI * 20.0;
+        }
         self.time += time * 5.0;
+    }
+}
+
+pub struct WaterPosition {
+    position: Vec3,
+    size: Vec2,
+}
+
+impl WaterPosition {
+    /// returns (min_x, min_z) (max_x, max_z)
+    fn get_boundaries(&self) -> (Vec2, Vec2) {
+        let x_half_size = self.size.x() / 2.0;
+        let z_half_size = self.size.y() / 2.0;
+        (
+            Vec2::new(
+                self.position.x() - x_half_size,
+                self.position.z() - z_half_size,
+            ),
+            Vec2::new(
+                self.position.x() + x_half_size,
+                self.position.z() + z_half_size,
+            ),
+        )
+    }
+
+    pub fn lies_within(&self, point: Vec3) -> bool {
+        let (min, max) = self.get_boundaries();
+        point.x() >= min.x() && point.z() >= min.y() && point.x() <= max.x() && point.z() <= max.y()
     }
 }
 
@@ -29,6 +61,11 @@ pub fn update_material_time(
     for m in material.get_mut(&handle).iter_mut() {
         m.add(time.delta_seconds);
     }
+}
+
+pub fn set_water_position(mut position: Mut<WaterPosition>, transform: &Transform) {
+    position.position = transform.translation();
+    position.size = Vec2::new(transform.scale().x(), transform.scale().z());
 }
 
 pub fn setup_water_layer(
@@ -49,31 +86,24 @@ pub fn setup_water_layer(
         AssetRenderResourcesNode::<WaterMaterial>::new(true),
     );
 
-    // Add a Render Graph edge connecting our new "my_material" node to the main pass node. This ensures "my_material" runs before the main pass
     render_graph
         .add_node_edge("water_material", base::node::MAIN_PASS)
         .unwrap();
 
-    // Create a new material
     let material = materials.add(WaterMaterial { time: 0.0f32 });
     let mesh = asset_server.load("assets/water.gltf").unwrap();
 
-    // Setup our world
     commands
-        // cube
         .spawn(MeshComponents {
             mesh: mesh,
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
                 pipeline_handle,
-                // NOTE: in the future you wont need to manually declare dynamic bindings
                 PipelineSpecialization {
                     dynamic_bindings: vec![
-                        // Transform
                         DynamicBinding {
                             bind_group: 1,
                             binding: 0,
                         },
-                        // MyMaterial_color
                         DynamicBinding {
                             bind_group: 1,
                             binding: 1,
@@ -86,5 +116,9 @@ pub fn setup_water_layer(
                 .with_non_uniform_scale(Vec3::new(10.0, 1.0, 10.0)),
             ..Default::default()
         })
-        .with(material);
+        .with(material)
+        .with(WaterPosition {
+            position: Vec3::zero(),
+            size: Vec2::zero(),
+        });
 }

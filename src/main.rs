@@ -6,7 +6,9 @@ use physme::prelude3d::*;
 
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::render::camera::Camera;
-use water::body_of_water::{setup_water_layer, update_material_time, WaterMaterial};
+use water::body_of_water::{
+    set_water_position, setup_water_layer, update_material_time, WaterMaterial,
+};
 use water::water_effect::apply_water_raise;
 use world::world_setup;
 
@@ -39,6 +41,7 @@ fn main() {
         .add_startup_system(world_setup.system())
         .add_startup_system(setup_water_layer.system())
         .add_system(update_material_time.system())
+        .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
         .init_resource::<State>()
         .init_resource::<CameraRotation>()
