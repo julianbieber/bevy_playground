@@ -27,7 +27,7 @@ impl WaterMaterial {
 
 pub struct WaterPosition {
     position: Vec3,
-    size: Vec2
+    size: Vec2,
 }
 
 impl WaterPosition {
@@ -36,8 +36,14 @@ impl WaterPosition {
         let x_half_size = self.size.x() / 2.0;
         let z_half_size = self.size.y() / 2.0;
         (
-            Vec2::new(self.position.x() - x_half_size, self.position.z() - z_half_size),
-            Vec2::new(self.position.x() + x_half_size, self.position.z() + z_half_size)
+            Vec2::new(
+                self.position.x() - x_half_size,
+                self.position.z() - z_half_size,
+            ),
+            Vec2::new(
+                self.position.x() + x_half_size,
+                self.position.z() + z_half_size,
+            ),
         )
     }
 
@@ -113,6 +119,6 @@ pub fn setup_water_layer(
         .with(material)
         .with(WaterPosition {
             position: Vec3::zero(),
-            size: Vec2::zero()
+            size: Vec2::zero(),
         });
 }
