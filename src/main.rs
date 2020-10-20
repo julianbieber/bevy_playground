@@ -49,6 +49,7 @@ fn main() {
         .init_resource::<InputState>()
         .add_system(process_mouse_events.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
+        .add_system(camera_translation.system())
         .run();
 }
 fn setup(mut commands: Commands) {
