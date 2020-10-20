@@ -43,6 +43,7 @@ fn main() {
         .add_system(update_material_time.system())
         .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
+        .add_system(camera_translation.system())
         .init_resource::<State>()
         .init_resource::<CameraRotation>()
         .init_resource::<InputState>()
@@ -75,31 +76,33 @@ fn process_mouse_events(
         let look = event.delta;
         let camera_translation = transform.translation();
         transform.set_translation(Vec3::zero());
-        if f32::rem_euclid(
-            camera_rotation.rotation_x - (look.y()).to_radians() / 5.0,
+        if (f32::rem_euclid(
+            camera_rotation.rotation_y - (look.y()).to_radians() / 5.0,
             2.0 * std::f32::consts::PI,
-        ) > 6.1
+        ) - std::f32::consts::FRAC_PI_2)
+            .abs()
+            < 0.2
         {
-            camera_rotation.rotation_x = 6.1
-        } else if f32::rem_euclid(
-            camera_rotation.rotation_x - (look.y()).to_radians() / 5.0,
+        } else if (f32::rem_euclid(
+            camera_rotation.rotation_y - (look.y()).to_radians() / 5.0,
             2.0 * std::f32::consts::PI,
-        ) < 5.5
+        ) - 3.0 * std::f32::consts::FRAC_PI_2)
+            .abs()
+            < 0.2
         {
-            camera_rotation.rotation_x = 5.5
         } else {
-            camera_rotation.rotation_x = f32::rem_euclid(
-                camera_rotation.rotation_x - (look.y()).to_radians() / 5.0,
+            camera_rotation.rotation_y = f32::rem_euclid(
+                camera_rotation.rotation_y - (look.y()).to_radians() / 5.0,
                 2.0 * std::f32::consts::PI,
-            )
+            );
         };
-        camera_rotation.rotation_y = f32::rem_euclid(
-            camera_rotation.rotation_y - (look.x()).to_radians() / 5.0,
+        camera_rotation.rotation_x = f32::rem_euclid(
+            camera_rotation.rotation_x - (look.x()).to_radians() / 5.0,
             2.0 * std::f32::consts::PI,
         );
         transform.set_rotation(Quat::from_rotation_ypr(
-            camera_rotation.rotation_y,
             camera_rotation.rotation_x,
+            camera_rotation.rotation_y,
             0.0,
         ));
         transform.set_translation(camera_translation)
@@ -107,5 +110,36 @@ fn process_mouse_events(
 
     for event in state.mouse_wheel_event_reader.iter(&mouse_wheel_events) {
         let _zoom_delta = event.y;
+    }
+}
+fn camera_translation(
+    _camera_rotation: Res<CameraRotation>,
+    keys: Res<Input<KeyCode>>,
+    _camera: &Camera,
+    mut transform: Mut<Transform>,
+) {
+    if keys.pressed(KeyCode::W) {
+        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 0.0, -1.0));
+        transform.translate(a);
+    }
+    if keys.pressed(KeyCode::A) {
+        let a = transform.rotation().mul_vec3(Vec3::new(-1.0, 0.0, 0.0));
+        transform.translate(a);
+    }
+    if keys.pressed(KeyCode::D) {
+        let a = transform.rotation().mul_vec3(Vec3::new(1.0, 0.0, 0.0));
+        transform.translate(a);
+    }
+    if keys.pressed(KeyCode::S) {
+        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 0.0, 1.0));
+        transform.translate(a);
+    }
+    if keys.pressed(KeyCode::Q) {
+        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 1.0, 0.0));
+        transform.translate(a);
+    }
+    if keys.pressed(KeyCode::E) {
+        let a = transform.rotation().mul_vec3(Vec3::new(0.0, -1.0, 0.0));
+        transform.translate(a);
     }
 }
