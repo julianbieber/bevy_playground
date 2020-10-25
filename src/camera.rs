@@ -92,7 +92,7 @@ pub fn rotator_system(
 }
 
 pub fn camera_setup(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {

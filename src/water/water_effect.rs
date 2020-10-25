@@ -60,7 +60,7 @@ pub fn apply_water_raise(
 }
 
 fn calculate_water_height(t: f32, x: f32, z: f32) -> f32 {
-    (t * 0.1 + x).sin() + (z + 0.5).sin()
+    (t * 0.1 + x).sin()
 }
 
 #[derive(Debug)]
