@@ -52,8 +52,15 @@ fn main() {
         .add_system(camera_translation.system())
         .run();
 }
-fn setup(mut commands: Commands) {
-    // Create a new shader pipeline
+fn setup(mut commands: Commands, mut windows: ResMut<Windows>) {
+    windows
+        .get_primary_mut()
+        .unwrap()
+        .set_cursor_lock_mode(true);
+    windows
+        .get_primary_mut()
+        .unwrap()
+        .set_cursor_visibility(false);
     commands
         // camera
         .spawn(Camera3dComponents {
