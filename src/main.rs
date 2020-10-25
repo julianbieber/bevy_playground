@@ -1,6 +1,7 @@
 mod water;
 mod world;
 
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
@@ -33,6 +34,8 @@ fn main() {
     App::build()
         .add_default_plugins()
         .add_plugin(Physics3dPlugin)
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(PrintDiagnosticsPlugin::default())
         .add_resource(GlobalGravity(Vec3::new(0.0, -9.8, 0.0)))
         .add_resource(GlobalFriction(0.90))
         .add_resource(GlobalStep(0.5))

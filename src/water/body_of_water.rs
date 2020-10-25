@@ -72,7 +72,7 @@ pub fn set_water_position(mut position: Mut<WaterPosition>, transform: &Transfor
 pub fn setup_water_layer(
     mut commands: Commands,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
-    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut shaders: ResMut<Assets<Shader>>,
     mut materials: ResMut<Assets<WaterMaterial>>,
     mut render_graph: ResMut<RenderGraph>,
@@ -91,37 +91,39 @@ pub fn setup_water_layer(
         .add_node_edge("water_material", base::node::MAIN_PASS)
         .unwrap();
 
+    let water = Water::new((2.0, 2.0), 100);
+    let mesh = meshes.add(Mesh::from(water));
+
     let material = materials.add(WaterMaterial { time: 0.0f32 });
     let mut transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
     transform.scale = Vec3::new(10.0, 1.0, 10.0);
-    /*commands
-       .spawn(MeshComponents {
-           mesh,
-           render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
-               pipeline_handle,
-               PipelineSpecialization {
-                   dynamic_bindings: vec![
-                       DynamicBinding {
-                           bind_group: 1,
-                           binding: 0,
-                       },
-                       DynamicBinding {
-                           bind_group: 1,
-                           binding: 1,
-                       },
-                   ],
-                   ..Default::default()
-               },
-           )]),
-           transform,
-           ..Default::default()
-       })
-       .with(material)
-       .with(WaterPosition {
-           position: Vec3::zero(),
-           size: Vec2::zero(),
-       });
-    */
+    commands
+        .spawn(MeshComponents {
+            mesh,
+            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
+                pipeline_handle,
+                PipelineSpecialization {
+                    dynamic_bindings: vec![
+                        DynamicBinding {
+                            bind_group: 1,
+                            binding: 0,
+                        },
+                        DynamicBinding {
+                            bind_group: 1,
+                            binding: 1,
+                        },
+                    ],
+                    ..Default::default()
+                },
+            )]),
+            transform,
+            ..Default::default()
+        })
+        .with(material)
+        .with(WaterPosition {
+            position: Vec3::zero(),
+            size: Vec2::zero(),
+        });
 }
 
 struct Water {
@@ -129,6 +131,59 @@ struct Water {
     normals: Vec<[f32; 3]>,
     uvs: Vec<[f32; 2]>,
     indices: Vec<u32>,
+}
+
+impl Water {
+    fn new(size: (f32, f32), splits: u32) -> Water {
+        let mut vertices = Vec::new();
+        let lower_left = (size.0 / -2.0, 0.0, size.1 / -2.0);
+        let split_length_x = size.0 / splits as f32;
+        let split_length_z = size.1 / splits as f32;
+        for x_split in 0..(splits + 1) {
+            let x = lower_left.0 + x_split as f32 * split_length_x;
+            for z_split in 0..(splits + 1) {
+                let z = lower_left.0 + z_split as f32 * split_length_z;
+                vertices.push([x, 0.0f32, z]);
+            }
+        }
+
+        let normals = vertices.iter().map(|_| [0.0f32, 1.0f32, 0.0f32]).collect();
+
+        let uvs = vertices
+            .iter()
+            .map(|_| {
+                [0.0f32, 0.0f32] // TODO actual uv coordinates
+            })
+            .collect();
+
+        let mut indices = Vec::new();
+        for first in 0..(splits + 1) * splits {
+            if first % (splits + 1) != splits {
+                let second = first + 1;
+                let third = first + splits + 1;
+                indices.push(first);
+                indices.push(second);
+                indices.push(third);
+            }
+        }
+
+        for first in 1..(splits + 1) * splits {
+            if first % (splits + 1) != 0 {
+                let second = first + splits + 1;
+                let third = first + splits;
+                indices.push(first);
+                indices.push(second);
+                indices.push(third);
+            }
+        }
+
+        Water {
+            vertices,
+            normals,
+            uvs,
+            indices,
+        }
+    }
 }
 
 impl From<Water> for Mesh {
