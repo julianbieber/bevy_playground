@@ -57,7 +57,7 @@ fn setup(mut commands: Commands) {
     commands
         // camera
         .spawn(Camera3dComponents {
-            transform: Transform::new(Mat4::face_toward(
+            transform: Transform::from_matrix(Mat4::face_toward(
                 Vec3::new(3.0, 5.0, -8.0),
                 Vec3::new(0.0, 0.0, 0.0),
                 Vec3::new(0.0, 1.0, 0.0),
@@ -75,8 +75,8 @@ fn process_mouse_events(
 ) {
     for event in state.mouse_motion_event_reader.iter(&mouse_motion_events) {
         let look = event.delta;
-        let camera_translation = transform.translation();
-        transform.set_translation(Vec3::zero());
+        let camera_translation = transform.translation;
+        transform.translation = Vec3::zero();
         if (f32::rem_euclid(
             camera_rotation.rotation_y - (look.y()).to_radians() / 5.0,
             2.0 * std::f32::consts::PI,
@@ -101,12 +101,9 @@ fn process_mouse_events(
             camera_rotation.rotation_x - (look.x()).to_radians() / 5.0,
             2.0 * std::f32::consts::PI,
         );
-        transform.set_rotation(Quat::from_rotation_ypr(
-            camera_rotation.rotation_x,
-            camera_rotation.rotation_y,
-            0.0,
-        ));
-        transform.set_translation(camera_translation)
+        transform.rotation =
+            Quat::from_rotation_ypr(camera_rotation.rotation_x, camera_rotation.rotation_y, 0.0);
+        transform.translation = camera_translation;
     }
 
     for event in state.mouse_wheel_event_reader.iter(&mouse_wheel_events) {
@@ -120,27 +117,27 @@ fn camera_translation(
     mut transform: Mut<Transform>,
 ) {
     if keys.pressed(KeyCode::W) {
-        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 0.0, -1.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -1.0));
+        transform.translation += a;
     }
     if keys.pressed(KeyCode::A) {
-        let a = transform.rotation().mul_vec3(Vec3::new(-1.0, 0.0, 0.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(-1.0, 0.0, 0.0));
+        transform.translation += a;
     }
     if keys.pressed(KeyCode::D) {
-        let a = transform.rotation().mul_vec3(Vec3::new(1.0, 0.0, 0.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(1.0, 0.0, 0.0));
+        transform.translation += a;
     }
     if keys.pressed(KeyCode::S) {
-        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 0.0, 1.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 1.0));
+        transform.translation += a;
     }
     if keys.pressed(KeyCode::Q) {
-        let a = transform.rotation().mul_vec3(Vec3::new(0.0, 1.0, 0.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(0.0, 1.0, 0.0));
+        transform.translation += a;
     }
     if keys.pressed(KeyCode::E) {
-        let a = transform.rotation().mul_vec3(Vec3::new(0.0, -1.0, 0.0));
-        transform.translate(a);
+        let a = transform.rotation.mul_vec3(Vec3::new(0.0, -1.0, 0.0));
+        transform.translation += a;
     }
 }

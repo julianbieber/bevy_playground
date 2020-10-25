@@ -6,11 +6,15 @@ use bevy::{
         renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
     },
+    type_registry::TypeUuid,
 };
 
 use crate::water::water_shaders::*;
+use bevy::render::mesh::{Indices, VertexAttribute};
+use bevy::render::pipeline::PrimitiveTopology;
 
-#[derive(RenderResources)]
+#[derive(RenderResources, Default, TypeUuid)]
+#[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
 pub struct WaterMaterial {
     pub time: f32,
 }
@@ -53,19 +57,16 @@ impl WaterPosition {
     }
 }
 
-pub fn update_material_time(
-    mut material: ResMut<Assets<WaterMaterial>>,
-    time: Res<Time>,
-    handle: Mut<Handle<WaterMaterial>>,
-) {
-    for m in material.get_mut(&handle).iter_mut() {
-        m.add(time.delta_seconds);
+pub fn update_material_time(mut material: ResMut<Assets<WaterMaterial>>, time: Res<Time>) {
+    let handles: Vec<_> = material.ids().collect();
+    for handle in handles.into_iter() {
+        material.get_mut(handle).unwrap().add(time.delta_seconds);
     }
 }
 
 pub fn set_water_position(mut position: Mut<WaterPosition>, transform: &Transform) {
-    position.position = transform.translation();
-    position.size = Vec2::new(transform.scale().x(), transform.scale().z());
+    position.position = transform.translation;
+    position.size = Vec2::new(transform.scale.x(), transform.scale.z());
 }
 
 pub fn setup_water_layer(
@@ -91,34 +92,55 @@ pub fn setup_water_layer(
         .unwrap();
 
     let material = materials.add(WaterMaterial { time: 0.0f32 });
-    let mesh = asset_server.load("assets/water.gltf").unwrap();
+    let mut transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
+    transform.scale = Vec3::new(10.0, 1.0, 10.0);
+    /*commands
+       .spawn(MeshComponents {
+           mesh,
+           render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
+               pipeline_handle,
+               PipelineSpecialization {
+                   dynamic_bindings: vec![
+                       DynamicBinding {
+                           bind_group: 1,
+                           binding: 0,
+                       },
+                       DynamicBinding {
+                           bind_group: 1,
+                           binding: 1,
+                       },
+                   ],
+                   ..Default::default()
+               },
+           )]),
+           transform,
+           ..Default::default()
+       })
+       .with(material)
+       .with(WaterPosition {
+           position: Vec3::zero(),
+           size: Vec2::zero(),
+       });
+    */
+}
 
-    commands
-        .spawn(MeshComponents {
-            mesh: mesh,
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
-                pipeline_handle,
-                PipelineSpecialization {
-                    dynamic_bindings: vec![
-                        DynamicBinding {
-                            bind_group: 1,
-                            binding: 0,
-                        },
-                        DynamicBinding {
-                            bind_group: 1,
-                            binding: 1,
-                        },
-                    ],
-                    ..Default::default()
-                },
-            )]),
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0))
-                .with_non_uniform_scale(Vec3::new(10.0, 1.0, 10.0)),
-            ..Default::default()
-        })
-        .with(material)
-        .with(WaterPosition {
-            position: Vec3::zero(),
-            size: Vec2::zero(),
-        });
+struct Water {
+    vertices: Vec<[f32; 3]>,
+    normals: Vec<[f32; 3]>,
+    uvs: Vec<[f32; 2]>,
+    indices: Vec<u32>,
+}
+
+impl From<Water> for Mesh {
+    fn from(water: Water) -> Self {
+        Mesh {
+            primitive_topology: PrimitiveTopology::TriangleList,
+            attributes: vec![
+                VertexAttribute::position(water.vertices),
+                VertexAttribute::normal(water.normals),
+                VertexAttribute::uv(water.uvs),
+            ],
+            indices: Some(Indices::U32(water.indices)),
+        }
+    }
 }

@@ -17,7 +17,7 @@ pub fn world_setup(
     let material2 = water_materials.add(WaterMaterial { time: 0.0f32 });
     commands
         .spawn(PbrComponents {
-            mesh: cube,
+            mesh: cube.clone_weak(),
             material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
             ..Default::default()
         })
@@ -32,7 +32,7 @@ pub fn world_setup(
             parent.spawn((Shape::from(Size3::new(1.0, 1.0, 1.0)),));
         })
         .spawn(PbrComponents {
-            mesh: bigcube,
+            mesh: bigcube.clone_weak(),
             material: materials.add(Color::rgb(0.2, 0.8, 0.2).into()),
             ..Default::default()
         })
