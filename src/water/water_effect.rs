@@ -29,9 +29,9 @@ pub fn apply_water_raise(
 ) {
     for (mut water_effected, mut transform, mut body) in &mut water_effected_query.iter() {
         for (water_material_handle, water_position) in &mut water_query.iter() {
-            if water_position.lies_within(transform.translation()) {
+            if water_position.lies_within(transform.translation) {
                 let water_material = water_materials.get(water_material_handle).unwrap();
-                let position = transform.translation();
+                let position = transform.translation;
                 let water_level =
                     calculate_water_height(water_material.time, position.x(), position.z());
                 if position.y() < water_level {
@@ -43,12 +43,12 @@ pub fn apply_water_raise(
                     .calculate_force();
                     water_effected.add(new_force);
 
-                    transform.translate(Vec3::new(
+                    transform.translation += Vec3::new(
                         water_effected.force.x(),
                         water_level - position.y(),
                         water_effected.force.y(),
-                    ));
-                    body.position = transform.translation();
+                    );
+                    body.position = transform.translation;
                 } else {
                     water_effected.reset();
                 }
