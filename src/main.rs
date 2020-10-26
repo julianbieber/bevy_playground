@@ -73,27 +73,27 @@ fn rotator_system(
         }
 
         if keys.pressed(KeyCode::W) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -1.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -0.1));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::A) {
-            let a = transform.rotation.mul_vec3(Vec3::new(-1.0, 0.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(-0.1, 0.0, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::D) {
-            let a = transform.rotation.mul_vec3(Vec3::new(1.0, 0.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.1, 0.0, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::S) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 1.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 0.1));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::Q) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 1.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.1, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::E) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, -1.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, -0.1, 0.0));
             transform.translation += a;
         }
     }
@@ -137,7 +137,7 @@ fn setup(
         .unwrap()
         .set_cursor_visibility(false);
 
-    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.2 }));
+    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.8, 0.7, 0.6),
         ..Default::default()
@@ -153,9 +153,13 @@ fn setup(
         })
         .with(Rotator)
         .with_children(|parent| {
+            let camera_position = Vec3::new(0.0, 1.0, 5.0);
+            let camera_position_y = camera_position.y();
+            let up = Vec3::unit_y();
+            let camera_looking_point = -camera_position + 2.0 * camera_position_y * up;
             parent.spawn(Camera3dComponents {
-                transform: Transform::from_translation(Vec3::new(0.0, 4.0, 4.0))
-                    .looking_at(Vec3::default(), Vec3::unit_y()),
+                transform: Transform::from_translation(camera_position)
+                    .looking_at(camera_looking_point, up),
                 ..Default::default()
             });
         });
