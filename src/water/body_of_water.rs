@@ -10,8 +10,9 @@ use bevy::{
 };
 
 use crate::water::water_shaders::*;
-use bevy::render::mesh::{Indices, VertexAttribute};
+use bevy::render::mesh::Indices;
 use bevy::render::pipeline::PrimitiveTopology;
+use std::borrow::Cow;
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
@@ -188,14 +189,16 @@ impl Water {
 
 impl From<Water> for Mesh {
     fn from(water: Water) -> Self {
-        Mesh {
-            primitive_topology: PrimitiveTopology::TriangleList,
-            attributes: vec![
-                VertexAttribute::position(water.vertices),
-                VertexAttribute::normal(water.normals),
-                VertexAttribute::uv(water.uvs),
-            ],
-            indices: Some(Indices::U32(water.indices)),
-        }
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        mesh.attributes.insert(
+            Cow::Borrowed(Mesh::ATTRIBUTE_POSITION),
+            water.vertices.into(),
+        );
+        mesh.attributes
+            .insert(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), water.normals.into());
+        mesh.attributes
+            .insert(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), water.uvs.into());
+        mesh.indices = Some(Indices::U32(water.indices));
+        mesh
     }
 }

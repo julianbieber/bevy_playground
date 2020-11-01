@@ -25,10 +25,10 @@ impl WaterEffected {
 pub fn apply_water_raise(
     water_materials: Res<Assets<WaterMaterial>>,
     mut water_effected_query: Query<(&mut WaterEffected, &mut Transform, &mut RigidBody)>,
-    mut water_query: Query<(&Handle<WaterMaterial>, &WaterPosition)>,
+    water_query: Query<(&Handle<WaterMaterial>, &WaterPosition)>,
 ) {
-    for (mut water_effected, mut transform, mut body) in &mut water_effected_query.iter() {
-        for (water_material_handle, water_position) in &mut water_query.iter() {
+    for (mut water_effected, mut transform, mut body) in water_effected_query.iter_mut() {
+        for (water_material_handle, water_position) in water_query.iter() {
             if water_position.lies_within(transform.translation) {
                 let water_material = water_materials.get(water_material_handle).unwrap();
                 let position = transform.translation;
