@@ -35,7 +35,7 @@ fn rotator_system(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&Rotator, &mut Transform)>,
 ) {
-    for (_rotator, mut transform) in &mut query.iter() {
+    for (_rotator, mut transform) in query.iter_mut() {
         for event in state.mouse_motion_event_reader.iter(&mouse_motion_events) {
             let look = event.delta;
             let camera_translation = transform.translation;
