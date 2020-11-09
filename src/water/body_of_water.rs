@@ -65,13 +65,15 @@ pub fn update_material_time(mut material: ResMut<Assets<WaterMaterial>>, time: R
     }
 }
 
-pub fn set_water_position(mut position: Mut<WaterPosition>, transform: &Transform) {
-    position.position = transform.translation;
-    position.size = Vec2::new(transform.scale.x(), transform.scale.z());
+pub fn set_water_position(mut position_2_transform_query: Query<(&mut WaterPosition, &Transform)>) {
+    for (mut position, transform) in position_2_transform_query.iter_mut() {
+        position.position = transform.translation;
+        position.size = Vec2::new(transform.scale.x(), transform.scale.z());
+    }
 }
 
 pub fn setup_water_layer(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut shaders: ResMut<Assets<Shader>>,
@@ -92,7 +94,7 @@ pub fn setup_water_layer(
         .add_node_edge("water_material", base::node::MAIN_PASS)
         .unwrap();
 
-    let water = Water::new((2.0, 2.0), 100);
+    let water = Water::new((50.0, 50.0), 1000);
     let mesh = meshes.add(Mesh::from(water));
 
     let material = materials.add(WaterMaterial { time: 0.0f32 });
@@ -190,15 +192,13 @@ impl Water {
 impl From<Water> for Mesh {
     fn from(water: Water) -> Self {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.attributes.insert(
+        mesh.set_attribute(
             Cow::Borrowed(Mesh::ATTRIBUTE_POSITION),
             water.vertices.into(),
         );
-        mesh.attributes
-            .insert(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), water.normals.into());
-        mesh.attributes
-            .insert(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), water.uvs.into());
-        mesh.indices = Some(Indices::U32(water.indices));
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), water.normals.into());
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), water.uvs.into());
+        mesh.set_indices(Some(Indices::U32(water.indices)));
         mesh
     }
 }

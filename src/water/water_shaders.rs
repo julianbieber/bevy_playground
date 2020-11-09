@@ -10,10 +10,14 @@ layout(set = 1, binding = 0) uniform Transform {
 layout(set = 1, binding = 1) uniform WaterMaterial_time {
     float time;
 };
+layout(location = 1) out X_Out {
+    float x;
+}x_out;
 void main() {
     vec4 world_position = Model * vec4(Vertex_Position, 1);
-    world_position.y = world_position.y + sin(time * 0.1 + world_position.x) + sin(world_position.z + 0.5);
+    world_position.y = world_position.y + sin(time * 0.1 + world_position.x);
     gl_Position = ViewProj * world_position;
+    x_out.x = world_position.x;
 }
 "#;
 
@@ -23,7 +27,8 @@ layout(location = 0) out vec4 o_Target;
 layout(set = 1, binding = 1) uniform WaterMaterial_time {
     float time;
 };
+layout(location = 1) in float x;
 void main() {
-    o_Target = vec4(0, 0, 255, 1.0);
+    o_Target = vec4(0, 0, 1 + sin(x + time), 1.0);
 }
 "#;
