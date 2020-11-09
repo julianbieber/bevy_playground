@@ -1,5 +1,7 @@
+use crate::water::water_effect::WaterEffected;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
+use physme::prelude3d::*;
 
 #[derive(Default)]
 pub struct State {
@@ -10,7 +12,6 @@ pub struct State {
 pub struct PlayerRotation {
     rotation_x: f32,
     rotation_y: f32,
-    walking: bool,
 }
 
 /// this component indicates what entities should rotate
@@ -23,9 +24,9 @@ pub fn rotator_system(
     mut player_rotation: ResMut<PlayerRotation>,
     mouse_motion_events: Res<Events<MouseMotion>>,
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&Rotator, &mut Transform)>,
+    mut query: Query<(&Rotator, &mut Transform, &mut RigidBody)>,
 ) {
-    for (_rotator, mut transform) in query.iter_mut() {
+    for (_rotator, mut transform, mut rigibody) in query.iter_mut() {
         for event in state.mouse_motion_event_reader.iter(&mouse_motion_events) {
             let look = event.delta;
             let player_translation = transform.translation;
@@ -61,59 +62,32 @@ pub fn rotator_system(
             );
             transform.translation = player_translation;
         }
-        if player_rotation.walking == false {
-            if keys.pressed(KeyCode::W) {
-                let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -0.1));
-                transform.translation += a;
-            }
-            if keys.pressed(KeyCode::A) {
-                let a = transform.rotation.mul_vec3(Vec3::new(-0.1, 0.0, 0.0));
-                transform.translation += a;
-            }
-            if keys.pressed(KeyCode::D) {
-                let a = transform.rotation.mul_vec3(Vec3::new(0.1, 0.0, 0.0));
-                transform.translation += a;
-            }
-            if keys.pressed(KeyCode::S) {
-                let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 0.1));
-                transform.translation += a;
-            }
-            if keys.pressed(KeyCode::Q) {
-                let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.1, 0.0));
-                transform.translation += a;
-            }
-            if keys.pressed(KeyCode::E) {
-                let a = transform.rotation.mul_vec3(Vec3::new(0.0, -0.1, 0.0));
-                transform.translation += a;
-            }
-            if keys.just_pressed(KeyCode::F) {
-                player_rotation.walking = true;
-            }
-        } else {
-            if keys.pressed(KeyCode::W) {
-                transform.translation +=
-                    Mat3::from_rotation_ypr(player_rotation.rotation_x, 0.0, 0.0)
-                        .mul_vec3(Vec3::new(0.0, 0.0, -0.1));
-            }
-            if keys.pressed(KeyCode::A) {
-                transform.translation +=
-                    Mat3::from_rotation_ypr(player_rotation.rotation_x, 0.0, 0.0)
-                        .mul_vec3(Vec3::new(-0.1, 0.0, 0.0));
-            }
-            if keys.pressed(KeyCode::D) {
-                transform.translation +=
-                    Mat3::from_rotation_ypr(player_rotation.rotation_x, 0.0, 0.0)
-                        .mul_vec3(Vec3::new(0.1, 0.0, 0.0));
-            }
-            if keys.pressed(KeyCode::S) {
-                transform.translation +=
-                    Mat3::from_rotation_ypr(player_rotation.rotation_x, 0.0, 0.0)
-                        .mul_vec3(Vec3::new(0.0, 0.0, 0.1));
-            }
-            if keys.just_pressed(KeyCode::F) {
-                player_rotation.walking = false
-            }
+        if keys.pressed(KeyCode::W) {
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -0.1));
+            transform.translation += a;
         }
+        if keys.pressed(KeyCode::A) {
+            let a = transform.rotation.mul_vec3(Vec3::new(-0.1, 0.0, 0.0));
+            transform.translation += a;
+        }
+        if keys.pressed(KeyCode::D) {
+            let a = transform.rotation.mul_vec3(Vec3::new(0.1, 0.0, 0.0));
+            transform.translation += a;
+        }
+        if keys.pressed(KeyCode::S) {
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 0.1));
+            transform.translation += a;
+        }
+        if keys.pressed(KeyCode::Q) {
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.1, 0.0));
+            transform.translation += a;
+        }
+        if keys.pressed(KeyCode::E) {
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, -0.1, 0.0));
+            transform.translation += a;
+        }
+        rigibody.position = transform.translation;
+        rigibody.rotation = transform.rotation;
     }
 }
 
@@ -132,10 +106,19 @@ pub fn camera_setup(
         .spawn(PbrComponents {
             mesh: cube_handle.clone(),
             material: cube_material_handle.clone(),
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 0.0)),
             ..Default::default()
         })
+        .with(
+            RigidBody::new(Mass::Real(1.0))
+                .with_status(Status::Semikinematic)
+                .with_position(Vec3::new(0.0, 5.0, 0.0)),
+        )
         .with(Rotator)
+        .with(WaterEffected::new())
+        .with_children(|parent| {
+            parent.spawn((Shape::from(Size3::new(1.0, 1.0, 1.0)),));
+        })
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y();
