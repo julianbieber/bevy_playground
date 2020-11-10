@@ -1,18 +1,13 @@
 use ahash::AHashMap;
-use std::borrow::Cow;
-use std::collections::HashMap;
-
-type YWorldCoordinate = AHashMap<i32, Voxel>;
-type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;
-
-type WorldStructure = AHashMap<i32, ZWorldCoordinate>;
-
 use bevy::{
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
 };
 use lerp::Lerp;
 use rand::prelude::*;
+use std::borrow::Cow;
+
+use super::world_structure::*;
 
 pub struct VoxelWorld {
     pub pillars: Vec<PillarGenerator>,
@@ -68,7 +63,7 @@ impl PillarGenerator {
     }
 
     pub fn voxels(&self) -> WorldStructure {
-        let mut blocks: WorldStructure = AHashMap::new();
+        let mut world: WorldStructure = AHashMap::new();
         for layer in 0..self.height {
             let radius = self.radius_at_level(layer);
             let radius_sq = radius * radius;
@@ -81,30 +76,12 @@ impl PillarGenerator {
                             position: (x, layer, z),
                             typ: VoxelTypes::Rock,
                         };
-                        match blocks.get_mut(&x) {
-                            Some(z_map) => match z_map.get_mut(&z) {
-                                Some(y_map) => {
-                                    y_map.insert(layer, voxel);
-                                }
-                                None => {
-                                    let mut y_map = AHashMap::new();
-                                    y_map.insert(layer, voxel);
-                                    z_map.insert(z, y_map);
-                                }
-                            },
-                            None => {
-                                let mut z_map = AHashMap::new();
-                                let mut y_map = AHashMap::new();
-                                y_map.insert(layer, voxel);
-                                z_map.insert(z, y_map);
-                                blocks.insert(x, z_map);
-                            }
-                        };
+                        world.add_voxel(voxel);
                     }
                 }
             }
         }
-        blocks
+        world
     }
 
     fn radius_at_level(&self, level: i32) -> i32 {
@@ -126,25 +103,6 @@ impl PillarGenerator {
             ) as i32
         }
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct Voxel {
-    pub position: (i32, i32, i32),
-    pub typ: VoxelTypes,
-}
-
-impl Voxel {
-    fn is_next_to(&self, other: &Voxel) -> bool {
-        (self.position.0 - other.position.0).abs() <= 1
-            && (self.position.1 - other.position.1).abs() <= 1
-            && (self.position.2 - other.position.2).abs() <= 1
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum VoxelTypes {
-    Rock,
 }
 
 impl From<&PillarGenerator> for Mesh {

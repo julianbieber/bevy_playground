@@ -8,10 +8,8 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
 use physme::prelude3d::*;
 
-use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::render::camera::Camera;
 use camera::{camera_setup, rotator_system, PlayerRotation, Rotator, State};
-use render::{hide_far_away, update_player_position, PlayerPosition};
+use render::{hide_far_away, update_player_position};
 use water::body_of_water::{
     set_water_position, setup_water_layer, update_material_time, WaterMaterial,
 };
