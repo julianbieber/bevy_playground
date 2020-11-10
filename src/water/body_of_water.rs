@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*,
     render::{
-        pipeline::{DynamicBinding, PipelineDescriptor, PipelineSpecialization, RenderPipeline},
+        pipeline::{PipelineDescriptor, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
         renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
@@ -103,21 +103,8 @@ pub fn setup_water_layer(
     commands
         .spawn(MeshComponents {
             mesh,
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::specialized(
+            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle,
-                PipelineSpecialization {
-                    dynamic_bindings: vec![
-                        DynamicBinding {
-                            bind_group: 1,
-                            binding: 0,
-                        },
-                        DynamicBinding {
-                            bind_group: 1,
-                            binding: 1,
-                        },
-                    ],
-                    ..Default::default()
-                },
             )]),
             transform,
             ..Default::default()
