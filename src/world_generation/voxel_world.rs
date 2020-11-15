@@ -25,12 +25,18 @@ impl VoxelWorld {
     pub fn add_to_world(
         &self,
         commands: &mut Commands,
+        asset_server: Res<AssetServer>,
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
         for pillar in self.pillars.iter() {
             let m = meshes.add(Mesh::from(pillar));
-            let material = materials.add(Color::rgb(1.0, 0.0, 0.2).into());
+            let texture = asset_server.load("world_texture_color.png");
+            let material = materials.add(StandardMaterial {
+                albedo_texture: Some(texture),
+                shaded: false,
+                ..Default::default()
+            });
             commands.spawn(PbrComponents {
                 mesh: m,
                 material,
