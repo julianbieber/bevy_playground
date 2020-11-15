@@ -7,12 +7,6 @@ pub struct WaterEffected {
 }
 
 impl WaterEffected {
-    pub fn new() -> WaterEffected {
-        WaterEffected {
-            force: Vec2::zero(),
-        }
-    }
-
     pub fn reset(&mut self) {
         self.force = Vec2::zero();
     }

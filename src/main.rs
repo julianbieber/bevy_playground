@@ -6,7 +6,6 @@ mod world_generation;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
-use physme::prelude3d::*;
 
 use camera::{camera_setup, rotator_system, PlayerRotation, Rotator, State};
 use render::{hide_far_away, update_player_position};
@@ -19,12 +18,8 @@ use world::world_setup;
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .add_plugin(Physics3dPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(PrintDiagnosticsPlugin::default())
-        .add_resource(GlobalGravity(Vec3::new(0.0, -9.8, 0.0)))
-        .add_resource(GlobalFriction(0.90))
-        .add_resource(GlobalStep(0.5))
         .add_asset::<WaterMaterial>()
         .add_startup_system(setup.system())
         .add_startup_system(world_setup.system())
