@@ -13,7 +13,13 @@ pub struct Voxel {
 
 #[derive(Clone, Debug)]
 pub enum VoxelTypes {
-    Rock,
+    DarkRock1,
+    DarkRock2,
+    Lava,
+    Moss,
+    CrackedRock,
+    LightRock1,
+    LightRock2,
 }
 
 pub trait WorldStrucutureImpl {
