@@ -1,3 +1,4 @@
+use super::voxel::{Voxel, VoxelPosition};
 use ahash::AHashMap;
 
 type YWorldCoordinate = AHashMap<i32, Voxel>;
@@ -5,33 +6,21 @@ type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;
 
 pub type WorldStructure = AHashMap<i32, ZWorldCoordinate>;
 
-#[derive(Clone, Debug)]
-pub struct Voxel {
-    pub position: (i32, i32, i32),
-    pub typ: VoxelTypes,
-}
-
-#[derive(Clone, Debug)]
-pub enum VoxelTypes {
-    DarkRock1,
-    DarkRock2,
-    Lava,
-    Moss,
-    CrackedRock,
-    LightRock1,
-    LightRock2,
+pub struct Terrain {
+    pub structure: WorldStructure,
 }
 
 pub trait WorldStrucutureImpl {
     fn add_voxel(&mut self, voxel: Voxel);
     fn get_at(&self, x: &i32, y: &i32, z: &i32) -> Option<&Voxel>;
+    fn get_at_voxel(&self, voxel: &VoxelPosition) -> Option<&Voxel>;
 }
 
 impl WorldStrucutureImpl for WorldStructure {
     fn add_voxel(&mut self, voxel: Voxel) {
-        let x = voxel.position.0;
-        let y = voxel.position.1;
-        let z = voxel.position.2;
+        let x = voxel.position.x;
+        let y = voxel.position.y;
+        let z = voxel.position.z;
         match self.get_mut(&x) {
             Some(z_map) => match z_map.get_mut(&z) {
                 Some(y_map) => {
@@ -58,5 +47,9 @@ impl WorldStrucutureImpl for WorldStructure {
             .map(|i| i.get(z).map(|i| i.get(y)))
             .flatten()
             .flatten()
+    }
+
+    fn get_at_voxel(&self, voxel: &VoxelPosition) -> Option<&Voxel> {
+        self.get_at(&voxel.x, &voxel.y, &voxel.z)
     }
 }

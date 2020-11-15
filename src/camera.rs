@@ -1,4 +1,4 @@
-use crate::physics::collider::{Collider, ColliderShapes};
+use crate::physics::collider::*;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
@@ -93,7 +93,10 @@ pub fn camera_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.2 }));
+    let cube_handle = meshes.add(Mesh::from(shape::Icosphere {
+        radius: 0.2,
+        subdivisions: 10,
+    }));
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.0, 1.0, 0.0),
         ..Default::default()
