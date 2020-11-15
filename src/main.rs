@@ -1,4 +1,5 @@
 mod camera;
+mod physics;
 mod render;
 mod water;
 mod world;
