@@ -94,8 +94,8 @@ pub fn camera_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let cube_handle = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.2,
-        subdivisions: 10,
+        radius: 0.5,
+        subdivisions: 8,
     }));
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.0, 1.0, 0.0),
@@ -111,7 +111,7 @@ pub fn camera_setup(
         })
         .with(Rotator)
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.3 },
+            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         })
         .with_children(|parent| {
@@ -134,7 +134,7 @@ pub fn camera_setup(
             ..Default::default()
         })
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.3 },
+            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }
