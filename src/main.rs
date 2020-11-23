@@ -8,6 +8,7 @@ mod world_generation;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
 
+use crate::physics::collider::collision_update;
 use camera::{camera_setup, rotator_system, PlayerRotation, Rotator, State};
 use render::{hide_far_away, update_player_position};
 use water::body_of_water::{
@@ -30,6 +31,7 @@ fn main() {
         .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
         .add_system(rotator_system.system())
+        .add_system(collision_update.system())
         .init_resource::<State>()
         .init_resource::<PlayerRotation>()
         .init_resource::<Rotator>()

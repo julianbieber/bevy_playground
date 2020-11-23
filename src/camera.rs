@@ -1,3 +1,4 @@
+use crate::physics::collider::{Collider, ColliderShapes};
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
@@ -106,6 +107,10 @@ pub fn camera_setup(
             ..Default::default()
         })
         .with(Rotator)
+        .with(Collider {
+            collider_shape: ColliderShapes::Sphere { radius: 0.3 },
+            local_position: Vec3::new(0.0, 0.0, 0.0),
+        })
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y();
@@ -116,5 +121,17 @@ pub fn camera_setup(
                     .looking_at(camera_looking_point, up),
                 ..Default::default()
             });
+        });
+    commands
+        // parent cube
+        .spawn(PbrComponents {
+            mesh: cube_handle.clone(),
+            material: cube_material_handle.clone(),
+            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 45.0)),
+            ..Default::default()
+        })
+        .with(Collider {
+            collider_shape: ColliderShapes::Sphere { radius: 0.3 },
+            local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }
