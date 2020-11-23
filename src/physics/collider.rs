@@ -64,8 +64,11 @@ impl Collider {
                 if self_to_other.length() > radius + self_radius {
                     None
                 } else {
+                    let impulse_strength =
+                        ((radius + self_radius) - self_to_other.length()) / self_to_other.length();
                     Option::Some(
-                        -(Vec3::new(self_to_other.x(), self_to_other.y(), self_to_other.z())),
+                        -(Vec3::new(self_to_other.x(), self_to_other.y(), self_to_other.z())
+                            * impulse_strength),
                     )
                 }
             }
@@ -85,7 +88,7 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         colliders.push((collider.clone(), transform.compute_matrix()));
     }
     let mut impulses = HashMap::new();
-    for (collider, transform1) in colliders.iter() {
+    for (collider, collider_transform) in colliders.iter() {
         let key = format!(
             "{:?}",
             transform1.mul_vec4(Vec4::new(
@@ -96,11 +99,10 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
             ))
         );
 
-        for (other_collider, tr) in colliders.iter() {
-            if (!tr.eq(transform1)) {
-                //TODO compute impulse define funtion
+        for (other_collider, other_transform) in colliders.iter() {
+            if (!other_transform.eq(collider_transform)) {
                 let mut impulse = collider
-                    .detect_collision(other_collider, transform1, tr)
+                    .detect_collision(other_collider, collider_transform, other_transform)
                     .unwrap_or(Vec3::zero());
                 impulses
                     .entry(key.clone())
@@ -110,7 +112,7 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         }
     }
     &impulses;
-    for (collider, mut transform1) in query.iter_mut() {
+    for (collider, mut collider_transform) in query.iter_mut() {
         let key = format!(
             "{:?}",
             transform1.compute_matrix().mul_vec4(Vec4::new(
@@ -120,9 +122,9 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
                 1.0f32
             ))
         );
-        let a = *impulses.get(&key).unwrap() * 0.5;
-        transform1.translation = transform1.translation - a;
-        dbg!(transform1.translation);
+        collider_transform.translation =
+            collider_transform.translation - *impulses.get(&key).unwrap();
+        collider_transform.translation;
     }
 }
 trait Vec3Ext {
