@@ -38,23 +38,17 @@ pub struct WaterPosition {
 impl WaterPosition {
     /// returns (min_x, min_z) (max_x, max_z)
     fn get_boundaries(&self) -> (Vec2, Vec2) {
-        let x_half_size = self.size.x() / 2.0;
-        let z_half_size = self.size.y() / 2.0;
+        let x_half_size = self.size.x / 2.0;
+        let z_half_size = self.size.y / 2.0;
         (
-            Vec2::new(
-                self.position.x() - x_half_size,
-                self.position.z() - z_half_size,
-            ),
-            Vec2::new(
-                self.position.x() + x_half_size,
-                self.position.z() + z_half_size,
-            ),
+            Vec2::new(self.position.x - x_half_size, self.position.z - z_half_size),
+            Vec2::new(self.position.x + x_half_size, self.position.z + z_half_size),
         )
     }
 
     pub fn lies_within(&self, point: Vec3) -> bool {
         let (min, max) = self.get_boundaries();
-        point.x() >= min.x() && point.z() >= min.y() && point.x() <= max.x() && point.z() <= max.y()
+        point.x >= min.x && point.z >= min.y && point.x <= max.x && point.z <= max.y
     }
 }
 
@@ -68,7 +62,7 @@ pub fn update_material_time(mut material: ResMut<Assets<WaterMaterial>>, time: R
 pub fn set_water_position(mut position_2_transform_query: Query<(&mut WaterPosition, &Transform)>) {
     for (mut position, transform) in position_2_transform_query.iter_mut() {
         position.position = transform.translation;
-        position.size = Vec2::new(transform.scale.x(), transform.scale.z());
+        position.size = Vec2::new(transform.scale.x, transform.scale.z);
     }
 }
 
@@ -101,7 +95,7 @@ pub fn setup_water_layer(
     let mut transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
     transform.scale = Vec3::new(10.0, 1.0, 10.0);
     commands
-        .spawn(MeshComponents {
+        .spawn(MeshBundle {
             mesh,
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle,
@@ -179,12 +173,9 @@ impl Water {
 impl From<Water> for Mesh {
     fn from(water: Water) -> Self {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_attribute(
-            Cow::Borrowed(Mesh::ATTRIBUTE_POSITION),
-            water.vertices.into(),
-        );
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), water.normals.into());
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), water.uvs.into());
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), water.vertices);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), water.normals);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), water.uvs);
         mesh.set_indices(Some(Indices::U32(water.indices)));
         mesh
     }

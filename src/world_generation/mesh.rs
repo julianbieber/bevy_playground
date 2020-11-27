@@ -21,9 +21,9 @@ impl From<&Terrain> for Mesh {
                 for (_, voxel) in z_map.iter() {
                     draw_c += 1;
                     let voxel_world_position = voxel.position.to_vec();
-                    let x = voxel_world_position.x();
-                    let y = voxel_world_position.y();
-                    let z = voxel_world_position.z();
+                    let x = voxel_world_position.x;
+                    let y = voxel_world_position.y;
+                    let z = voxel_world_position.z;
                     let (u_min, u_max, v_min, v_max) = match voxel.typ {
                         VoxelTypes::DarkRock1 => (0.0f32, 0.25f32, 0.5f32, 1.0f32),
                         VoxelTypes::DarkRock2 => (0.25f32, 0.5f32, 0.5f32, 1.0f32),
@@ -311,9 +311,9 @@ impl From<&Terrain> for Mesh {
         }
         dbg!(draw_c);
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices.into());
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals.into());
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs.into());
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs);
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh
     }

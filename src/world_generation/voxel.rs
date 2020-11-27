@@ -13,9 +13,9 @@ pub struct VoxelPosition {
 impl VoxelPosition {
     pub fn from_vec3(vec3: &Vec3) -> VoxelPosition {
         VoxelPosition {
-            x: world_2_voxel_space(vec3.x()),
-            y: world_2_voxel_space(vec3.y()),
-            z: world_2_voxel_space(vec3.z()),
+            x: world_2_voxel_space(vec3.x),
+            y: world_2_voxel_space(vec3.y),
+            z: world_2_voxel_space(vec3.z),
         }
     }
 
@@ -34,14 +34,14 @@ impl VoxelPosition {
     pub fn to_box(&self) -> (Vec3, Vec3) {
         let center = self.to_vec();
         let min = Vec3::new(
-            center.x() - HALF_VOXEL_SIZE,
-            center.y() - HALF_VOXEL_SIZE,
-            center.z() - HALF_VOXEL_SIZE,
+            center.x - HALF_VOXEL_SIZE,
+            center.y - HALF_VOXEL_SIZE,
+            center.z - HALF_VOXEL_SIZE,
         );
         let max = Vec3::new(
-            center.x() + HALF_VOXEL_SIZE,
-            center.y() + HALF_VOXEL_SIZE,
-            center.z() + HALF_VOXEL_SIZE,
+            center.x + HALF_VOXEL_SIZE,
+            center.y + HALF_VOXEL_SIZE,
+            center.z + HALF_VOXEL_SIZE,
         );
         (min, max)
     }
