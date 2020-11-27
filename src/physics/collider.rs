@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use std::collections::HashMap;
 use std::ops::{Add, AddAssign, Mul};
 
-#[derive(Clone)]
 pub enum ColliderShapes {
     Sphere {
         radius: f32,
@@ -17,7 +16,7 @@ pub enum ColliderShapes {
         half_depth_z: f32,
     },
 }
-#[derive(Clone)]
+
 pub struct Collider {
     pub collider_shape: ColliderShapes,
     pub local_position: Vec3,

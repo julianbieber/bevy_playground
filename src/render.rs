@@ -1,3 +1,4 @@
+use super::vec3_ext::*;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
@@ -22,18 +23,4 @@ pub fn update_player_position(mut pp_query: Query<(&mut PlayerPosition, &Transfo
 
 pub struct PlayerPosition {
     pub position: Vec3,
-}
-
-trait Vec3DistanceExt {
-    fn distance_sq(&self, other: &Vec3) -> f32;
-}
-
-impl Vec3DistanceExt for Vec3 {
-    fn distance_sq(&self, other: &Vec3) -> f32 {
-        let x_diff = self.x() - other.x();
-        let y_diff = self.z() - other.y();
-        let z_diff = self.y() - other.z();
-
-        x_diff * x_diff + y_diff * y_diff + z_diff * z_diff
-    }
 }

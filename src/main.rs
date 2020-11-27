@@ -1,6 +1,7 @@
 mod camera;
 mod physics;
 mod render;
+mod vec3_ext;
 mod water;
 mod world;
 mod world_generation;
@@ -16,6 +17,7 @@ use water::body_of_water::{
 };
 use water::water_effect::apply_water_raise;
 use world::world_setup;
+use world_generation::collision::terrain_collision_system;
 
 fn main() {
     App::build()
@@ -38,8 +40,10 @@ fn main() {
         .add_system(bevy::input::system::exit_on_esc_system.system())
         .add_system(hide_far_away.system())
         .add_system(update_player_position.system())
+        .add_system(terrain_collision_system.system())
         .run();
 }
+
 fn setup(mut windows: ResMut<Windows>) {
     windows
         .get_primary_mut()
