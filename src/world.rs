@@ -10,7 +10,7 @@ pub fn world_setup(
 ) {
     let w = VoxelWorld::generate(50, 50, rand::thread_rng());
     w.add_to_world(commands, asset_server, meshes, materials);
-    commands.spawn(LightComponents {
+    commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),
         ..Default::default()
     });

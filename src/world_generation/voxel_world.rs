@@ -37,7 +37,7 @@ impl VoxelWorld {
                 ..Default::default()
             });
             commands
-                .spawn(PbrComponents {
+                .spawn(PbrBundle {
                     mesh: m,
                     material,
                     ..Default::default()

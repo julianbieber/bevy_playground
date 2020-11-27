@@ -49,14 +49,14 @@ impl Collider {
         other_transform: &Mat4,
     ) -> Option<Vec3> {
         let self_to_other = transform.mul_vec4(Vec4::new(
-            self.local_position.x(),
-            self.local_position.y(),
-            self.local_position.z(),
+            self.local_position.x,
+            self.local_position.y,
+            self.local_position.z,
             1.0,
         )) - other_transform.mul_vec4(Vec4::new(
-            other.local_position.x(),
-            other.local_position.y(),
-            other.local_position.z(),
+            other.local_position.x,
+            other.local_position.y,
+            other.local_position.z,
             1.0,
         ));
         match other.collider_shape {
@@ -89,9 +89,9 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         let key = format!(
             "{:?}",
             transform1.mul_vec4(Vec4::new(
-                collider.local_position.x(),
-                collider.local_position.y(),
-                collider.local_position.z(),
+                collider.local_position.x,
+                collider.local_position.y,
+                collider.local_position.z,
                 1.0f32
             ))
         );
@@ -114,9 +114,9 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         let key = format!(
             "{:?}",
             transform1.compute_matrix().mul_vec4(Vec4::new(
-                collider.local_position.x(),
-                collider.local_position.y(),
-                collider.local_position.z(),
+                collider.local_position.x,
+                collider.local_position.y,
+                collider.local_position.z,
                 1.0f32
             ))
         );

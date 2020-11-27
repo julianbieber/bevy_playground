@@ -31,14 +31,14 @@ pub fn rotator_system(
             let player_translation = transform.translation;
             transform.translation = Vec3::zero();
             if (f32::rem_euclid(
-                player_rotation.rotation_y - (look.y()).to_radians() / 5.0,
+                player_rotation.rotation_y - (look.y).to_radians() / 5.0,
                 2.0 * std::f32::consts::PI,
             ) - std::f32::consts::FRAC_PI_2)
                 .abs()
                 < 0.2
             {
             } else if (f32::rem_euclid(
-                player_rotation.rotation_y - (look.y()).to_radians() / 5.0,
+                player_rotation.rotation_y - (look.y).to_radians() / 5.0,
                 2.0 * std::f32::consts::PI,
             ) - 3.0 * std::f32::consts::FRAC_PI_2)
                 .abs()
@@ -46,12 +46,12 @@ pub fn rotator_system(
             {
             } else {
                 player_rotation.rotation_y = f32::rem_euclid(
-                    player_rotation.rotation_y - (look.y()).to_radians() / 5.0,
+                    player_rotation.rotation_y - (look.y).to_radians() / 5.0,
                     2.0 * std::f32::consts::PI,
                 );
             };
             player_rotation.rotation_x = f32::rem_euclid(
-                player_rotation.rotation_x - (look.x()).to_radians() / 5.0,
+                player_rotation.rotation_x - (look.x).to_radians() / 5.0,
                 2.0 * std::f32::consts::PI,
             );
             transform.rotation = Quat::from_rotation_ypr(
@@ -103,7 +103,7 @@ pub fn camera_setup(
     });
     commands
         // parent cube
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             mesh: cube_handle.clone(),
             material: cube_material_handle.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 5.0, 50.0)),
@@ -116,10 +116,10 @@ pub fn camera_setup(
         })
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
-            let camera_position_y = camera_position.y();
+            let camera_position_y = camera_position.y;
             let up = Vec3::unit_y();
             let camera_looking_point = -camera_position + 2.0 * camera_position_y * up;
-            parent.spawn(Camera3dComponents {
+            parent.spawn(Camera3dBundle {
                 transform: Transform::from_translation(camera_position)
                     .looking_at(camera_looking_point, up),
                 ..Default::default()
@@ -127,7 +127,7 @@ pub fn camera_setup(
         });
     commands
         // parent cube
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             mesh: cube_handle.clone(),
             material: cube_material_handle.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 5.0, 45.0)),
