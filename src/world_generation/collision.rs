@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::physics::collider::{Collider, ColliderShapes};
 
-use super::voxel::world_2_voxel_space;
+use super::voxel::{world_2_voxel_space, VoxelBox};
 use super::world_structure::*;
 use crate::vec3_ext::*;
 
@@ -42,7 +42,6 @@ pub fn terrain_collision_system(
 
 fn collision_depth_sphere(terrain: &Terrain, center: Vec3, radius: f32) -> Vec3 {
     let mut overlapping_move = Vec3::zero();
-    let mut max_move = 0.0f32;
     for potential_x in
         world_2_voxel_space(center.x - radius) - 1..world_2_voxel_space(center.x + radius) + 1
     {
@@ -56,32 +55,44 @@ fn collision_depth_sphere(terrain: &Terrain, center: Vec3, radius: f32) -> Vec3 
                     .structure
                     .get_at(&potential_x, &potential_y, &potential_z)
                     .map(|terrain_voxel| {
-                        let voxel_min_max = terrain_voxel.position.to_box();
-                        let x = voxel_min_max.0.x.max(center.x.min(voxel_min_max.1.x));
-                        let y = voxel_min_max.0.y.max(center.y.min(voxel_min_max.1.y));
-                        let z = voxel_min_max.0.z.max(center.z.min(voxel_min_max.1.z));
-                        let distance = center.distance(Vec3::new(x, y, z));
-                        if distance < radius && (radius - distance) > max_move {
-                            max_move = radius - distance;
-                            let x_distance = (center.x - terrain_voxel.position.x as f32).abs();
-                            let y_distance = (center.y - terrain_voxel.position.y as f32).abs();
-                            let z_distance = (center.z - terrain_voxel.position.z as f32).abs();
-                            if x_distance > y_distance && x_distance > z_distance {
-                                overlapping_move = Vec3::new(1.0, 0.0, 0.0) * (radius - distance);
-                                if x > center.x {
-                                    overlapping_move *= -1.0f32;
+                        let closest_point = terrain_voxel.position.to_box().closest_point(&center);
+                        let voxel_world_position = terrain_voxel.position.to_vec();
+                        let distance = center.distance(closest_point);
+                        if distance < radius {
+                            let x_distance = (center.x - voxel_world_position.x).abs();
+                            let y_distance = (center.y - voxel_world_position.y).abs();
+                            let z_distance = (center.z - voxel_world_position.z).abs();
+                            let move_length = radius - distance;
+                            if x_distance >= y_distance
+                                && x_distance >= z_distance
+                                && overlapping_move.x.abs() < move_length
+                            {
+                                if closest_point.x < center.x {
+                                    overlapping_move.x = move_length;
+                                } else {
+                                    overlapping_move.x = -move_length;
                                 }
                             }
-                            if y_distance > x_distance && y_distance > z_distance {
-                                overlapping_move = Vec3::new(0.0, 1.0, 0.0) * (radius - distance);
-                                if y > center.y {
-                                    overlapping_move *= -1.0f32;
+
+                            if y_distance >= x_distance
+                                && y_distance >= z_distance
+                                && overlapping_move.y.abs() < move_length
+                            {
+                                if closest_point.y < center.y {
+                                    overlapping_move.y = move_length;
+                                } else {
+                                    overlapping_move.y = -move_length;
                                 }
                             }
-                            if z_distance > y_distance && z_distance > x_distance {
-                                overlapping_move = Vec3::new(0.0, 0.0, 1.0) * (radius - distance);
-                                if z > center.z {
-                                    overlapping_move *= -1.0f32;
+
+                            if z_distance >= x_distance
+                                && z_distance >= y_distance
+                                && overlapping_move.z.abs() < move_length
+                            {
+                                if closest_point.z < center.z {
+                                    overlapping_move.z = move_length;
+                                } else {
+                                    overlapping_move.z = -move_length;
                                 }
                             }
                         }
