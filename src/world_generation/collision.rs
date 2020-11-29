@@ -20,9 +20,6 @@ pub fn terrain_collision_system(
                 ColliderShapes::Sphere { radius } => {
                     collision_depth_sphere(terrain, transformed_center, radius)
                 }
-                ColliderShapes::Cube { half_size } => {
-                    collision_depth_cube(terrain, transformed_center, half_size)
-                }
                 ColliderShapes::Cuboid {
                     half_width_x,
                     half_height_y,
@@ -102,10 +99,6 @@ fn collision_depth_sphere(terrain: &Terrain, center: Vec3, radius: f32) -> Vec3 
     }
 
     overlapping_move
-}
-
-fn collision_depth_cube(terrain: &Terrain, center: Vec3, half_size: f32) -> Vec3 {
-    Vec3::zero()
 }
 
 fn collision_depth_cubiod(
