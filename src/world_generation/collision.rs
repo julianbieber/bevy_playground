@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use crate::physics::collider::{Collider, ColliderShapes};
+use crate::physics::collider::{cuboid_vertices, Collider, ColliderShapes};
 
 use super::voxel::{world_2_voxel_space, VoxelBox};
 use super::world_structure::*;
-use crate::vec3_ext::*;
+use std::cmp::Ordering::Equal;
 
 pub fn terrain_collision_system(
     terrain_query: Query<&Terrain>,
@@ -13,7 +13,7 @@ pub fn terrain_collision_system(
     for (mut transform, collider) in movable_colliders_query.iter_mut() {
         let mut impulse = Vec3::zero();
         let transform_matrix = transform.compute_matrix();
-        let transformed_center = transform_matrix.transform_vec3(collider.local_position);
+        let transformed_center = transform_matrix.transform_point3(collider.local_position);
 
         for terrain in terrain_query.iter() {
             impulse += match collider.collider_shape {
@@ -26,7 +26,8 @@ pub fn terrain_collision_system(
                     half_depth_z,
                 } => collision_depth_cubiod(
                     terrain,
-                    transformed_center,
+                    collider.local_position,
+                    transform_matrix,
                     half_width_x,
                     half_height_y,
                     half_depth_z,
@@ -104,9 +105,65 @@ fn collision_depth_sphere(terrain: &Terrain, center: Vec3, radius: f32) -> Vec3 
 fn collision_depth_cubiod(
     terrain: &Terrain,
     center: Vec3,
+    transform: Mat4,
     half_x: f32,
     half_y: f32,
     half_z: f32,
 ) -> Vec3 {
-    Vec3::zero()
+    let object_vertices = cuboid_vertices(&center, &transform, half_x, half_y, half_z);
+    let transformed_center = transform.transform_point3(center);
+    let mut movement = Vec3::zero();
+    let mut max_distacne = 0.0f32;
+    for potential_x in world_2_voxel_space(transformed_center.x - half_x) - 1
+        ..world_2_voxel_space(transformed_center.x + half_x) + 1
+    {
+        for potential_y in world_2_voxel_space(transformed_center.y - half_y) - 1
+            ..world_2_voxel_space(transformed_center.y + half_y) + 1
+        {
+            for potential_z in world_2_voxel_space(transformed_center.z - half_z) - 1
+                ..world_2_voxel_space(transformed_center.z + half_z) + 1
+            {
+                terrain
+                    .structure
+                    .get_at(&potential_x, &potential_y, &potential_z)
+                    .map(|terrain_voxel| {
+                        let voxel_world_position = terrain_voxel.position.to_vec();
+                        let voxel_vertices = terrain_voxel.position.vertices();
+
+                        let object_distances = object_vertices
+                            .iter()
+                            .map(|v| {
+                                point_on_line(transformed_center, voxel_world_position, v.clone())
+                            })
+                            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+                            .unwrap();
+                        let voxel_distances = voxel_vertices
+                            .iter()
+                            .map(|v| {
+                                point_on_line(transformed_center, voxel_world_position, v.clone())
+                            })
+                            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+                            .unwrap();
+
+                        if object_distances > voxel_distances
+                            && object_distances > voxel_distances - object_distances
+                        {
+                            max_distacne = voxel_distances - object_distances;
+                            movement += (voxel_world_position - transformed_center).normalize()
+                                * (voxel_distances - object_distances);
+                        }
+                    });
+            }
+        }
+    }
+
+    movement
+}
+
+fn point_on_line(a: Vec3, b: Vec3, p: Vec3) -> f32 {
+    let ap = p - a;
+    let ab = b - a;
+
+    let projected_p = a + ap.dot(ab) / ab.dot(ab) * ab;
+    a.distance(projected_p)
 }
