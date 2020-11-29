@@ -7,14 +7,23 @@ pub enum ColliderShapes {
     Sphere {
         radius: f32,
     },
-    Cube {
-        half_size: f32,
-    },
     Cuboid {
         half_width_x: f32,
         half_height_y: f32,
         half_depth_z: f32,
     },
+}
+
+impl ColliderShapes {
+    fn cube(side_length: f32) -> ColliderShapes {
+        let half_side = side_length / 2.0f32;
+
+        ColliderShapes::Cuboid {
+            half_width_x: half_side,
+            half_height_y: half_side,
+            half_depth_z: half_side,
+        }
+    }
 }
 
 pub struct Collider {
@@ -33,7 +42,6 @@ impl Collider {
             ColliderShapes::Sphere { radius } => {
                 Collider::collision_sphere(self, radius, other, transform, other_transform)
             }
-            ColliderShapes::Cube { half_size } => None,
             ColliderShapes::Cuboid {
                 half_width_x,
                 half_height_y,
@@ -72,7 +80,6 @@ impl Collider {
                     )
                 }
             }
-            ColliderShapes::Cube { half_size } => None,
             ColliderShapes::Cuboid {
                 half_width_x,
                 half_height_y,
