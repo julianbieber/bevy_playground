@@ -47,6 +47,19 @@ impl VoxelPosition {
     }
 }
 
+pub trait VoxelBox {
+    fn closest_point(&self, other: &Vec3) -> Vec3;
+}
+
+impl VoxelBox for (Vec3, Vec3) {
+    fn closest_point(&self, other: &Vec3) -> Vec3 {
+        let x = self.0.x.max(other.x.min(self.1.x));
+        let y = self.0.y.max(other.y.min(self.1.y));
+        let z = self.0.z.max(other.z.min(self.1.z));
+        Vec3::new(x, y, z)
+    }
+}
+
 pub fn world_2_voxel_space(s: f32) -> i32 {
     (s / VOXEL_SIZE).ceil() as i32
 }
