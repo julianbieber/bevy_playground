@@ -111,7 +111,7 @@ pub fn camera_setup(
         })
         .with(Rotator)
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
+            collider_shape: ColliderShapes::cube(1.0f32),
             local_position: Vec3::new(0.0, 0.0, 0.0),
         })
         .with_children(|parent| {

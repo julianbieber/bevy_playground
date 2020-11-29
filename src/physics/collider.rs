@@ -2,7 +2,6 @@ use bevy::ecs::Query;
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::ops::{Add, AddAssign, Mul};
-
 pub enum ColliderShapes {
     Sphere {
         radius: f32,
@@ -15,7 +14,7 @@ pub enum ColliderShapes {
 }
 
 impl ColliderShapes {
-    fn cube(side_length: f32) -> ColliderShapes {
+    pub fn cube(side_length: f32) -> ColliderShapes {
         let half_side = side_length / 2.0f32;
 
         ColliderShapes::Cuboid {
@@ -24,6 +23,29 @@ impl ColliderShapes {
             half_depth_z: half_side,
         }
     }
+}
+
+pub fn cuboid_vertices(
+    center: &Vec3,
+    transform_matrix: &Mat4,
+    half_x: f32,
+    half_y: f32,
+    half_z: f32,
+) -> Vec<Vec3> {
+    let mut vertices = Vec::new();
+    vertices.reserve(8);
+    for x in [center.x - half_x, center.x + half_x].iter() {
+        for y in [center.y - half_y, center.y + half_y].iter() {
+            for z in [center.z - half_z, center.z + half_z].iter() {
+                vertices.push(transform_matrix.transform_point3(Vec3::new(
+                    x.clone(),
+                    y.clone(),
+                    z.clone(),
+                )));
+            }
+        }
+    }
+    vertices
 }
 
 pub struct Collider {

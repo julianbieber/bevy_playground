@@ -45,6 +45,35 @@ impl VoxelPosition {
         );
         (min, max)
     }
+
+    pub fn vertices(&self) -> Vec<Vec3> {
+        let mut vertices = Vec::new();
+        vertices.reserve(8);
+        let world_position = self.to_vec();
+        for x in [
+            world_position.x - HALF_VOXEL_SIZE,
+            world_position.x + HALF_VOXEL_SIZE,
+        ]
+        .iter()
+        {
+            for y in [
+                world_position.y - HALF_VOXEL_SIZE,
+                world_position.y + HALF_VOXEL_SIZE,
+            ]
+            .iter()
+            {
+                for z in [
+                    world_position.z - HALF_VOXEL_SIZE,
+                    world_position.z + HALF_VOXEL_SIZE,
+                ]
+                .iter()
+                {
+                    vertices.push(Vec3::new(x.clone(), y.clone(), z.clone()));
+                }
+            }
+        }
+        vertices
+    }
 }
 
 pub trait VoxelBox {
