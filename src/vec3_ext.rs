@@ -1,4 +1,4 @@
-use bevy::math::{Mat4, Vec3};
+use bevy::math::Vec3;
 
 pub trait Vec3DistanceExt {
     fn distance_sq(&self, other: &Vec3) -> f32;

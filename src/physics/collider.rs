@@ -1,7 +1,8 @@
 use bevy::ecs::Query;
 use bevy::prelude::*;
 use std::collections::HashMap;
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::AddAssign;
+
 pub enum ColliderShapes {
     Sphere {
         radius: f32,
@@ -65,9 +66,9 @@ impl Collider {
                 Collider::collision_sphere(self, radius, other, transform, other_transform)
             }
             ColliderShapes::Cuboid {
-                half_width_x,
-                half_height_y,
-                half_depth_z,
+                half_width_x: _,
+                half_height_y: _,
+                half_depth_z: _,
             } => None,
         }
     }
@@ -106,7 +107,41 @@ impl Collider {
                 half_width_x,
                 half_height_y,
                 half_depth_z,
-            } => None,
+            } => {
+                let local_sphere_center =
+                    other_transform
+                        .inverse()
+                        .mul_vec4(transform.mul_vec4(Vec4::new(
+                            self.local_position.x,
+                            self.local_position.y,
+                            self.local_position.z,
+                            1.0,
+                        )));
+                let closest_x = (other.local_position.x - half_width_x).max(
+                    local_sphere_center
+                        .x
+                        .min(other.local_position.x + half_width_x),
+                );
+                let closest_y = (other.local_position.y - half_height_y).max(
+                    local_sphere_center
+                        .y
+                        .min(other.local_position.y + half_height_y),
+                );
+                let closest_z = (other.local_position.z - half_depth_z).max(
+                    local_sphere_center
+                        .z
+                        .min(other.local_position.z + half_depth_z),
+                );
+                let offset: Vec4 =
+                    local_sphere_center - Vec4::new(closest_x, closest_y, closest_z, 1.0);
+                if !(offset.length() < 0.5 * self_radius) {
+                    None
+                } else {
+                    let impulse_strength =
+                        0.5 * ((0.5 * self_radius - offset.length()) / offset.length());
+                    Option::Some(-Vec3::new(offset.x, offset.y, offset.z) * impulse_strength)
+                }
+            }
         }
     }
 }
@@ -129,8 +164,8 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         );
 
         for (other_collider, other_transform) in colliders.iter() {
-            if (!other_transform.eq(collider_transform)) {
-                let mut impulse = collider
+            if !other_transform.eq(collider_transform) {
+                let impulse = collider
                     .detect_collision(other_collider, collider_transform, other_transform)
                     .unwrap_or(Vec3::zero());
                 impulses
@@ -156,6 +191,7 @@ pub fn collision_update(mut query: Query<(&Collider, &mut Transform)>) {
         collider_transform.translation;
     }
 }
+
 trait Vec3Ext {
     fn function(&mut self, vec: Vec3);
 }
