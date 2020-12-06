@@ -61,28 +61,29 @@ pub fn rotator_system(
             );
             transform.translation = player_translation;
         }
+        let speed = 0.1;
         if keys.pressed(KeyCode::W) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -0.2));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -speed));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::A) {
-            let a = transform.rotation.mul_vec3(Vec3::new(-0.2, 0.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(-speed, 0.0, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::D) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.2, 0.0, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(speed, 0.0, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::S) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, 0.2));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, speed));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::Q) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.2, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, speed, 0.0));
             transform.translation += a;
         }
         if keys.pressed(KeyCode::E) {
-            let a = transform.rotation.mul_vec3(Vec3::new(0.0, -0.2, 0.0));
+            let a = transform.rotation.mul_vec3(Vec3::new(0.0, -speed, 0.0));
             transform.translation += a;
         }
     }
@@ -97,6 +98,7 @@ pub fn camera_setup(
         radius: 0.5,
         subdivisions: 8,
     }));
+    let cube_handle1 = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.0, 1.0, 0.0),
         ..Default::default()
@@ -111,7 +113,7 @@ pub fn camera_setup(
         })
         .with(Rotator)
         .with(Collider {
-            collider_shape: ColliderShapes::cube(1.0f32),
+            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         })
         .with_children(|parent| {
@@ -128,13 +130,17 @@ pub fn camera_setup(
     commands
         // parent cube
         .spawn(PbrBundle {
-            mesh: cube_handle.clone(),
+            mesh: cube_handle1.clone(),
             material: cube_material_handle.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 5.0, 45.0)),
             ..Default::default()
         })
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
+            collider_shape: ColliderShapes::Cuboid {
+                half_width_x: 0.5,
+                half_height_y: 0.5,
+                half_depth_z: 0.5,
+            },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }
