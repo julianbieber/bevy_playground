@@ -137,9 +137,9 @@ pub fn camera_setup(
         })
         .with(Collider {
             collider_shape: ColliderShapes::Cuboid {
-                half_width_x: 0.5,
-                half_height_y: 0.5,
-                half_depth_z: 0.5,
+                half_width_x: 0.25,
+                half_height_y: 0.25,
+                half_depth_z: 0.25,
             },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
