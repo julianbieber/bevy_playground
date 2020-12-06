@@ -134,11 +134,11 @@ impl Collider {
                 );
                 let offset: Vec4 =
                     local_sphere_center - Vec4::new(closest_x, closest_y, closest_z, 1.0);
-                if !(offset.length() < 0.5 * self_radius) {
+                if !(offset.length() < self_radius) || offset.length() == 0.0 {
                     None
                 } else {
                     let impulse_strength =
-                        0.5 * ((0.5 * self_radius - offset.length()) / offset.length());
+                        0.5 * ((self_radius - offset.length()) / offset.length());
                     Option::Some(-Vec3::new(offset.x, offset.y, offset.z) * impulse_strength)
                 }
             }
