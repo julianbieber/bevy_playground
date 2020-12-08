@@ -61,7 +61,7 @@ pub fn rotator_system(
             );
             transform.translation = player_translation;
         }
-        let speed = 0.1;
+        let speed = 0.3;
         if keys.pressed(KeyCode::W) {
             let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -speed));
             transform.translation += a;
@@ -106,16 +106,20 @@ pub fn camera_setup(
     commands
         // parent cube
         .spawn(PbrBundle {
-            mesh: cube_handle.clone(),
+            mesh: cube_handle1.clone(),
             material: cube_material_handle.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 5.0, 50.0)),
             ..Default::default()
         })
-        .with(Rotator)
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
+            collider_shape: ColliderShapes::Cuboid {
+                half_width_x: 0.25,
+                half_height_y: 0.25,
+                half_depth_z: 0.25,
+            },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         })
+        .with(Rotator)
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y;
@@ -130,17 +134,13 @@ pub fn camera_setup(
     commands
         // parent cube
         .spawn(PbrBundle {
-            mesh: cube_handle1.clone(),
+            mesh: cube_handle.clone(),
             material: cube_material_handle.clone(),
             transform: Transform::from_translation(Vec3::new(0.0, 5.0, 45.0)),
             ..Default::default()
         })
         .with(Collider {
-            collider_shape: ColliderShapes::Cuboid {
-                half_width_x: 0.25,
-                half_height_y: 0.25,
-                half_depth_z: 0.25,
-            },
+            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }
