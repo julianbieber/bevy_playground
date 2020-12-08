@@ -33,14 +33,14 @@ fn main() {
         .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
         .add_system(rotator_system.system())
-        .add_system(collision_update.system())
         .init_resource::<State>()
         .init_resource::<PlayerRotation>()
         .init_resource::<Rotator>()
         .add_system(bevy::input::system::exit_on_esc_system.system())
         .add_system(hide_far_away.system())
-        .add_system(update_player_position.system())
         .add_system(terrain_collision_system.system())
+        .add_system(update_player_position.system())
+        .add_system(collision_update.system())
         .run();
 }
 

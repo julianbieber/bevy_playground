@@ -66,10 +66,18 @@ impl Collider {
                 Collider::collision_sphere(self, radius, other, transform, other_transform)
             }
             ColliderShapes::Cuboid {
-                half_width_x: _,
-                half_height_y: _,
-                half_depth_z: _,
-            } => None,
+                half_width_x,
+                half_height_y,
+                half_depth_z,
+            } => Collider::collision_cuboid(
+                self,
+                half_width_x,
+                half_height_y,
+                half_depth_z,
+                other,
+                transform,
+                other_transform,
+            ),
         }
     }
     fn collision_sphere(
@@ -137,11 +145,62 @@ impl Collider {
                 if !(offset.length() < self_radius) || offset.length() == 0.0 {
                     None
                 } else {
-                    let impulse_strength =
-                        0.5 * ((self_radius - offset.length()) / offset.length());
+                    let impulse_strength = (self_radius - offset.length()) / offset.length();
                     Option::Some(-Vec3::new(offset.x, offset.y, offset.z) * impulse_strength)
                 }
             }
+        }
+    }
+
+    fn collision_cuboid(
+        &self,
+        self_half_width_x: f32,
+        self_half_height_y: f32,
+        self_half_depth_z: f32,
+        other: &Collider,
+        transform: &Mat4,
+        other_transform: &Mat4,
+    ) -> Option<Vec3> {
+        match other.collider_shape {
+            ColliderShapes::Sphere { radius } => {
+                let local_sphere_center =
+                    transform
+                        .inverse()
+                        .mul_vec4(other_transform.mul_vec4(Vec4::new(
+                            other.local_position.x,
+                            other.local_position.y,
+                            other.local_position.z,
+                            1.0,
+                        )));
+                let closest_x = (self.local_position.x - self_half_width_x).max(
+                    local_sphere_center
+                        .x
+                        .min(self.local_position.x + self_half_width_x),
+                );
+                let closest_y = (self.local_position.y - self_half_height_y).max(
+                    local_sphere_center
+                        .y
+                        .min(self.local_position.y + self_half_height_y),
+                );
+                let closest_z = (self.local_position.z - self_half_depth_z).max(
+                    local_sphere_center
+                        .z
+                        .min(self.local_position.z + self_half_depth_z),
+                );
+                let offset: Vec4 =
+                    local_sphere_center - Vec4::new(closest_x, closest_y, closest_z, 1.0);
+                if !(offset.length() < radius) || dbg!(offset.length()) == 0.0 {
+                    None
+                } else {
+                    let impulse_strength = 0.5 * (radius - offset.length()) / offset.length();
+                    Option::Some(Vec3::new(offset.x, offset.y, offset.z) * impulse_strength)
+                }
+            }
+            ColliderShapes::Cuboid {
+                half_width_x,
+                half_height_y,
+                half_depth_z,
+            } => None,
         }
     }
 }
