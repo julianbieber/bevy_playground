@@ -31,6 +31,10 @@ impl VoxelPosition {
         )
     }
 
+    pub fn transform(&self) -> Mat4 {
+        Transform::from_translation(self.to_vec()).compute_matrix()
+    }
+
     pub fn to_box(&self) -> (Vec3, Vec3) {
         let center = self.to_vec();
         let min = Vec3::new(
@@ -44,35 +48,6 @@ impl VoxelPosition {
             center.z + HALF_VOXEL_SIZE,
         );
         (min, max)
-    }
-
-    pub fn vertices(&self) -> Vec<Vec3> {
-        let mut vertices = Vec::new();
-        vertices.reserve(8);
-        let world_position = self.to_vec();
-        for x in [
-            world_position.x - HALF_VOXEL_SIZE,
-            world_position.x + HALF_VOXEL_SIZE,
-        ]
-        .iter()
-        {
-            for y in [
-                world_position.y - HALF_VOXEL_SIZE,
-                world_position.y + HALF_VOXEL_SIZE,
-            ]
-            .iter()
-            {
-                for z in [
-                    world_position.z - HALF_VOXEL_SIZE,
-                    world_position.z + HALF_VOXEL_SIZE,
-                ]
-                .iter()
-                {
-                    vertices.push(Vec3::new(x.clone(), y.clone(), z.clone()));
-                }
-            }
-        }
-        vertices
     }
 }
 
@@ -105,6 +80,43 @@ impl Voxel {
             position: VoxelPosition { x, y, z },
             typ,
         }
+    }
+
+    pub fn vertices(&self) -> Vec<Vec3> {
+        let mut vertices = Vec::new();
+        vertices.reserve(8);
+        let world_position = self.position.to_vec();
+        for x in [
+            world_position.x - HALF_VOXEL_SIZE,
+            world_position.x + HALF_VOXEL_SIZE,
+        ]
+        .iter()
+        {
+            for y in [
+                world_position.y - HALF_VOXEL_SIZE,
+                world_position.y + HALF_VOXEL_SIZE,
+            ]
+            .iter()
+            {
+                for z in [
+                    world_position.z - HALF_VOXEL_SIZE,
+                    world_position.z + HALF_VOXEL_SIZE,
+                ]
+                .iter()
+                {
+                    vertices.push(Vec3::new(x.clone(), y.clone(), z.clone()));
+                }
+            }
+        }
+        vertices
+    }
+
+    pub fn normals() -> Vec<Vec3> {
+        vec![
+            Vec3::new(1.0, 0.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            Vec3::new(0.0, 0.0, 1.0),
+        ]
     }
 }
 

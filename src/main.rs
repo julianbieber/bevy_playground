@@ -2,9 +2,9 @@ mod camera;
 mod physics;
 mod render;
 mod vec3_ext;
+mod voxel_world;
 mod water;
 mod world;
-mod world_generation;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
@@ -12,12 +12,12 @@ use bevy::prelude::*;
 use crate::physics::collider::collision_update;
 use camera::{camera_setup, rotator_system, PlayerRotation, Rotator, State};
 use render::{hide_far_away, update_player_position};
+use voxel_world::collision::systems::terrain_collision_system;
 use water::body_of_water::{
     set_water_position, setup_water_layer, update_material_time, WaterMaterial,
 };
 use water::water_effect::apply_water_raise;
 use world::world_setup;
-use world_generation::collision::terrain_collision_system;
 
 fn main() {
     App::build()
