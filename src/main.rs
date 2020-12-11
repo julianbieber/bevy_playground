@@ -1,6 +1,5 @@
 mod camera;
 mod physics;
-mod render;
 mod vec3_ext;
 mod voxel_world;
 mod water;
@@ -11,7 +10,6 @@ use bevy::prelude::*;
 
 use crate::physics::collider::collision_update;
 use camera::{camera_setup, rotator_system, PlayerRotation, Rotator, State};
-use render::{hide_far_away, update_player_position};
 use voxel_world::collision::systems::terrain_collision_system;
 use water::body_of_water::{
     set_water_position, setup_water_layer, update_material_time, WaterMaterial,
@@ -37,9 +35,7 @@ fn main() {
         .init_resource::<PlayerRotation>()
         .init_resource::<Rotator>()
         .add_system(bevy::input::system::exit_on_esc_system.system())
-        .add_system(hide_far_away.system())
         .add_system(terrain_collision_system.system())
-        .add_system(update_player_position.system())
         .add_system(collision_update.system())
         .run();
 }

@@ -1,12 +1,12 @@
 use bevy::{
     prelude::*,
+    reflect::TypeUuid,
     render::{
         pipeline::{PipelineDescriptor, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
         renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
     },
-    type_registry::TypeUuid,
 };
 
 use crate::water::water_shaders::*;
@@ -55,7 +55,7 @@ impl WaterPosition {
 pub fn update_material_time(mut material: ResMut<Assets<WaterMaterial>>, time: Res<Time>) {
     let handles: Vec<_> = material.ids().collect();
     for handle in handles.into_iter() {
-        material.get_mut(handle).unwrap().add(time.delta_seconds);
+        material.get_mut(handle).unwrap().add(time.delta_seconds());
     }
 }
 

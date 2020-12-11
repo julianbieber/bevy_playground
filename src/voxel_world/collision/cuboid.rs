@@ -1,12 +1,8 @@
 use bevy::prelude::*;
 use cgmath::Matrix4;
-use collision::{algorithm::minkowski::GJK3, prelude::*, primitive::Cuboid, CollisionStrategy};
+use collision::{algorithm::minkowski::GJK3, primitive::Cuboid, CollisionStrategy};
 
-use crate::physics::collider::{
-    cuboid_edges, cuboid_edges_untransformed, cuboid_normals, cuboid_vertices,
-};
-
-use super::super::voxel::{world_2_voxel_space, Voxel, HALF_VOXEL_SIZE};
+use super::super::voxel::{world_2_voxel_space, HALF_VOXEL_SIZE};
 use super::super::world_structure::*;
 
 pub fn collision_depth_cubiod(
