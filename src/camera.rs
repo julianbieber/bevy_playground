@@ -61,7 +61,7 @@ pub fn rotator_system(
             );
             transform.translation = player_translation;
         }
-        let speed = 0.3;
+        let speed = 0.1;
         if keys.pressed(KeyCode::W) {
             let a = transform.rotation.mul_vec3(Vec3::new(0.0, 0.0, -speed));
             transform.translation += a;
@@ -140,7 +140,7 @@ pub fn camera_setup(
             ..Default::default()
         })
         .with(Collider {
-            collider_shape: ColliderShapes::Sphere { radius: 0.5 },
+            collider_shape: ColliderShapes::cube(0.5),
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }

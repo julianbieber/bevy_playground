@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::world_generation::voxel_world::VoxelWorld;
+use crate::voxel_world::generator::VoxelWorld;
 
 pub fn world_setup(
     commands: &mut Commands,

@@ -49,6 +49,33 @@ pub fn cuboid_vertices(
     vertices
 }
 
+pub fn cuboid_normals(transform_matrix: &Mat4) -> Vec<Vec3> {
+    vec![
+        transform_matrix.transform_vector3(Vec3::new(1.0, 0.0, 0.0)),
+        transform_matrix.transform_vector3(Vec3::new(0.0, 1.0, 0.0)),
+        transform_matrix.transform_vector3(Vec3::new(0.0, 0.0, 1.0)),
+    ]
+}
+
+pub fn cuboid_edges_untransformed() -> Vec<Vec3> {
+    let top_left_front = Vec3::new(-1.0, 1.0, 1.0);
+    let top_left_back = Vec3::new(-1.0, 1.0, -1.0);
+    let lower_left_front = Vec3::new(-1.0, -1.0, 1.0);
+    let top_right_front = Vec3::new(1.0, 1.0, 1.0);
+    vec![
+        top_left_back - top_left_front,
+        top_right_front - top_left_front,
+        lower_left_front - top_left_front,
+    ]
+}
+
+pub fn cuboid_edges(transform_matrix: &Mat4) -> Vec<Vec3> {
+    cuboid_edges_untransformed()
+        .iter()
+        .map(|v| transform_matrix.transform_vector3(*v))
+        .collect()
+}
+
 pub struct Collider {
     pub collider_shape: ColliderShapes,
     pub local_position: Vec3,
