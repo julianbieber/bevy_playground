@@ -1,0 +1,73 @@
+use crate::movement::{MoveEvent, UnitRotation};
+use bevy::input::mouse::MouseMotion;
+use bevy::prelude::*;
+
+const ROTATION_SPEED_X: f32 = 5.0f32;
+const ROTATION_SPEED_Y: f32 = 5.0f32;
+
+// m/s
+const PLAYER_SPEED: f32 = 0.1f32;
+
+#[derive(Default)]
+pub struct MouseEvents {
+    reader: EventReader<MouseMotion>,
+}
+
+pub struct ReceivesInput;
+
+pub fn publish_player_movements(
+    mut mouse_events: ResMut<MouseEvents>,
+    mouse_motion_events: Res<Events<MouseMotion>>,
+    keys: Res<Input<KeyCode>>,
+    mut movement_events: ResMut<Events<MoveEvent>>,
+    mut input_receiver_query: Query<(Entity, &ReceivesInput, &UnitRotation)>,
+) {
+    for (entity, _, unit_rotation) in input_receiver_query.iter_mut() {
+        let mut frame_rotation = Vec2::zero();
+        for event in mouse_events.reader.iter(&mouse_motion_events) {
+            let look = event.delta;
+            frame_rotation.x -= (look.x).to_radians() / ROTATION_SPEED_X;
+            frame_rotation.y -= (look.y).to_radians() / ROTATION_SPEED_Y;
+        }
+        let rotation = cap_rotation(frame_rotation, &unit_rotation);
+
+        let mut movement_before_rotation = Vec3::zero();
+        if keys.pressed(KeyCode::W) {
+            movement_before_rotation.z -= PLAYER_SPEED;
+        }
+        if keys.pressed(KeyCode::A) {
+            movement_before_rotation.x -= PLAYER_SPEED;
+        }
+        if keys.pressed(KeyCode::D) {
+            movement_before_rotation.x += PLAYER_SPEED;
+        }
+        if keys.pressed(KeyCode::S) {
+            movement_before_rotation.z += PLAYER_SPEED;
+        }
+        if keys.pressed(KeyCode::Q) {
+            movement_before_rotation.y += PLAYER_SPEED;
+        }
+        if keys.pressed(KeyCode::E) {
+            movement_before_rotation.y -= PLAYER_SPEED;
+        }
+        movement_events.send(MoveEvent {
+            rotation_offset: rotation,
+            translation_offset: movement_before_rotation,
+            entity: entity,
+        });
+    }
+}
+
+fn cap_rotation(rotation: Vec2, current_rotation: &UnitRotation) -> Vec2 {
+    let uncapped_rotation_y =
+        (current_rotation.rotation.y + rotation.y).rem_euclid(std::f32::consts::TAU);
+
+    let y = if !((uncapped_rotation_y - std::f32::consts::FRAC_PI_2).abs() < 0.2)
+        && !((uncapped_rotation_y - 3.0 * std::f32::consts::FRAC_PI_2).abs() < 0.2)
+    {
+        rotation.y
+    } else {
+        0.0f32
+    };
+    Vec2::new(rotation.x, y)
+}
