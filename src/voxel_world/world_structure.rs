@@ -10,13 +10,14 @@ pub struct Terrain {
     pub structure: WorldStructure,
 }
 
-pub trait WorldStrucutureImpl {
+pub trait WorldStructureImpl {
     fn add_voxel(&mut self, voxel: Voxel);
     fn get_at(&self, x: &i32, y: &i32, z: &i32) -> Option<&Voxel>;
     fn get_at_voxel(&self, voxel: &VoxelPosition) -> Option<&Voxel>;
+    fn is_surrounded(&self, voxel: &VoxelPosition) -> bool;
 }
 
-impl WorldStrucutureImpl for WorldStructure {
+impl WorldStructureImpl for WorldStructure {
     fn add_voxel(&mut self, voxel: Voxel) {
         let x = voxel.position.x;
         let y = voxel.position.y;
@@ -51,5 +52,18 @@ impl WorldStrucutureImpl for WorldStructure {
 
     fn get_at_voxel(&self, voxel: &VoxelPosition) -> Option<&Voxel> {
         self.get_at(&voxel.x, &voxel.y, &voxel.z)
+    }
+
+    fn is_surrounded(&self, voxel: &VoxelPosition) -> bool {
+        for x in [voxel.x - 1, voxel.x + 1].iter() {
+            for y in [voxel.y - 1, voxel.y + 1].iter() {
+                for z in [voxel.z - 1, voxel.z + 1].iter() {
+                    if self.get_at(&x, &y, &z).is_none() {
+                        return false;
+                    }
+                }
+            }
+        }
+        true
     }
 }
