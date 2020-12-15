@@ -24,8 +24,8 @@ impl VoxelWorld {
         self,
         commands: &mut Commands,
         asset_server: Res<AssetServer>,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
     ) {
         for pillar in self.pillars.into_iter() {
             let terrain = pillar.voxels();
