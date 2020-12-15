@@ -2,11 +2,11 @@ use crate::movement::{MoveEvent, UnitRotation};
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
-const ROTATION_SPEED_X: f32 = 5.0f32;
-const ROTATION_SPEED_Y: f32 = 5.0f32;
+const ROTATION_SPEED_X: f32 = 0.3f32;
+const ROTATION_SPEED_Y: f32 = 0.3f32;
 
 // m/s
-const PLAYER_SPEED: f32 = 0.1f32;
+const PLAYER_SPEED: f32 = 3.0f32;
 
 #[derive(Default)]
 pub struct MouseEvents {
@@ -21,6 +21,7 @@ pub fn publish_player_movements(
     keys: Res<Input<KeyCode>>,
     mut movement_events: ResMut<Events<MoveEvent>>,
     mut input_receiver_query: Query<(Entity, &ReceivesInput, &UnitRotation)>,
+    time: Res<Time>,
 ) {
     for (entity, _, unit_rotation) in input_receiver_query.iter_mut() {
         let mut frame_rotation = Vec2::zero();
@@ -29,6 +30,7 @@ pub fn publish_player_movements(
             frame_rotation.x -= (look.x).to_radians() / ROTATION_SPEED_X;
             frame_rotation.y -= (look.y).to_radians() / ROTATION_SPEED_Y;
         }
+        frame_rotation *= time.delta_seconds();
         let rotation = cap_rotation(frame_rotation, &unit_rotation);
 
         let mut movement_before_rotation = Vec3::zero();
@@ -52,7 +54,7 @@ pub fn publish_player_movements(
         }
         movement_events.send(MoveEvent {
             rotation_offset: rotation,
-            translation_offset: movement_before_rotation,
+            translation_offset: movement_before_rotation * time.delta_seconds(),
             entity: entity,
         });
     }
