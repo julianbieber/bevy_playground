@@ -1,6 +1,6 @@
 use crate::input::ReceivesInput;
 use crate::physics::collider::*;
-use bevy::input::mouse::MouseMotion;
+
 use bevy::prelude::*;
 
 #[derive(Default)]

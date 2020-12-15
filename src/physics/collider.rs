@@ -224,9 +224,9 @@ impl Collider {
                 }
             }
             ColliderShapes::Cuboid {
-                half_width_x,
-                half_height_y,
-                half_depth_z,
+                half_width_x: _,
+                half_height_y: _,
+                half_depth_z: _,
             } => None,
         }
     }

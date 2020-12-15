@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use crate::input::{publish_player_movements, MouseEvents};
 use crate::movement::{MoveEvent, MovementReader};
 use crate::physics::collider::collision_update;
-use movement::{movement_system, player_setup, Movable, UnitRotation};
+use movement::{movement_system, player_setup};
 use voxel_world::collision::systems::terrain_collision_system;
 use water::body_of_water::{
     set_water_position, setup_water_layer, update_material_time, WaterMaterial,
