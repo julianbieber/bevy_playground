@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 #[derive(Default)]
 pub struct UnitRotation {
-    pub rotation: Vec2,
+    pub rotation: Vec3,
 }
 
 /// this component indicates what entities should rotate
@@ -16,8 +16,9 @@ pub struct MovementReader {
     reader: EventReader<MoveEvent>,
 }
 
+#[derive(Debug)]
 pub struct MoveEvent {
-    pub rotation_offset: Vec2,
+    pub rotation_offset: Vec3,
     pub translation_offset: Vec3,
     pub entity: Entity,
 }
@@ -30,9 +31,14 @@ pub fn movement_system(
     for movement in movement_events.reader.iter(&movement_reader) {
         let (_, mut transform, mut unit_rotation) = units_query.get_mut(movement.entity).unwrap();
         unit_rotation.rotation += movement.rotation_offset;
-
-        transform.rotation =
-            Quat::from_rotation_ypr(unit_rotation.rotation.x, unit_rotation.rotation.y, 0.0);
+        unit_rotation.rotation.x = (&unit_rotation.rotation.x).rem_euclid(std::f32::consts::TAU);
+        unit_rotation.rotation.y = (&unit_rotation.rotation.y).rem_euclid(std::f32::consts::TAU);
+        unit_rotation.rotation.z = (&unit_rotation.rotation.z).rem_euclid(std::f32::consts::TAU);
+        transform.rotation = Quat::from_rotation_ypr(
+            unit_rotation.rotation.x,
+            unit_rotation.rotation.y,
+            unit_rotation.rotation.z,
+        );
 
         let translation_offset = transform.rotation.mul_vec3(movement.translation_offset);
         transform.translation += translation_offset;
@@ -50,11 +56,10 @@ pub fn player_setup(
         ..Default::default()
     });
     commands
-        // parent cube
         .spawn(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
-            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 50.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 50.0)),
             ..Default::default()
         })
         .with(Collider {
