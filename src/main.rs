@@ -7,7 +7,7 @@ mod voxel_world;
 mod water;
 mod world;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
+use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use crate::ai::{npc_movement_system, populate_world};
@@ -26,7 +26,7 @@ fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(PrintDiagnosticsPlugin::default())
+        .add_plugin(DiagnosticsPlugin::default())
         .add_asset::<WaterMaterial>()
         .add_startup_system(setup.system())
         .add_startup_system(world_setup.system())
