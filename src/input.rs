@@ -24,7 +24,7 @@ pub fn publish_player_movements(
     time: Res<Time>,
 ) {
     for (entity, _, unit_rotation) in input_receiver_query.iter_mut() {
-        let mut frame_rotation = Vec2::zero();
+        let mut frame_rotation = Vec3::zero();
         for event in mouse_events.reader.iter(&mouse_motion_events) {
             let look = event.delta;
             frame_rotation.x -= (look.x).to_radians() / ROTATION_SPEED_X;
@@ -55,12 +55,12 @@ pub fn publish_player_movements(
         movement_events.send(MoveEvent {
             rotation_offset: rotation,
             translation_offset: movement_before_rotation * time.delta_seconds(),
-            entity: entity,
+            entity,
         });
     }
 }
 
-fn cap_rotation(rotation: Vec2, current_rotation: &UnitRotation) -> Vec2 {
+fn cap_rotation(rotation: Vec3, current_rotation: &UnitRotation) -> Vec3 {
     let uncapped_rotation_y =
         (current_rotation.rotation.y + rotation.y).rem_euclid(std::f32::consts::TAU);
 
@@ -71,5 +71,5 @@ fn cap_rotation(rotation: Vec2, current_rotation: &UnitRotation) -> Vec2 {
     } else {
         0.0f32
     };
-    Vec2::new(rotation.x, y)
+    Vec3::new(rotation.x, y, 0.0)
 }

@@ -1,3 +1,4 @@
+mod ai;
 mod input;
 mod movement;
 mod physics;
@@ -9,6 +10,7 @@ mod world;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin};
 use bevy::prelude::*;
 
+use crate::ai::{npc_movement_system, populate_world};
 use crate::input::{publish_player_movements, MouseEvents};
 use crate::movement::{MoveEvent, MovementReader};
 use crate::physics::collider::collision_update;
@@ -29,8 +31,10 @@ fn main() {
         .add_startup_system(setup.system())
         .add_startup_system(world_setup.system())
         .add_startup_system(player_setup.system())
+        .add_startup_system(populate_world.system())
         .add_startup_system(setup_water_layer.system())
         .add_system(publish_player_movements.system())
+        .add_system(npc_movement_system.system())
         .add_system(update_material_time.system())
         .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
