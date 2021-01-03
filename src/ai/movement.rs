@@ -24,15 +24,49 @@ pub fn npc_movement_system(
                     ThreadRng::default().gen_range(-0.1f32, 0.1f32),
                     0.0,
                 ),
+                NPCBehaviours::EXPLODE => Vec3::zero(),
             };
-            if rotation_offset.is_nan() {
-                panic!()
+            if let Some(forward) = match npc.behaviour {
+                NPCBehaviours::EXPLODE => None,
+                _ => Some(Vec3::new(0.0, 0.0, -1.0) * npc.velocity * time.delta_seconds()),
+            } {
+                if !rotation_offset.is_nan() {
+                    movement_events.send(MoveEvent {
+                        rotation_offset,
+                        translation_offset: forward,
+                        entity: npc_entity,
+                    });
+                }
             }
-            movement_events.send(MoveEvent {
-                rotation_offset,
-                translation_offset: Vec3::new(0.0, 0.0, -1.0) * npc.velocity * time.delta_seconds(),
-                entity: npc_entity,
-            });
+        }
+    }
+}
+
+pub fn update_behaviour_system(
+    mut npcs_query: Query<(&mut NPC, &Transform)>,
+    player_query: Query<(&ReceivesInput, &Transform)>,
+) {
+    for (_, player_transform) in player_query.iter() {
+        for (mut npc, npc_transform) in npcs_query.iter_mut() {
+            match npc.behaviour {
+                NPCBehaviours::FOLLOW => {
+                    let distance_sq = player_transform
+                        .translation
+                        .distance_squared(npc_transform.translation);
+                    if distance_sq < 50.0f32 {
+                        npc.behaviour = NPCBehaviours::EXPLODE;
+                    }
+                }
+                NPCBehaviours::RANDOM => {
+                    let distance_sq = player_transform
+                        .translation
+                        .distance_squared(npc_transform.translation);
+                    if distance_sq < 10000.0f32 {
+                        npc.behaviour = NPCBehaviours::FOLLOW;
+                    }
+                }
+                NPCBehaviours::EXPLODE => {}
+            }
         }
     }
 }

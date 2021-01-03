@@ -13,6 +13,7 @@ pub struct NPC {
 pub enum NPCBehaviours {
     FOLLOW,
     RANDOM,
+    EXPLODE,
 }
 
 impl Distribution<NPCBehaviours> for Standard {

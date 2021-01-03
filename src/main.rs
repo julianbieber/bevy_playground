@@ -10,7 +10,7 @@ mod world;
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::prelude::*;
 
-use crate::ai::movement::npc_movement_system;
+use crate::ai::movement::{npc_movement_system, update_behaviour_system};
 use crate::ai::spawn::{enemy_spawn_system, SpawnCoolDown};
 use crate::input::{publish_player_movements, MouseEvents};
 use crate::movement::{MoveEvent, MovementReader};
@@ -37,6 +37,7 @@ fn main() {
         .add_startup_system(setup_water_layer.system())
         .add_system(publish_player_movements.system())
         .add_system(npc_movement_system.system())
+        .add_system(update_behaviour_system.system())
         .add_system(update_material_time.system())
         .add_system(set_water_position.system())
         .add_system(apply_water_raise.system())
