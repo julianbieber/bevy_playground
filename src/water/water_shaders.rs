@@ -29,6 +29,6 @@ layout(set = 2, binding = 0) uniform WaterMaterial_time {
 };
 layout(location = 1) in float x;
 void main() {
-    o_Target = vec4(0, 0, 1 + sin(x + time), 1.0);
+    o_Target = vec4(0, 0, 1, 1.0);
 }
 "#;

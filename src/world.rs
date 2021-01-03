@@ -9,7 +9,7 @@ pub fn world_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let w = VoxelWorld::generate(50, 50, rand::thread_rng());
+    let w = VoxelWorld::generate(150, 150, rand::thread_rng());
     w.add_to_world(commands, asset_server, &mut meshes, &mut materials);
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),
