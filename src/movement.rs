@@ -59,7 +59,7 @@ pub fn player_setup(
         .spawn(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 50.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 22.0, 0.0)),
             ..Default::default()
         })
         .with(Collider {

@@ -26,37 +26,6 @@ impl ColliderShapes {
     }
 }
 
-pub fn cuboid_vertices(
-    center: &Vec3,
-    transform_matrix: &Mat4,
-    half_x: f32,
-    half_y: f32,
-    half_z: f32,
-) -> Vec<Vec3> {
-    let mut vertices = Vec::new();
-    vertices.reserve(8);
-    for x in [center.x - half_x, center.x + half_x].iter() {
-        for y in [center.y - half_y, center.y + half_y].iter() {
-            for z in [center.z - half_z, center.z + half_z].iter() {
-                vertices.push(transform_matrix.transform_point3(Vec3::new(
-                    x.clone(),
-                    y.clone(),
-                    z.clone(),
-                )));
-            }
-        }
-    }
-    vertices
-}
-
-pub fn cuboid_normals(transform_matrix: &Mat4) -> Vec<Vec3> {
-    vec![
-        transform_matrix.transform_vector3(Vec3::new(1.0, 0.0, 0.0)),
-        transform_matrix.transform_vector3(Vec3::new(0.0, 1.0, 0.0)),
-        transform_matrix.transform_vector3(Vec3::new(0.0, 0.0, 1.0)),
-    ]
-}
-
 pub fn cuboid_edges_untransformed() -> Vec<Vec3> {
     let top_left_front = Vec3::new(-1.0, 1.0, 1.0);
     let top_left_back = Vec3::new(-1.0, 1.0, -1.0);
