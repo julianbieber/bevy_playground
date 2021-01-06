@@ -1,51 +1,23 @@
-use crate::input::ReceivesInput;
-use crate::physics::collider::*;
+mod input;
+pub mod model;
 
+use crate::movement::model::{Movable, UnitRotation};
+use crate::physics::collider::{Collider, ColliderShapes};
+use crate::player::input::{publish_player_movements, MouseEvents};
+use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 
-#[derive(Default)]
-pub struct UnitRotation {
-    pub rotation: Vec3,
-}
+pub struct PlayerPlugin;
 
-/// this component indicates what entities should rotate
-pub struct Movable;
-
-#[derive(Default)]
-pub struct MovementReader {
-    reader: EventReader<MoveEvent>,
-}
-
-#[derive(Debug)]
-pub struct MoveEvent {
-    pub rotation_offset: Vec3,
-    pub translation_offset: Vec3,
-    pub entity: Entity,
-}
-
-pub fn movement_system(
-    mut movement_events: ResMut<MovementReader>,
-    movement_reader: Res<Events<MoveEvent>>,
-    mut units_query: Query<(&Movable, &mut Transform, &mut UnitRotation)>,
-) {
-    for movement in movement_events.reader.iter(&movement_reader) {
-        let (_, mut transform, mut unit_rotation) = units_query.get_mut(movement.entity).unwrap();
-        unit_rotation.rotation += movement.rotation_offset;
-        unit_rotation.rotation.x = (&unit_rotation.rotation.x).rem_euclid(std::f32::consts::TAU);
-        unit_rotation.rotation.y = (&unit_rotation.rotation.y).rem_euclid(std::f32::consts::TAU);
-        unit_rotation.rotation.z = (&unit_rotation.rotation.z).rem_euclid(std::f32::consts::TAU);
-        transform.rotation = Quat::from_rotation_ypr(
-            unit_rotation.rotation.x,
-            unit_rotation.rotation.y,
-            unit_rotation.rotation.z,
-        );
-
-        let translation_offset = transform.rotation.mul_vec3(movement.translation_offset);
-        transform.translation += translation_offset;
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_startup_system(player_setup.system())
+            .add_system(publish_player_movements.system())
+            .init_resource::<MouseEvents>();
     }
 }
 
-pub fn player_setup(
+fn player_setup(
     commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,

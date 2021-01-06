@@ -1,7 +1,7 @@
 use crate::ai::model::*;
-use crate::movement::{Movable, UnitRotation};
 use bevy::prelude::*;
 
+use crate::movement::model::{Movable, UnitRotation};
 use rand::{thread_rng, Rng};
 
 pub struct SpawnCoolDown {
