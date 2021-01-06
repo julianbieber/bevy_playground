@@ -1,4 +1,5 @@
-use crate::movement::{MoveEvent, UnitRotation};
+use crate::movement::model::{MoveEvent, UnitRotation};
+use crate::player::model::ReceivesInput;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
@@ -12,8 +13,6 @@ const PLAYER_SPEED: f32 = 3.0f32;
 pub struct MouseEvents {
     reader: EventReader<MouseMotion>,
 }
-
-pub struct ReceivesInput;
 
 pub fn publish_player_movements(
     mut mouse_events: ResMut<MouseEvents>,

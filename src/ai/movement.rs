@@ -1,7 +1,6 @@
-use crate::input::ReceivesInput;
-use crate::movement::{MoveEvent, UnitRotation};
-
 use crate::ai::model::{NPCBehaviours, NPC};
+use crate::movement::model::{MoveEvent, UnitRotation};
+use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 use rand::prelude::ThreadRng;
 use rand::Rng;
