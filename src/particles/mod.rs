@@ -16,6 +16,7 @@ use bevy::render::mesh::Indices;
 use bevy::render::pipeline::PrimitiveTopology;
 use primitives::*;
 use rand::{thread_rng, Rng};
+use std::time::Duration;
 
 pub struct ParticlePlugin;
 
@@ -25,10 +26,12 @@ impl Plugin for ParticlePlugin {
             timer: Timer::from_seconds(0.5, true),
         })
         .add_asset::<ParticleDirectionMaterial>()
+        .init_resource::<DelayedParticleSpawns>()
         .add_startup_system(setup_particles.system())
         .add_system(spawn_regular_explosions_system.system())
         .add_system(despawn_explosions.system())
-        .add_system(update_particle_direction.system());
+        .add_system(update_particle_direction.system())
+        .add_system(evaluate_delayed_particles.system());
     }
 }
 
@@ -60,15 +63,65 @@ struct ParticlePipeline {
     handle: Handle<PipelineDescriptor>,
 }
 
+#[derive(Default)]
+pub struct DelayedParticleSpawns {
+    pub spawns: Vec<(Timer, Explosion)>,
+}
+
+#[derive(Clone)]
+pub struct Explosion {
+    pub duration: Duration,
+    pub radius: f32,
+    pub particles: u32,
+    pub position: Vec3,
+}
+
 struct ExplosionSpawnCoolDown {
     pub timer: Timer,
+}
+
+fn evaluate_delayed_particles(
+    commands: &mut Commands,
+    particle_pipeline: Res<ParticlePipeline>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
+    mut delayed_particle_spawns_res: ResMut<DelayedParticleSpawns>,
+    time: Res<Time>,
+) {
+    let mut at_least_one = false;
+    for (timer, explosion) in delayed_particle_spawns_res.spawns.iter_mut() {
+        if timer.tick(time.delta_seconds()).just_finished() {
+            spawn_explosion(
+                commands,
+                &particle_pipeline,
+                &mut meshes,
+                &mut materials,
+                explosion.particles,
+                explosion.radius,
+                explosion.position,
+                Timer::new(explosion.duration, false),
+            );
+            at_least_one = true;
+        }
+    }
+
+    if at_least_one {
+        let remaining: Vec<(Timer, Explosion)> = delayed_particle_spawns_res
+            .spawns
+            .iter()
+            .filter(|(t, _)| !t.just_finished())
+            .map(|(t, e)| (t.clone(), e.clone()))
+            .collect();
+
+        delayed_particle_spawns_res.spawns = remaining;
+    }
 }
 
 fn spawn_regular_explosions_system(
     commands: &mut Commands,
     particle_pipeline: Res<ParticlePipeline>,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<ParticleDirectionMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
     mut spawn_timer: ResMut<ExplosionSpawnCoolDown>,
     time: Res<Time>,
 ) {
@@ -77,15 +130,17 @@ fn spawn_regular_explosions_system(
 
         spawn_explosion(
             commands,
-            particle_pipeline,
-            meshes,
-            materials,
+            &particle_pipeline,
+            &mut meshes,
+            &mut materials,
             10000,
+            10.0,
             Vec3::new(
                 thread_rng().gen_range(-100.0f32, 100.0f32),
                 thread_rng().gen_range(0.0f32, 100.0f32),
                 thread_rng().gen_range(-100.0f32, 100.0f32),
             ),
+            Timer::from_seconds(2.0, false),
         );
     }
 }
@@ -104,13 +159,15 @@ fn despawn_explosions(
 
 fn spawn_explosion(
     commands: &mut Commands,
-    particle_pipeline: Res<ParticlePipeline>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
+    particle_pipeline: &Res<ParticlePipeline>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ParticleDirectionMaterial>>,
     particle_count: u32,
+    radius: f32,
     position: Vec3,
+    timer: Timer,
 ) {
-    let cube_vertices = cube_vertices(0.2);
+    let cube_vertices = cube_vertices(0.02);
     let mut positions = Vec::with_capacity(24 * particle_count as usize);
     let mut normals = Vec::with_capacity(24 * particle_count as usize);
     let mut uvs = Vec::with_capacity(24 * particle_count as usize);
@@ -123,9 +180,9 @@ fn spawn_explosion(
         indices.extend(cube_indices(i).iter());
     }
     for _ in 0..particle_count {
-        let mut x: f32 = thread_rng().gen_range(-10.0, 10.0);
-        let mut y: f32 = thread_rng().gen_range(-10.0, 10.0);
-        let mut z: f32 = thread_rng().gen_range(-10.0, 10.0);
+        let mut x: f32 = thread_rng().gen_range(-radius, radius);
+        let mut y: f32 = thread_rng().gen_range(-radius, radius);
+        let mut z: f32 = thread_rng().gen_range(-radius, radius);
         let div = (x * x + y * y + z * z).sqrt();
         x /= div;
         y /= div;
@@ -158,7 +215,7 @@ fn spawn_explosion(
         })
         .with(materials.add(ParticleDirectionMaterial { multiplier: 0.0 }))
         .with(ExplosionMarker)
-        .with(Timer::from_seconds(2.0, false));
+        .with(timer);
 }
 
 #[derive(RenderResources, Default, TypeUuid)]

@@ -1,7 +1,10 @@
 use crate::ai::model::{NPCBehaviours, NPC};
+use crate::delayed_despawn::DelayedDespawns;
 use crate::movement::model::{MoveEvent, UnitRotation};
+use crate::particles::{DelayedParticleSpawns, Explosion};
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
+use bevy::utils::Duration;
 use rand::prelude::ThreadRng;
 use rand::Rng;
 
@@ -42,11 +45,13 @@ pub fn npc_movement_system(
 }
 
 pub fn update_behaviour_system(
-    mut npcs_query: Query<(&mut NPC, &Transform)>,
+    mut npcs_query: Query<(Entity, &mut NPC, &Transform)>,
     player_query: Query<(&ReceivesInput, &Transform)>,
+    mut delayed_spawn_res: ResMut<DelayedParticleSpawns>,
+    mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     for (_, player_transform) in player_query.iter() {
-        for (mut npc, npc_transform) in npcs_query.iter_mut() {
+        for (entity, mut npc, npc_transform) in npcs_query.iter_mut() {
             match npc.behaviour {
                 NPCBehaviours::FOLLOW => {
                     let distance_sq = player_transform
@@ -54,6 +59,18 @@ pub fn update_behaviour_system(
                         .distance_squared(npc_transform.translation);
                     if distance_sq < 50.0f32 {
                         npc.behaviour = NPCBehaviours::EXPLODE;
+                        delayed_spawn_res.spawns.push((
+                            Timer::from_seconds(2.0, false),
+                            Explosion {
+                                duration: Duration::from_secs(10),
+                                radius: 10.0,
+                                particles: 10000,
+                                position: npc_transform.translation,
+                            },
+                        ));
+                        despanws_res
+                            .despawns
+                            .push((Timer::from_seconds(2.1, false), entity))
                     }
                 }
                 NPCBehaviours::RANDOM => {
