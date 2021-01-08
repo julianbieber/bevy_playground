@@ -1,4 +1,5 @@
 mod ai;
+mod delayed_despawn;
 mod movement;
 mod particles;
 mod physics;
@@ -11,6 +12,7 @@ mod world;
 use bevy::prelude::*;
 
 use crate::ai::AIPlugin;
+use crate::delayed_despawn::DelayedDespawnsPlugin;
 use crate::movement::MovementPlugin;
 use crate::particles::ParticlePlugin;
 use crate::physics::collider::collision_update;
@@ -27,6 +29,7 @@ fn main() {
         .add_plugin(AIPlugin)
         .add_plugin(MovementPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(DelayedDespawnsPlugin)
         .add_startup_system(window_setup.system())
         .add_startup_system(world_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
