@@ -8,6 +8,7 @@ mod vec3_ext;
 mod voxel_world;
 mod water;
 mod world;
+mod pickups;
 
 use bevy::prelude::*;
 
