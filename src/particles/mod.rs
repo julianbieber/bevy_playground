@@ -10,28 +10,40 @@ use bevy::{
         renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
     },
+    tasks::AsyncComputeTaskPool,
 };
 
 use bevy::render::mesh::Indices;
 use bevy::render::pipeline::PrimitiveTopology;
 use primitives::*;
 use rand::{thread_rng, Rng};
-use std::time::Duration;
+
+use std::{
+    sync::{
+        mpsc::{Receiver, Sender},
+        Arc, Mutex,
+    },
+    time::Duration,
+};
 
 pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
+        let (tx, rx) = std::sync::mpsc::channel::<(Mesh, Explosion)>();
         app.add_resource(ExplosionSpawnCoolDown {
             timer: Timer::from_seconds(0.5, true),
         })
         .add_asset::<ParticleDirectionMaterial>()
+        .add_resource(Arc::new(Mutex::new(tx)))
+        .add_resource(Arc::new(Mutex::new(rx)))
         .init_resource::<DelayedParticleSpawns>()
         .add_startup_system(setup_particles.system())
         .add_system(spawn_regular_explosions_system.system())
         .add_system(despawn_explosions.system())
         .add_system(update_particle_direction.system())
-        .add_system(evaluate_delayed_particles.system());
+        .add_system(evaluate_delayed_particles.system())
+        .add_system(spawn_from_channel.system());
     }
 }
 
@@ -81,26 +93,22 @@ struct ExplosionSpawnCoolDown {
 }
 
 fn evaluate_delayed_particles(
-    commands: &mut Commands,
-    particle_pipeline: Res<ParticlePipeline>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
     mut delayed_particle_spawns_res: ResMut<DelayedParticleSpawns>,
     time: Res<Time>,
+    pool: ResMut<AsyncComputeTaskPool>,
+    tx: Res<Arc<Mutex<Sender<(Mesh, Explosion)>>>>,
 ) {
     let mut at_least_one = false;
     for (timer, explosion) in delayed_particle_spawns_res.spawns.iter_mut() {
         if timer.tick(time.delta_seconds()).just_finished() {
-            spawn_explosion(
-                commands,
-                &particle_pipeline,
-                &mut meshes,
-                &mut materials,
-                explosion.particles,
-                explosion.radius,
-                explosion.position,
-                Timer::new(explosion.duration, false),
-            );
+            let e = explosion.clone();
+            let tx_copy = tx.clone();
+            pool.spawn(async move {
+                let mesh = create_explosion_mesh(&e);
+                let locked_tx = tx_copy.lock().unwrap();
+                locked_tx.send((mesh, e)).unwrap();
+            })
+            .detach();
             at_least_one = true;
         }
     }
@@ -118,30 +126,31 @@ fn evaluate_delayed_particles(
 }
 
 fn spawn_regular_explosions_system(
-    commands: &mut Commands,
-    particle_pipeline: Res<ParticlePipeline>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
     mut spawn_timer: ResMut<ExplosionSpawnCoolDown>,
     time: Res<Time>,
+    pool: ResMut<AsyncComputeTaskPool>,
+    tx: Res<Arc<Mutex<Sender<(Mesh, Explosion)>>>>,
 ) {
     if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
         spawn_timer.timer.reset();
-
-        spawn_explosion(
-            commands,
-            &particle_pipeline,
-            &mut meshes,
-            &mut materials,
-            10000,
-            10.0,
-            Vec3::new(
-                thread_rng().gen_range(-100.0f32, 100.0f32),
-                thread_rng().gen_range(0.0f32, 100.0f32),
-                thread_rng().gen_range(-100.0f32, 100.0f32),
-            ),
-            Timer::from_seconds(2.0, false),
-        );
+        let tx_copy = tx.clone();
+        pool.0
+            .spawn(async move {
+                let e = Explosion {
+                    duration: Duration::from_secs(2),
+                    radius: 10.0,
+                    particles: 10000,
+                    position: Vec3::new(
+                        thread_rng().gen_range(-100.0f32, 100.0f32),
+                        thread_rng().gen_range(0.0f32, 100.0f32),
+                        thread_rng().gen_range(-100.0f32, 100.0f32),
+                    ),
+                };
+                let mesh = create_explosion_mesh(&e);
+                let locked_tx = tx_copy.lock().unwrap();
+                locked_tx.send((mesh, e)).unwrap();
+            })
+            .detach();
     }
 }
 
@@ -157,16 +166,9 @@ fn despawn_explosions(
     }
 }
 
-fn spawn_explosion(
-    commands: &mut Commands,
-    particle_pipeline: &Res<ParticlePipeline>,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ParticleDirectionMaterial>>,
-    particle_count: u32,
-    radius: f32,
-    position: Vec3,
-    timer: Timer,
-) {
+fn create_explosion_mesh(explosion: &Explosion) -> Mesh {
+    let particle_count = explosion.particles;
+    let radius = explosion.radius;
     let cube_vertices = cube_vertices(0.02);
     let mut positions = Vec::with_capacity(24 * particle_count as usize);
     let mut normals = Vec::with_capacity(24 * particle_count as usize);
@@ -204,6 +206,39 @@ fn spawn_explosion(
         "Particle_Direction",
         VertexAttributeValues::from(particle_directions),
     );
+    mesh
+}
+
+fn spawn_from_channel(
+    commands: &mut Commands,
+    particle_pipeline: Res<ParticlePipeline>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
+    rx: Res<Arc<Mutex<Receiver<(Mesh, Explosion)>>>>,
+) {
+    let receiver = rx.lock().unwrap();
+    for (mesh, explosion) in receiver.recv_timeout(Duration::from_millis(0)) {
+        spawn_explosion(
+            commands,
+            &particle_pipeline,
+            &mut meshes,
+            &mut materials,
+            mesh,
+            explosion.position,
+            Timer::new(explosion.duration, false),
+        );
+    }
+}
+
+fn spawn_explosion(
+    commands: &mut Commands,
+    particle_pipeline: &Res<ParticlePipeline>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ParticleDirectionMaterial>>,
+    mesh: Mesh,
+    position: Vec3,
+    timer: Timer,
+) {
     commands
         .spawn(MeshBundle {
             mesh: meshes.add(mesh),

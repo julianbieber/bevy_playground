@@ -3,13 +3,14 @@ mod delayed_despawn;
 mod movement;
 mod particles;
 mod physics;
+mod pickups;
 mod player;
 mod vec3_ext;
 mod voxel_world;
 mod water;
 mod world;
-mod pickups;
 
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use crate::ai::AIPlugin;
@@ -31,6 +32,9 @@ fn main() {
         .add_plugin(MovementPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(DelayedDespawnsPlugin)
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // Adds a system that prints diagnostics to the console
+        .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
         .add_startup_system(world_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
@@ -40,12 +44,9 @@ fn main() {
 }
 
 fn window_setup(mut windows: ResMut<Windows>) {
-    windows
-        .get_primary_mut()
-        .unwrap()
-        .set_cursor_lock_mode(true);
-    windows
-        .get_primary_mut()
-        .unwrap()
-        .set_cursor_visibility(false);
+    let window = windows.get_primary_mut().unwrap();
+    window.set_cursor_lock_mode(true);
+    window.set_cursor_visibility(false);
+    window.set_maximized(true);
+    window.set_vsync(true);
 }
