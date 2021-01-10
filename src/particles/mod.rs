@@ -171,14 +171,10 @@ fn create_explosion_mesh(explosion: &Explosion) -> Mesh {
     let radius = explosion.radius;
     let cube_vertices = cube_vertices(0.02);
     let mut positions = Vec::with_capacity(24 * particle_count as usize);
-    let mut normals = Vec::with_capacity(24 * particle_count as usize);
-    let mut uvs = Vec::with_capacity(24 * particle_count as usize);
     let mut indices = Vec::with_capacity(36 * particle_count as usize);
     let mut particle_directions = Vec::with_capacity(24 * particle_count as usize);
     for i in 0..particle_count {
         positions.extend_from_slice(&cube_vertices);
-        normals.extend_from_slice(&CUBOID_NORMALS);
-        uvs.extend_from_slice(&CUBOID_UVS);
         indices.extend(cube_indices(i).iter());
     }
     for _ in 0..particle_count {
@@ -191,15 +187,13 @@ fn create_explosion_mesh(explosion: &Explosion) -> Mesh {
         z /= div;
         let d = thread_rng().gen_range(0.0, 1.0);
 
-        for _ in 0..24 {
+        for _ in 0..8 {
             particle_directions.push([x * d, y * d, z * d]);
         }
     }
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
     mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.set_indices(Some(Indices::U32(indices)));
 
     mesh.set_attribute(
@@ -217,7 +211,7 @@ fn spawn_from_channel(
     rx: Res<Arc<Mutex<Receiver<(Mesh, Explosion)>>>>,
 ) {
     let receiver = rx.lock().unwrap();
-    for (mesh, explosion) in receiver.recv_timeout(Duration::from_millis(0)) {
+    for (mesh, explosion) in receiver.try_iter() {
         spawn_explosion(
             commands,
             &particle_pipeline,
