@@ -18,25 +18,20 @@ use bevy::render::pipeline::PrimitiveTopology;
 use primitives::*;
 use rand::{thread_rng, Rng};
 
-use std::{
-    sync::{
-        mpsc::{Receiver, Sender},
-        Arc, Mutex,
-    },
-    time::Duration,
-};
+use flume::{unbounded, Receiver, Sender};
+use std::time::Duration;
 
 pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        let (tx, rx) = std::sync::mpsc::channel::<(Mesh, Explosion)>();
+        let (tx, rx) = unbounded::<(Mesh, Explosion)>();
         app.add_resource(ExplosionSpawnCoolDown {
             timer: Timer::from_seconds(0.5, true),
         })
         .add_asset::<ParticleDirectionMaterial>()
-        .add_resource(Arc::new(Mutex::new(tx)))
-        .add_resource(Arc::new(Mutex::new(rx)))
+        .add_resource(tx)
+        .add_resource(rx)
         .init_resource::<DelayedParticleSpawns>()
         .add_startup_system(setup_particles.system())
         .add_system(spawn_regular_explosions_system.system())
@@ -96,17 +91,16 @@ fn evaluate_delayed_particles(
     mut delayed_particle_spawns_res: ResMut<DelayedParticleSpawns>,
     time: Res<Time>,
     pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Arc<Mutex<Sender<(Mesh, Explosion)>>>>,
+    tx: Res<Sender<(Mesh, Explosion)>>,
 ) {
     let mut at_least_one = false;
     for (timer, explosion) in delayed_particle_spawns_res.spawns.iter_mut() {
         if timer.tick(time.delta_seconds()).just_finished() {
             let e = explosion.clone();
-            let tx_copy = tx.clone();
+            let tx_cloned = tx.clone();
             pool.spawn(async move {
                 let mesh = create_explosion_mesh(&e);
-                let locked_tx = tx_copy.lock().unwrap();
-                locked_tx.send((mesh, e)).unwrap();
+                tx_cloned.send((mesh, e)).unwrap();
             })
             .detach();
             at_least_one = true;
@@ -129,7 +123,7 @@ fn spawn_regular_explosions_system(
     mut spawn_timer: ResMut<ExplosionSpawnCoolDown>,
     time: Res<Time>,
     pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Arc<Mutex<Sender<(Mesh, Explosion)>>>>,
+    tx: Res<Sender<(Mesh, Explosion)>>,
 ) {
     if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
         spawn_timer.timer.reset();
@@ -147,8 +141,7 @@ fn spawn_regular_explosions_system(
                     ),
                 };
                 let mesh = create_explosion_mesh(&e);
-                let locked_tx = tx_copy.lock().unwrap();
-                locked_tx.send((mesh, e)).unwrap();
+                tx_copy.send((mesh, e)).unwrap();
             })
             .detach();
     }
@@ -208,10 +201,9 @@ fn spawn_from_channel(
     particle_pipeline: Res<ParticlePipeline>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
-    rx: Res<Arc<Mutex<Receiver<(Mesh, Explosion)>>>>,
+    rx: Res<Receiver<(Mesh, Explosion)>>,
 ) {
-    let receiver = rx.lock().unwrap();
-    for (mesh, explosion) in receiver.try_iter() {
+    for (mesh, explosion) in rx.try_iter() {
         spawn_explosion(
             commands,
             &particle_pipeline,
