@@ -12,6 +12,7 @@ mod world;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
+use pickups::EnergyPlugin;
 
 use crate::ai::AIPlugin;
 use crate::delayed_despawn::DelayedDespawnsPlugin;
@@ -33,6 +34,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(DelayedDespawnsPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(EnergyPlugin)
         // Adds a system that prints diagnostics to the console
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
