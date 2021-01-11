@@ -7,6 +7,8 @@ use crate::player::input::{publish_player_movements, MouseEvents};
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 
+pub struct PlayerMarker;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -47,6 +49,7 @@ fn player_setup(
         .with(UnitRotation {
             ..Default::default()
         })
+        .with(PlayerMarker)
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y;
