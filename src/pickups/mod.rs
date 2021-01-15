@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use crate::{delayed_despawn::DelayedDespawns, player::PlayerMarker};
+use crate::player::PlayerMarker;
 
 pub struct Energy {
     pub amount: f32,
@@ -126,11 +126,11 @@ fn setup_ui(commands: &mut Commands, asset_server: Res<AssetServer>) {
 }
 
 fn display_energy(
-    mut text_query: Query<(&mut Text), With<EnergyText>>,
-    energy_query: Query<(&Energy), With<PlayerMarker>>,
+    mut text_query: Query<&mut Text, With<EnergyText>>,
+    energy_query: Query<&Energy, With<PlayerMarker>>,
 ) {
-    for (mut text) in text_query.iter_mut() {
-        if let (Some(e)) = energy_query.iter().next() {
+    for mut text in text_query.iter_mut() {
+        if let Some(e) = energy_query.iter().next() {
             text.value = format!("Energy: {}", e.amount);
         }
     }
