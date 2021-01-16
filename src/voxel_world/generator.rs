@@ -27,19 +27,19 @@ impl VoxelWorld {
         meshes: &mut ResMut<Assets<Mesh>>,
         materials: &mut ResMut<Assets<StandardMaterial>>,
     ) {
+        let texture = asset_server.load("world_texture_color.png");
+        let material = materials.add(StandardMaterial {
+            albedo_texture: Some(texture),
+            shaded: true,
+            ..Default::default()
+        });
         for pillar in self.pillars.into_iter() {
             let terrain = pillar.voxels();
             let m = meshes.add(Mesh::from(&terrain));
-            let texture = asset_server.load("world_texture_color.png");
-            let material = materials.add(StandardMaterial {
-                albedo_texture: Some(texture),
-                shaded: false,
-                ..Default::default()
-            });
             commands
                 .spawn(PbrBundle {
                     mesh: m,
-                    material,
+                    material: material.clone(),
                     ..Default::default()
                 })
                 .with(terrain);
