@@ -22,16 +22,11 @@ pub fn spawn_regular_explosions_system(
         let tx_copy = tx.clone();
         pool.0
             .spawn(async move {
-                let e = ParticleDescription {
-                    typ: ParticleTypes::Explosion { radius: 10.0 },
-                    duration: Duration::from_secs(2),
-                    particles: 10000,
-                    position: Vec3::new(
-                        thread_rng().gen_range(-100.0f32, 100.0f32),
-                        thread_rng().gen_range(0.0f32, 100.0f32),
-                        thread_rng().gen_range(-100.0f32, 100.0f32),
-                    ),
-                };
+                let e = ParticleDescription::high_storm(
+                    Duration::from_secs(50),
+                    500000,
+                    Vec3::new(100.0, 0.0, 0.0),
+                );
                 let mesh = create_particle_mesh(&e);
                 tx_copy.send((mesh, e)).unwrap();
             })

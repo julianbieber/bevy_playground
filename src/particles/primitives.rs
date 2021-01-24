@@ -1,3 +1,5 @@
+use bevy::prelude::Vec3;
+
 pub fn cube_vertices(length: f32) -> [[f32; 3]; 8] {
     let sp = bevy::render::mesh::shape::Box::new(length, length, length);
     [
@@ -51,4 +53,16 @@ pub fn cube_indices(i: u32) -> Vec<u32> {
         i * 8 + 7,
         i * 8 + 3,
     ]
+}
+
+pub fn triangle_vertices(length: f32, offset: Vec3) -> [[f32; 3]; 3] {
+    [
+        [offset.x, offset.y + length, offset.z],
+        [offset.x + length, offset.y, offset.z],
+        [offset.x, offset.y, offset.z + length],
+    ]
+}
+
+pub fn triangle_indices(i: u32) -> Vec<u32> {
+    vec![i * 3, i * 3 + 1, i * 3 + 2]
 }
