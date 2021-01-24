@@ -6,20 +6,11 @@ mod spawn;
 
 use bevy::{
     prelude::*,
-    reflect::TypeUuid,
     render::{
-        mesh::VertexAttributeValues,
-        pipeline::{PipelineDescriptor, RenderPipeline},
-        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        renderer::RenderResources,
-        shader::{ShaderStage, ShaderStages},
+        pipeline::RenderPipeline,
     },
     tasks::AsyncComputeTaskPool,
 };
-
-use bevy::render::mesh::Indices;
-use bevy::render::pipeline::PrimitiveTopology;
-use rand::{thread_rng, Rng};
 
 use crate::delayed_despawn::DelayedDespawns;
 use crate::particles::mesh::create_explosion_mesh;
@@ -29,7 +20,7 @@ use crate::particles::render::{
 };
 use crate::particles::spawn::{spawn_regular_explosions_system, ExplosionSpawnCoolDown};
 use flume::{unbounded, Receiver, Sender};
-use std::time::Duration;
+
 
 pub struct ParticlePlugin;
 

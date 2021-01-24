@@ -1,14 +1,8 @@
 use bevy::{
     prelude::*,
-    reflect::TypeUuid,
     render::{
         mesh::VertexAttributeValues,
-        pipeline::{PipelineDescriptor, RenderPipeline},
-        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        renderer::RenderResources,
-        shader::{ShaderStage, ShaderStages},
     },
-    tasks::AsyncComputeTaskPool,
 };
 
 use bevy::render::mesh::Indices;
@@ -17,8 +11,7 @@ use rand::{thread_rng, Rng};
 
 use crate::particles::model::Explosion;
 use crate::particles::primitives::{cube_indices, cube_vertices};
-use flume::{unbounded, Receiver, Sender};
-use std::time::Duration;
+
 
 pub fn create_explosion_mesh(explosion: &Explosion) -> Mesh {
     let particle_count = explosion.particles;

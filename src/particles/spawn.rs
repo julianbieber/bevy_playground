@@ -1,23 +1,15 @@
 use bevy::{
     prelude::*,
-    reflect::TypeUuid,
-    render::{
-        mesh::VertexAttributeValues,
-        pipeline::{PipelineDescriptor, RenderPipeline},
-        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        renderer::RenderResources,
-        shader::{ShaderStage, ShaderStages},
-    },
     tasks::AsyncComputeTaskPool,
 };
 
-use bevy::render::mesh::Indices;
-use bevy::render::pipeline::PrimitiveTopology;
+
+
 use rand::{thread_rng, Rng};
 
 use crate::particles::mesh::create_explosion_mesh;
 use crate::particles::model::Explosion;
-use flume::{unbounded, Receiver, Sender};
+use flume::{Sender};
 use std::time::Duration;
 
 pub struct ExplosionSpawnCoolDown {

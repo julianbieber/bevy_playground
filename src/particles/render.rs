@@ -2,21 +2,12 @@ use bevy::{
     prelude::*,
     reflect::TypeUuid,
     render::{
-        mesh::VertexAttributeValues,
-        pipeline::{PipelineDescriptor, RenderPipeline},
+        pipeline::PipelineDescriptor,
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
         renderer::RenderResources,
         shader::{ShaderStage, ShaderStages},
     },
-    tasks::AsyncComputeTaskPool,
 };
-
-use bevy::render::mesh::Indices;
-use bevy::render::pipeline::PrimitiveTopology;
-use rand::{thread_rng, Rng};
-
-use flume::{unbounded, Receiver, Sender};
-use std::time::Duration;
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "b8ba5506-487a-4fed-88a2-c6bac4a22016"]
