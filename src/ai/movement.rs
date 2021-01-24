@@ -1,7 +1,7 @@
 use crate::ai::model::{NPCBehaviours, NPC};
 use crate::delayed_despawn::DelayedDespawns;
 use crate::movement::model::{MoveEvent, UnitRotation};
-use crate::particles::model::Explosion;
+use crate::particles::model::{ParticleDescription, ParticleTypes};
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
@@ -62,9 +62,9 @@ pub fn update_behaviour_system(
                         npc.behaviour = NPCBehaviours::EXPLODE;
                         delayed_spawn_res.spawns.push((
                             Timer::from_seconds(2.0, false),
-                            Explosion {
+                            ParticleDescription {
+                                typ: ParticleTypes::Explosion { radius: 10.0 },
                                 duration: Duration::from_secs(10),
-                                radius: 10.0,
                                 particles: 10000,
                                 position: npc_transform.translation,
                             },

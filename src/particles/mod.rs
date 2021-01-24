@@ -4,29 +4,22 @@ mod primitives;
 mod render;
 mod spawn;
 
-use bevy::{
-    prelude::*,
-    render::{
-        pipeline::RenderPipeline,
-    },
-    tasks::AsyncComputeTaskPool,
-};
+use bevy::{prelude::*, render::pipeline::RenderPipeline, tasks::AsyncComputeTaskPool};
 
 use crate::delayed_despawn::DelayedDespawns;
-use crate::particles::mesh::create_explosion_mesh;
-use crate::particles::model::Explosion;
+use crate::particles::mesh::create_particle_mesh;
+use crate::particles::model::ParticleDescription;
 use crate::particles::render::{
     setup_particles, update_particle_direction, ParticleDirectionMaterial, ParticlePipeline,
 };
 use crate::particles::spawn::{spawn_regular_explosions_system, ExplosionSpawnCoolDown};
 use flume::{unbounded, Receiver, Sender};
 
-
 pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        let (tx, rx) = unbounded::<(Mesh, Explosion)>();
+        let (tx, rx) = unbounded::<(Mesh, ParticleDescription)>();
         app.add_resource(ExplosionSpawnCoolDown {
             timer: Timer::from_seconds(0.1, true),
         })
@@ -44,14 +37,14 @@ impl Plugin for ParticlePlugin {
 
 #[derive(Default)]
 pub struct DelayedParticleSpawns {
-    pub spawns: Vec<(Timer, Explosion)>,
+    pub spawns: Vec<(Timer, ParticleDescription)>,
 }
 
 fn evaluate_delayed_particles(
     mut delayed_particle_spawns_res: ResMut<DelayedParticleSpawns>,
     time: Res<Time>,
     pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Sender<(Mesh, Explosion)>>,
+    tx: Res<Sender<(Mesh, ParticleDescription)>>,
 ) {
     let mut at_least_one = false;
     for (timer, explosion) in delayed_particle_spawns_res.spawns.iter_mut() {
@@ -59,7 +52,7 @@ fn evaluate_delayed_particles(
             let e = explosion.clone();
             let tx_cloned = tx.clone();
             pool.spawn(async move {
-                let mesh = create_explosion_mesh(&e);
+                let mesh = create_particle_mesh(&e);
                 tx_cloned.send((mesh, e)).unwrap();
             })
             .detach();
@@ -68,7 +61,7 @@ fn evaluate_delayed_particles(
     }
 
     if at_least_one {
-        let remaining: Vec<(Timer, Explosion)> = delayed_particle_spawns_res
+        let remaining: Vec<(Timer, ParticleDescription)> = delayed_particle_spawns_res
             .spawns
             .iter()
             .filter(|(t, _)| !t.just_finished())
@@ -84,7 +77,7 @@ fn spawn_from_channel(
     particle_pipeline: Res<ParticlePipeline>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
-    rx: Res<Receiver<(Mesh, Explosion)>>,
+    rx: Res<Receiver<(Mesh, ParticleDescription)>>,
     mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     for (mesh, explosion) in rx.try_iter() {
