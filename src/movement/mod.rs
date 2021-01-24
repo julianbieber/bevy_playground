@@ -1,6 +1,6 @@
 pub mod model;
 
-use crate::movement::model::{Movable, MoveEvent, MovementReader, UnitRotation};
+use crate::movement::model::{Movable, MoveEvent, UnitRotation};
 use bevy::prelude::*;
 
 pub struct MovementPlugin;
@@ -8,17 +8,15 @@ pub struct MovementPlugin;
 impl Plugin for MovementPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<MoveEvent>()
-            .init_resource::<MovementReader>()
             .add_system(movement_system.system());
     }
 }
 
 fn movement_system(
-    mut movement_events: ResMut<MovementReader>,
-    movement_reader: Res<Events<MoveEvent>>,
+    mut movement_events: EventReader<MoveEvent>,
     mut units_query: Query<(&Movable, &mut Transform, &mut UnitRotation)>,
 ) {
-    for movement in movement_events.reader.iter(&movement_reader) {
+    for movement in movement_events.iter() {
         let (_, mut transform, mut unit_rotation) = units_query.get_mut(movement.entity).unwrap();
         unit_rotation.rotation += movement.rotation_offset;
         unit_rotation.rotation.x = (&unit_rotation.rotation.x).rem_euclid(std::f32::consts::TAU);

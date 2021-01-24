@@ -27,7 +27,7 @@ impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
         let (tx, rx) = unbounded::<(Mesh, Explosion)>();
         app.add_resource(ExplosionSpawnCoolDown {
-            timer: Timer::from_seconds(0.5, true),
+            timer: Timer::from_seconds(0.1, true),
         })
         .add_asset::<ParticleDirectionMaterial>()
         .add_resource(tx)

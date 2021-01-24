@@ -3,7 +3,7 @@ pub mod model;
 
 use crate::movement::model::{Movable, UnitRotation};
 use crate::physics::collider::{Collider, ColliderShapes};
-use crate::player::input::{publish_player_movements, MouseEvents};
+use crate::player::input::publish_player_movements;
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 
@@ -14,8 +14,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(player_setup.system())
-            .add_system(publish_player_movements.system())
-            .init_resource::<MouseEvents>();
+            .add_system(publish_player_movements.system());
     }
 }
 

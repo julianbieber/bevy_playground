@@ -8,11 +8,6 @@ pub struct UnitRotation {
 /// this component indicates what entities should rotate
 pub struct Movable;
 
-#[derive(Default)]
-pub struct MovementReader {
-    pub reader: EventReader<MoveEvent>,
-}
-
 #[derive(Debug)]
 pub struct MoveEvent {
     pub rotation_offset: Vec3,

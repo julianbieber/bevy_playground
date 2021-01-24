@@ -9,14 +9,8 @@ const ROTATION_SPEED_Y: f32 = 0.3f32;
 // m/s
 const PLAYER_SPEED: f32 = 3.0f32;
 
-#[derive(Default)]
-pub struct MouseEvents {
-    reader: EventReader<MouseMotion>,
-}
-
 pub fn publish_player_movements(
-    mut mouse_events: ResMut<MouseEvents>,
-    mouse_motion_events: Res<Events<MouseMotion>>,
+    mut mouse_events: EventReader<MouseMotion>,
     keys: Res<Input<KeyCode>>,
     mut movement_events: ResMut<Events<MoveEvent>>,
     mut input_receiver_query: Query<(Entity, &ReceivesInput, &UnitRotation)>,
@@ -24,7 +18,7 @@ pub fn publish_player_movements(
 ) {
     for (entity, _, unit_rotation) in input_receiver_query.iter_mut() {
         let mut frame_rotation = Vec3::zero();
-        for event in mouse_events.reader.iter(&mouse_motion_events) {
+        for event in mouse_events.iter() {
             let look = event.delta;
             frame_rotation.x -= (look.x).to_radians() / ROTATION_SPEED_X;
             frame_rotation.y -= (look.y).to_radians() / ROTATION_SPEED_Y;
