@@ -6,23 +6,25 @@ mod spawn;
 
 use bevy::{prelude::*, render::pipeline::RenderPipeline, tasks::AsyncComputeTaskPool};
 
-use crate::delayed_despawn::DelayedDespawns;
 use crate::particles::mesh::create_particle_mesh;
 use crate::particles::model::{ParticleDescription, ParticleTypes};
 use crate::particles::render::{
     setup_particles, update_particle_direction, ParticleDirectionMaterial, ParticlePipeline,
 };
 use crate::particles::spawn::{spawn_regular_explosions_system, ExplosionSpawnCoolDown};
+use crate::{delayed_despawn::DelayedDespawns, movement::model::UnitRotation};
 use bevy::render::pipeline::PipelineDescriptor;
 use flume::{unbounded, Receiver, Sender};
+
+use self::spawn::move_particle_emitters;
 
 pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
         let (tx, rx) = unbounded::<(Mesh, ParticleDescription)>();
-        let mut timer = Timer::from_seconds(100.0, true);
-        timer.tick(99.0);
+        let mut timer = Timer::from_seconds(50.0, true);
+        timer.tick(40.0);
         app.add_resource(ExplosionSpawnCoolDown { timer })
             .add_asset::<ParticleDirectionMaterial>()
             .add_resource(tx)
@@ -32,7 +34,8 @@ impl Plugin for ParticlePlugin {
             .add_system(spawn_regular_explosions_system.system())
             .add_system(update_particle_direction.system())
             .add_system(evaluate_delayed_particles.system())
-            .add_system(spawn_from_channel.system());
+            .add_system(spawn_from_channel.system())
+            .add_system(move_particle_emitters.system());
     }
 }
 
@@ -82,7 +85,7 @@ fn spawn_from_channel(
     mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     for (mesh, particles) in rx.try_iter() {
-        let entity = spawn_explosion(
+        let entity = spawn_particles(
             commands,
             &mut meshes,
             &mut materials,
@@ -100,7 +103,7 @@ fn spawn_from_channel(
     }
 }
 
-fn spawn_explosion(
+fn spawn_particles(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ParticleDirectionMaterial>>,
@@ -118,6 +121,9 @@ fn spawn_explosion(
         })
         .with(materials.add(ParticleDirectionMaterial { multiplier: 0.0 }))
         .with(typ)
+        .with(UnitRotation {
+            rotation: Vec3::zero(),
+        })
         .current_entity()
         .unwrap()
 }

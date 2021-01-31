@@ -1,4 +1,4 @@
-use bevy::prelude::Vec3;
+use bevy::{math::Mat3, prelude::Vec3};
 
 pub fn cube_vertices(length: f32) -> [[f32; 3]; 8] {
     let sp = bevy::render::mesh::shape::Box::new(length, length, length);
@@ -55,12 +55,12 @@ pub fn cube_indices(i: u32) -> Vec<u32> {
     ]
 }
 
-pub fn triangle_vertices(length: f32, offset: Vec3) -> [[f32; 3]; 3] {
-    [
-        [offset.x, offset.y + length, offset.z],
-        [offset.x + length, offset.y, offset.z],
-        [offset.x, offset.y, offset.z + length],
-    ]
+pub fn triangle_vertices(length: f32, offset: Vec3, rotation: Mat3) -> [[f32; 3]; 3] {
+    let x = Vec3::new(0.0, length, 0.0) + offset;
+    let y = rotation * Vec3::new(length, 0.0, 0.0) + offset;
+    let z = rotation * Vec3::new(0.0, 0.0, length) + offset;
+
+    [[x.x, x.y, x.z], [y.x, y.y, y.z], [z.x, z.y, z.z]]
 }
 
 pub fn triangle_indices(i: u32) -> Vec<u32> {

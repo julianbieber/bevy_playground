@@ -62,12 +62,12 @@ pub fn update_behaviour_system(
                         npc.behaviour = NPCBehaviours::EXPLODE;
                         delayed_spawn_res.spawns.push((
                             Timer::from_seconds(2.0, false),
-                            ParticleDescription {
-                                typ: ParticleTypes::Explosion { radius: 10.0 },
-                                duration: Duration::from_secs(10),
-                                particles: 10000,
-                                position: npc_transform.translation,
-                            },
+                            ParticleDescription::explosion(
+                                10.0,
+                                Duration::from_secs(10),
+                                10000,
+                                npc_transform.translation,
+                            ),
                         ));
                         despanws_res
                             .despawns

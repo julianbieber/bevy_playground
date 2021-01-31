@@ -1,5 +1,3 @@
-use crate::particles::model::ParticleTypes;
-use ahash::AHashMap;
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -102,7 +100,7 @@ layout(set = 2, binding = 0) uniform ParticleDirectionMaterial_multiplier {
     float multiplier;
 };
 void main() {
-    vec3 offset = Particle_Direction * multiplier;
+    vec3 offset = Particle_Direction * multiplier * multiplier * 10.0;
     gl_Position = ViewProj * Model * (vec4(Vertex_Position, 1.0) + vec4(offset, 0.0));
 }
 "#;
