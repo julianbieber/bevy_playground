@@ -93,7 +93,7 @@ fn spawn_from_channel(
             particles.position,
             match particles.typ {
                 ParticleTypes::Explosion { .. } => particle_pipeline.explosion_handle.as_weak(),
-                ParticleTypes::HighStorm => particle_pipeline.high_storms_handle.as_weak(),
+                ParticleTypes::HighStorm { .. } => particle_pipeline.high_storms_handle.as_weak(),
             },
             particles.typ,
         );

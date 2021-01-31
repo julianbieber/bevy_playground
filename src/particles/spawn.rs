@@ -26,6 +26,7 @@ pub fn spawn_regular_explosions_system(
                     Duration::from_secs(50),
                     500000,
                     Vec3::new(100.0, 0.0, 0.0),
+                    50.0,
                 );
                 let mesh = create_particle_mesh(&e);
                 tx_copy.send((mesh, e)).unwrap();
@@ -42,7 +43,7 @@ pub fn move_particle_emitters(
     for (e, p) in particle_emitters_query.iter() {
         match p {
             ParticleTypes::Explosion { .. } => {}
-            ParticleTypes::HighStorm => movement_events.send(MoveEvent {
+            ParticleTypes::HighStorm { .. } => movement_events.send(MoveEvent {
                 entity: e,
                 rotation_offset: Vec3::zero(),
                 translation_offset: Vec3::new(-10.0, 0.0, 0.0) * time.delta_seconds(),

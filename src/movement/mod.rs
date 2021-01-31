@@ -1,6 +1,6 @@
 pub mod model;
 
-use crate::movement::model::{Movable, MoveEvent, UnitRotation};
+use crate::movement::model::{MoveEvent, UnitRotation};
 use bevy::prelude::*;
 
 pub struct MovementPlugin;
