@@ -1,11 +1,11 @@
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 
-use rand::{thread_rng, Rng};
-
-use crate::particles::mesh::create_particle_mesh;
-use crate::particles::model::{ParticleDescription, ParticleTypes};
+use crate::particles::model::ParticleDescription;
+use crate::{movement::model::MoveEvent, particles::mesh::create_particle_mesh};
 use flume::Sender;
 use std::time::Duration;
+
+use super::model::ParticleTypes;
 
 pub struct ExplosionSpawnCoolDown {
     pub timer: Timer,
@@ -31,5 +31,22 @@ pub fn spawn_regular_explosions_system(
                 tx_copy.send((mesh, e)).unwrap();
             })
             .detach();
+    }
+}
+
+pub fn move_particle_emitters(
+    particle_emitters_query: Query<(Entity, &ParticleTypes)>,
+    mut movement_events: ResMut<Events<MoveEvent>>,
+    time: Res<Time>,
+) {
+    for (e, p) in particle_emitters_query.iter() {
+        match p {
+            ParticleTypes::Explosion { .. } => {}
+            ParticleTypes::HighStorm => movement_events.send(MoveEvent {
+                entity: e,
+                rotation_offset: Vec3::zero(),
+                translation_offset: Vec3::new(-10.0, 0.0, 0.0) * time.delta_seconds(),
+            }),
+        }
     }
 }
