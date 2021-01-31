@@ -5,7 +5,7 @@ use std::time::Duration;
 #[derive(Clone)]
 pub enum ParticleTypes {
     Explosion { radius: f32 },
-    HighStorm,
+    HighStorm { depth: f32 },
 }
 
 #[derive(Clone)]
@@ -31,9 +31,14 @@ impl ParticleDescription {
         }
     }
 
-    pub fn high_storm(duration: Duration, particles: u32, position: Vec3) -> ParticleDescription {
+    pub fn high_storm(
+        duration: Duration,
+        particles: u32,
+        position: Vec3,
+        depth: f32,
+    ) -> ParticleDescription {
         ParticleDescription {
-            typ: ParticleTypes::HighStorm,
+            typ: ParticleTypes::HighStorm { depth },
             duration,
             particles,
             position,

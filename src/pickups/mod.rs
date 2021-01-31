@@ -3,7 +3,9 @@ use std::time::Duration;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use crate::player::PlayerMarker;
+use crate::{
+    delayed_despawn::DelayedDespawns, particles::model::ParticleTypes, player::PlayerMarker,
+};
 
 pub struct Energy {
     pub amount: f32,
@@ -40,32 +42,49 @@ struct EnergySpawnTimer {
 
 fn regularily_spawn_energy(
     commands: &mut Commands,
+    storm_query: Query<(&Transform, &ParticleTypes)>,
     mut spawn_timer: ResMut<EnergySpawnTimer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
+    mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
-        let sphere = meshes.add(Mesh::from(shape::Icosphere {
-            radius: 1.0,
-            subdivisions: 5,
-        }));
-        let material = materials.add(StandardMaterial {
-            albedo: Color::rgb(0.6, 0.6, thread_rng().gen_range(0.6f32, 1.0f32)),
-            ..Default::default()
-        });
-        commands
-            .spawn(PbrBundle {
-                mesh: sphere,
-                material: material,
-                transform: Transform::from_translation(Vec3::new(
-                    thread_rng().gen_range(-100.0f32, 100.0f32),
-                    thread_rng().gen_range(0.0f32, 100.0f32),
-                    thread_rng().gen_range(-100.0f32, 100.0f32),
-                )),
-                ..Default::default()
-            })
-            .with(Energy { amount: 10.0 });
+        for (storm_transform, particle_type) in storm_query.iter() {
+            match particle_type {
+                ParticleTypes::Explosion { .. } => {}
+                ParticleTypes::HighStorm { depth } => {
+                    let sphere = meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 1.0,
+                        subdivisions: 5,
+                    }));
+                    let material = materials.add(StandardMaterial {
+                        albedo: Color::rgb(0.6, 0.6, 0.7),
+                        ..Default::default()
+                    });
+                    let entity = commands
+                        .spawn(PbrBundle {
+                            mesh: sphere,
+                            material: material,
+                            transform: Transform::from_translation(Vec3::new(
+                                thread_rng().gen_range(
+                                    storm_transform.translation.x - depth,
+                                    storm_transform.translation.x + depth,
+                                ),
+                                thread_rng().gen_range(0.0f32, 100.0f32),
+                                thread_rng().gen_range(-100.0f32, 100.0f32),
+                            )),
+                            ..Default::default()
+                        })
+                        .with(Energy { amount: 10.0 })
+                        .current_entity()
+                        .unwrap();
+                    despanws_res
+                        .despawns
+                        .push((Timer::from_seconds(100.0, false), entity));
+                }
+            }
+        }
     }
 }
 

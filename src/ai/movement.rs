@@ -1,7 +1,7 @@
 use crate::ai::model::{NPCBehaviours, NPC};
 use crate::delayed_despawn::DelayedDespawns;
 use crate::movement::model::{MoveEvent, UnitRotation};
-use crate::particles::model::{ParticleDescription, ParticleTypes};
+use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
