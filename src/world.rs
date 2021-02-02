@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::physics::collider::{Collider, ColliderShapes};
 use crate::voxel_world::generator::VoxelWorld;
+use rand::prelude::*;
 
 pub fn world_setup(
     commands: &mut Commands,
@@ -9,7 +10,7 @@ pub fn world_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let w = VoxelWorld::generate(150, 150, rand::thread_rng());
+    let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     w.add_to_world(commands, asset_server, &mut meshes, &mut materials);
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),

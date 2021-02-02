@@ -5,7 +5,7 @@
 - [X] start enemies random until certain distance then follow
 - [x] Explode Animation (Simple Particle System)
 - [x] Stormlight Pickups
-- [ ] Explosions hit cost stormlight
+- [x] Explosions hit cost stormlight
 - [ ] Storms rip blocks out of world
   - [ ] generate voxel mesh in background
   - [ ] remove voxels from world
