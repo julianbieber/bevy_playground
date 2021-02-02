@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use rand::{thread_rng, Rng};
+use rand::prelude::*;
 
 use crate::{
     delayed_despawn::DelayedDespawns, particles::model::ParticleTypes, player::PlayerMarker,
@@ -50,6 +50,7 @@ fn regularily_spawn_energy(
     mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
+        let mut rng = SmallRng::from_entropy();
         for (storm_transform, particle_type) in storm_query.iter() {
             match particle_type {
                 ParticleTypes::Explosion { .. } => {}
@@ -67,12 +68,12 @@ fn regularily_spawn_energy(
                             mesh: sphere,
                             material: material,
                             transform: Transform::from_translation(Vec3::new(
-                                thread_rng().gen_range(
-                                    storm_transform.translation.x - depth,
-                                    storm_transform.translation.x + depth,
+                                rng.gen_range(
+                                    storm_transform.translation.x - depth
+                                        ..storm_transform.translation.x + depth,
                                 ),
-                                thread_rng().gen_range(0.0f32, 100.0f32),
-                                thread_rng().gen_range(-100.0f32, 100.0f32),
+                                rng.gen_range(0.0f32..100.0f32),
+                                rng.gen_range(-100.0f32..100.0f32),
                             )),
                             ..Default::default()
                         })

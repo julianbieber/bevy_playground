@@ -12,7 +12,7 @@ pub struct VoxelWorld {
 }
 
 impl VoxelWorld {
-    pub fn generate(width: i32, depth: i32, mut rng: ThreadRng) -> VoxelWorld {
+    pub fn generate(width: i32, depth: i32, mut rng: SmallRng) -> VoxelWorld {
         let pillars: Vec<_> = (0..10)
             .into_iter()
             .map(|_| PillarGenerator::new(&mut rng, width, depth))
@@ -57,16 +57,16 @@ pub struct PillarGenerator {
 }
 
 impl PillarGenerator {
-    fn new(rng: &mut ThreadRng, width_boundary: i32, depth_boundary: i32) -> PillarGenerator {
+    fn new(rng: &mut SmallRng, width_boundary: i32, depth_boundary: i32) -> PillarGenerator {
         PillarGenerator {
             position: (
-                rng.gen_range(width_boundary / -2, width_boundary / 2),
-                rng.gen_range(depth_boundary / -2, depth_boundary / 2),
+                rng.gen_range(width_boundary / -2..width_boundary / 2),
+                rng.gen_range(depth_boundary / -2..depth_boundary / 2),
             ),
-            height: rng.gen_range(10, 20),
-            upper_radius: rng.gen_range(10, 20),
-            mid_radius: rng.gen_range(5, 20),
-            lower_radius: rng.gen_range(10, 21),
+            height: rng.gen_range(10..20),
+            upper_radius: rng.gen_range(10..20),
+            mid_radius: rng.gen_range(5..20),
+            lower_radius: rng.gen_range(10..21),
             rock_types: vec![
                 VoxelTypes::DarkRock1,
                 VoxelTypes::DarkRock2,
@@ -78,7 +78,7 @@ impl PillarGenerator {
     }
 
     pub fn voxels(&self) -> Terrain {
-        let mut rng = thread_rng();
+        let mut rng = SmallRng::from_entropy();
         let mut world: WorldStructure = AHashMap::new();
         for layer in 0..self.height {
             let radius = self.radius_at_level(layer);
@@ -97,7 +97,7 @@ impl PillarGenerator {
         Terrain { structure: world }
     }
 
-    fn voxel_type(&self, mut rng: &mut ThreadRng, y: i32) -> VoxelTypes {
+    fn voxel_type(&self, mut rng: &mut SmallRng, y: i32) -> VoxelTypes {
         if y == self.height - 1 {
             VoxelTypes::Moss
         } else if y == 0 {

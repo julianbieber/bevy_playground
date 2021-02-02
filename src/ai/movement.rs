@@ -1,13 +1,15 @@
-use crate::ai::model::{NPCBehaviours, NPC};
 use crate::delayed_despawn::DelayedDespawns;
 use crate::movement::model::{MoveEvent, UnitRotation};
 use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
+use crate::{
+    ai::model::{NPCBehaviours, NPC},
+    unit_effects::{DelayedEffects, Effect, Effects},
+};
 use bevy::prelude::*;
 use bevy::utils::Duration;
-use rand::prelude::ThreadRng;
-use rand::Rng;
+use rand::prelude::*;
 
 pub fn npc_movement_system(
     npcs_query: Query<(Entity, &NPC, &Transform, &UnitRotation)>,
@@ -15,6 +17,7 @@ pub fn npc_movement_system(
     mut movement_events: ResMut<Events<MoveEvent>>,
     time: Res<Time>,
 ) {
+    let mut rng = SmallRng::from_entropy();
     for (_, player_transform) in player_query.iter() {
         for (npc_entity, npc, npc_transform, current_rotation) in npcs_query.iter() {
             let rotation_offset = match npc.behaviour {
@@ -23,8 +26,8 @@ pub fn npc_movement_system(
                         - current_rotation.rotation
                 }
                 NPCBehaviours::RANDOM => Vec3::new(
-                    ThreadRng::default().gen_range(-0.1f32, 0.1f32),
-                    ThreadRng::default().gen_range(-0.1f32, 0.1f32),
+                    rng.gen_range(-0.1f32..0.1f32),
+                    rng.gen_range(-0.1f32..0.1f32),
                     0.0,
                 ),
                 NPCBehaviours::EXPLODE => Vec3::zero(),
@@ -50,6 +53,7 @@ pub fn update_behaviour_system(
     player_query: Query<(&ReceivesInput, &Transform)>,
     mut delayed_spawn_res: ResMut<DelayedParticleSpawns>,
     mut despanws_res: ResMut<DelayedDespawns>,
+    mut effects_res: ResMut<DelayedEffects>,
 ) {
     for (_, player_transform) in player_query.iter() {
         for (entity, mut npc, npc_transform) in npcs_query.iter_mut() {
@@ -71,7 +75,15 @@ pub fn update_behaviour_system(
                         ));
                         despanws_res
                             .despawns
-                            .push((Timer::from_seconds(2.1, false), entity))
+                            .push((Timer::from_seconds(2.1, false), entity));
+                        effects_res.effects.push((
+                            Timer::from_seconds(2.1, false),
+                            Effect {
+                                range: 10.0,
+                                center: npc_transform.translation,
+                                typ: Effects::Damage { amount: 10.0 },
+                            },
+                        ))
                     }
                 }
                 NPCBehaviours::RANDOM => {

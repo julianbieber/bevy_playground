@@ -5,7 +5,7 @@ mod particles;
 mod physics;
 mod pickups;
 mod player;
-mod vec3_ext;
+mod unit_effects;
 mod voxel_world;
 mod water;
 mod world;
@@ -13,6 +13,7 @@ mod world;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use pickups::EnergyPlugin;
+use unit_effects::DelayedUnitEffectsPlugin;
 
 use crate::ai::AIPlugin;
 use crate::delayed_despawn::DelayedDespawnsPlugin;
@@ -35,6 +36,7 @@ fn main() {
         .add_plugin(DelayedDespawnsPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(EnergyPlugin)
+        .add_plugin(DelayedUnitEffectsPlugin)
         // Adds a system that prints diagnostics to the console
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())

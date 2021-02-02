@@ -9,9 +9,9 @@ edition = "2018"
 [dependencies]
 bevy = {git = "https://github.com/bevyengine/bevy.git", version = "0.4.0", branch = "master"}
 png = "0.16.7"
-rand = "0.7.3"
-lerp = "0.3.0"
-ahash = "0.6.1"
+rand = { version = "0.8.3", features = ["small_rng"] }
+lerp = "0.4.0"
+ahash = "0.7"
 collision = "0.20.1"
 cgmath = "0.17"
 flume = "0.10.1"
