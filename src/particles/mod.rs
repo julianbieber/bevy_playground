@@ -25,10 +25,10 @@ impl Plugin for ParticlePlugin {
         let (tx, rx) = unbounded::<(Mesh, ParticleDescription)>();
         let mut timer = Timer::from_seconds(50.0, true);
         timer.tick(40.0);
-        app.add_resource(ExplosionSpawnCoolDown { timer })
+        app.insert_resource(ExplosionSpawnCoolDown { timer })
             .add_asset::<ParticleDirectionMaterial>()
-            .add_resource(tx)
-            .add_resource(rx)
+            .insert_resource(tx)
+            .insert_resource(rx)
             .init_resource::<DelayedParticleSpawns>()
             .add_startup_system(setup_particles.system())
             .add_system(spawn_regular_explosions_system.system())

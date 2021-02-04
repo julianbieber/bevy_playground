@@ -54,7 +54,7 @@ fn player_setup(
             let camera_position_y = camera_position.y;
             let up = Vec3::unit_y();
             let camera_looking_point = -camera_position + 2.0 * camera_position_y * up;
-            parent.spawn(Camera3dBundle {
+            parent.spawn(PerspectiveCameraBundle {
                 transform: Transform::from_translation(camera_position)
                     .looking_at(camera_looking_point, up),
                 ..Default::default()

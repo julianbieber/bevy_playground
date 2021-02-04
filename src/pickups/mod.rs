@@ -15,7 +15,7 @@ pub struct EnergyPlugin;
 
 impl Plugin for EnergyPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(EnergySpawnTimer {
+        app.insert_resource(EnergySpawnTimer {
             timer: Timer::new(Duration::from_millis(600), true),
         })
         .add_startup_system(setup_ui.system())
@@ -119,7 +119,7 @@ struct EnergyText;
 fn setup_ui(commands: &mut Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraMono-Medium.ttf");
     commands
-        .spawn(CameraUiBundle::default())
+        .spawn(UiCameraBundle::default())
         .spawn(TextBundle {
             style: Style {
                 align_self: AlignSelf::FlexEnd,
@@ -131,15 +131,15 @@ fn setup_ui(commands: &mut Commands, asset_server: Res<AssetServer>) {
                 },
                 ..Default::default()
             },
-            text: Text {
-                value: "".to_string(),
-                font: font,
-                style: TextStyle {
+            text: Text::with_section(
+                String::new(),
+                TextStyle {
                     font_size: 50.0,
                     color: Color::WHITE,
-                    alignment: TextAlignment::default(),
+                    font,
                 },
-            },
+                TextAlignment::default(),
+            ),
             ..Default::default()
         })
         .with(EnergyText);
@@ -151,7 +151,7 @@ fn display_energy(
 ) {
     for mut text in text_query.iter_mut() {
         if let Some(e) = energy_query.iter().next() {
-            text.value = format!("Energy: {}", e.amount);
+            text.sections[0].value = format!("Energy: {}", e.amount);
         }
     }
 }

@@ -10,7 +10,7 @@ pub struct AIPlugin;
 
 impl Plugin for AIPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(SpawnCoolDown {
+        app.insert_resource(SpawnCoolDown {
             timer: Timer::from_seconds(2.0, true),
         })
         .add_system(npc_movement_system.system())
