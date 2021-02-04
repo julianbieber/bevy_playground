@@ -23,11 +23,12 @@ use crate::physics::collider::collision_update;
 use crate::player::PlayerPlugin;
 use crate::water::WaterPlugin;
 use voxel_world::collision::systems::terrain_collision_system;
-use world::world_setup;
+use world::{world_setup, WorldPlugin};
 
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
+        .add_plugin(WorldPlugin)
         .add_plugin(ParticlePlugin)
         .add_plugin(WaterPlugin)
         .add_plugin(AIPlugin)

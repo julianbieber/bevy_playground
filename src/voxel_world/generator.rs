@@ -1,6 +1,7 @@
 use super::voxel::{Voxel, VoxelTypes};
 use ahash::AHashMap;
-use bevy::prelude::*;
+use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use flume::Sender;
 use lerp::Lerp;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
@@ -22,26 +23,17 @@ impl VoxelWorld {
 
     pub fn add_to_world(
         self,
-        commands: &mut Commands,
-        asset_server: Res<AssetServer>,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        materials: &mut ResMut<Assets<StandardMaterial>>,
+        pool: ResMut<AsyncComputeTaskPool>,
+        tx: Res<Sender<(Mesh, Terrain, Option<Entity>)>>,
     ) {
-        let texture = asset_server.load("world_texture_color.png");
-        let material = materials.add(StandardMaterial {
-            albedo_texture: Some(texture),
-            ..Default::default()
-        });
         for pillar in self.pillars.into_iter() {
-            let terrain = pillar.voxels();
-            let m = meshes.add(Mesh::from(&terrain));
-            commands
-                .spawn(PbrBundle {
-                    mesh: m,
-                    material: material.clone(),
-                    ..Default::default()
-                })
-                .with(terrain);
+            let tx_copy = tx.clone();
+            pool.spawn(async move {
+                let terrain = pillar.voxels();
+                let m = Mesh::from(&terrain);
+                tx_copy.send((m, terrain, None)).unwrap();
+            })
+            .detach();
         }
     }
 }
