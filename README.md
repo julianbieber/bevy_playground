@@ -7,7 +7,7 @@
 - [x] Stormlight Pickups
 - [x] Explosions hit cost stormlight
 - [ ] Storms rip blocks out of world
-  - [ ] generate voxel mesh in background
+  - [x] generate voxel mesh in background
   - [ ] remove voxels from world
   - [ ] stom removes voxels from top and spawns new block with matching texture
   - [ ] storm moves blocks

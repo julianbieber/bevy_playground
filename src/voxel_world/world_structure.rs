@@ -6,6 +6,7 @@ type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;
 
 pub type WorldStructure = AHashMap<i32, ZWorldCoordinate>;
 
+#[derive(Clone)]
 pub struct Terrain {
     pub structure: WorldStructure,
 }
