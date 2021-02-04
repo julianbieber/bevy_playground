@@ -30,7 +30,6 @@ impl VoxelWorld {
         let texture = asset_server.load("world_texture_color.png");
         let material = materials.add(StandardMaterial {
             albedo_texture: Some(texture),
-            shaded: true,
             ..Default::default()
         });
         for pillar in self.pillars.into_iter() {
