@@ -16,10 +16,7 @@ pub fn world_setup(
         ..Default::default()
     });
 
-    let cube_handle = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.5,
-        subdivisions: 8,
-    }));
+    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.0, 1.0, 0.0),
         ..Default::default()
@@ -29,11 +26,15 @@ pub fn world_setup(
         .spawn(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
-            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 45.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 22.0, 0.1)),
             ..Default::default()
         })
         .with(Collider {
-            collider_shape: ColliderShapes::cube(0.5),
+            collider_shape: ColliderShapes::Cuboid {
+                half_width_x: 0.25,
+                half_height_y: 0.25,
+                half_depth_z: 0.25,
+            },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         });
 }

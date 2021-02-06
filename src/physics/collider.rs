@@ -1,5 +1,7 @@
 use bevy::ecs::Query;
 use bevy::prelude::*;
+use cgmath::num_traits::Float;
+use std::cmp::min;
 use std::collections::HashMap;
 use std::ops::AddAssign;
 
@@ -185,7 +187,7 @@ impl Collider {
                 );
                 let offset: Vec4 =
                     local_sphere_center - Vec4::new(closest_x, closest_y, closest_z, 1.0);
-                if !(offset.length() < radius) || dbg!(offset.length()) == 0.0 {
+                if !(offset.length() < radius) || offset.length() == 0.0 {
                     None
                 } else {
                     let impulse_strength = 0.5 * (radius - offset.length()) / offset.length();
@@ -196,8 +198,299 @@ impl Collider {
                 half_width_x: _,
                 half_height_y: _,
                 half_depth_z: _,
-            } => None,
+            } => {
+                Collider::GJK(self, other, transform, other_transform);
+                None
+            }
         }
+    }
+
+    fn find_furthest_point(direction: Vec3, vertices: &Vec<Vec3>) -> Vec3 {
+        let mut maxPoint: Vec3 = Vec3::zero();
+        let mut maxDistance: f32 = -f32::infinity();
+
+        for vertex in vertices.iter() {
+            let distance: f32 = vertex.dot(direction);
+            if distance > maxDistance {
+                maxDistance = distance;
+                maxPoint = vertex.clone();
+            }
+        }
+        maxPoint
+    }
+
+    fn compute_vertices(collider: &Collider, transform: &Mat4) -> Vec<Vec3> {
+        let mut edges: Vec<Vec3> = Vec::new();
+        match collider.collider_shape {
+            ColliderShapes::Cuboid {
+                half_width_x,
+                half_height_y,
+                half_depth_z,
+            } => {
+                let local_position = collider.local_position;
+                for x in vec![-half_width_x, half_width_x] {
+                    for y in vec![-half_height_y, half_height_y] {
+                        for z in vec![-half_depth_z, half_depth_z] {
+                            let local_edge = local_position
+                                + x * Vec3::unit_x()
+                                + y * Vec3::unit_y()
+                                + z * Vec3::unit_z();
+                            let global_edge: Vec4 = transform.mul_vec4(Vec4::new(
+                                local_edge.x,
+                                local_edge.y,
+                                local_edge.z,
+                                1.0,
+                            ));
+                            let g = Vec3::new(global_edge.x, global_edge.y, global_edge.z);
+                            edges.push(g);
+                        }
+                    }
+                }
+            }
+            ColliderShapes::Sphere { radius } => {}
+        }
+        edges
+    }
+
+    fn support(colliderA: Vec<Vec3>, colliderB: Vec<Vec3>, direction: Vec3) -> Vec3 {
+        Collider::find_furthest_point(direction, &colliderA)
+            - Collider::find_furthest_point(-direction, &colliderB)
+    }
+
+    fn GJK(
+        collider: &Collider,
+        other_collider: &Collider,
+        transform: &Mat4,
+        other_transform: &Mat4,
+    ) -> bool {
+        let vertices: Vec<Vec3> = Collider::compute_vertices(collider, transform);
+        let other_vertices: Vec<Vec3> = Collider::compute_vertices(other_collider, other_transform);
+        let mut support: Vec3 =
+            Collider::support(vertices.clone(), other_vertices.clone(), Vec3::unit_x());
+        let mut simplex = Simplex::new();
+        simplex.push_front(support);
+        // New direction is towards the origin
+        let mut direction: Vec3 = -support;
+        let mut number_of_iterations: i32 = 0;
+        let max_number_of_iterations: i32 = 700;
+        while number_of_iterations < max_number_of_iterations {
+            support = Collider::support(vertices.clone(), other_vertices.clone(), direction);
+
+            if support.dot(direction) <= 0.0 {
+                return false; // no collision
+            }
+            simplex.push_front(support);
+            let a: Help = Collider::next_simplex(simplex, direction);
+            if a.boolean {
+                return true;
+            }
+            simplex = a.simplex;
+            direction = a.direction;
+            number_of_iterations += 1;
+        }
+        false
+    }
+
+    fn same_direction(direction: Vec3, point_to_origin: Vec3) -> bool {
+        direction.dot(point_to_origin) > 0.0
+    }
+
+    fn next_simplex(points: Simplex, direction: Vec3) -> Help {
+        match points.number_of_vertices {
+            2 => Collider::line(points, direction),
+            3 => Collider::triangle(points, direction),
+            4 => Collider::tetrahedron(points, direction),
+            _ => Help {
+                simplex: points,
+                direction,
+                boolean: false,
+            },
+        }
+    }
+
+    fn line(points: Simplex, mut direction: Vec3) -> Help {
+        let a: Vec3 = points.vertices[0];
+        let b: Vec3 = points.vertices[1];
+
+        let ab: Vec3 = b - a;
+        let ao: Vec3 = -a;
+
+        let mut simplex: Simplex = Simplex::new();
+
+        if Collider::same_direction(ab, ao) {
+            simplex = points;
+            direction = ab.cross(ao).cross(ab);
+        } else {
+            let mut p: Vec<Vec3> = Vec::new();
+            p.push(a);
+            simplex.number_of_vertices = p.len();
+            simplex.vertices = p;
+            direction = ao;
+        }
+        Help {
+            simplex,
+            direction,
+            boolean: false,
+        }
+    }
+
+    fn triangle(points: Simplex, mut direction: Vec3) -> Help {
+        let a: Vec3 = points.vertices[0];
+        let b: Vec3 = points.vertices[1];
+        let c: Vec3 = points.vertices[2];
+
+        let ab: Vec3 = b - a;
+        let ac: Vec3 = c - a;
+        let ao: Vec3 = -a;
+
+        let abc: Vec3 = ab.cross(ac);
+
+        let mut simplex: Simplex = Simplex::new();
+        let mut s: Simplex = Simplex::new();
+        let mut result: Help = Help {
+            simplex: s,
+            direction,
+            boolean: false,
+        };
+
+        if Collider::same_direction(abc.cross(ac), ao) {
+            if Collider::same_direction(ac, ao) {
+                let mut p: Vec<Vec3> = Vec::new();
+                p.push(a);
+                p.push(c);
+                simplex.number_of_vertices = p.len();
+                simplex.vertices = p;
+                direction = ac.cross(ao).cross(ac);
+                result = Help {
+                    simplex,
+                    direction,
+                    boolean: false,
+                };
+            } else {
+                let mut p: Vec<Vec3> = Vec::new();
+                p.push(a);
+                p.push(b);
+                simplex.number_of_vertices = p.len();
+                simplex.vertices = p;
+                return Collider::line(points, direction);
+            }
+        } else {
+            if Collider::same_direction(ab.cross(abc), ao) {
+                let mut p: Vec<Vec3> = Vec::new();
+                p.push(a);
+                p.push(b);
+                simplex.number_of_vertices = p.len();
+                simplex.vertices = p;
+                return Collider::line(points, direction);
+            } else {
+                if Collider::same_direction(abc, ao) {
+                    simplex = points;
+                    direction = abc;
+                    result = Help {
+                        simplex,
+                        direction,
+                        boolean: false,
+                    };
+                } else {
+                    let mut p: Vec<Vec3> = Vec::new();
+                    p.push(a);
+                    p.push(c);
+                    p.push(b);
+                    simplex.number_of_vertices = p.len();
+                    simplex.vertices = p;
+                    direction = -abc;
+                    result = Help {
+                        simplex,
+                        direction,
+                        boolean: false,
+                    };
+                }
+            }
+        }
+        result
+    }
+
+    fn tetrahedron(mut points: Simplex, direction: Vec3) -> Help {
+        let a: Vec3 = points.vertices[0];
+        let b: Vec3 = points.vertices[1];
+        let c: Vec3 = points.vertices[2];
+        let d: Vec3 = points.vertices[3];
+
+        let ab: Vec3 = b - a;
+        let ac: Vec3 = c - a;
+        let ad: Vec3 = d - a;
+        let ao: Vec3 = -a;
+
+        let abc: Vec3 = ab.cross(ac);
+        let acd: Vec3 = ac.cross(ad);
+        let adb: Vec3 = ad.cross(ab);
+
+        if Collider::same_direction(abc, ao) {
+            let mut p: Vec<Vec3> = Vec::new();
+            p.push(a);
+            p.push(b);
+            p.push(c);
+            points.number_of_vertices = p.len();
+            points.vertices = p;
+            return Collider::triangle(points, direction);
+        } else if Collider::same_direction(acd, ao) {
+            let mut p: Vec<Vec3> = Vec::new();
+            p.push(a);
+            p.push(c);
+            p.push(d);
+            points.number_of_vertices = p.len();
+            points.vertices = p;
+            return Collider::triangle(points, direction);
+        } else if Collider::same_direction(adb, ao) {
+            let mut p: Vec<Vec3> = Vec::new();
+            p.push(a);
+            p.push(d);
+            p.push(b);
+            points.number_of_vertices = p.len();
+            points.vertices = p;
+            return Collider::triangle(points, direction);
+        }
+        Help {
+            simplex: points,
+            direction,
+            boolean: true,
+        }
+    }
+}
+struct Help {
+    simplex: Simplex,
+    direction: Vec3,
+    boolean: bool,
+}
+
+struct Simplex {
+    vertices: Vec<Vec3>,
+    number_of_vertices: usize,
+}
+
+impl Simplex {
+    pub fn new() -> Self {
+        let vertices: Vec<Vec3> = Vec::new();
+        let number_of_vertices: usize = 0;
+        Self {
+            vertices,
+            number_of_vertices,
+        }
+    }
+
+    pub fn push_front(&mut self, vertex: Vec3) -> &mut Simplex {
+        let mut v = Vec::new();
+        v.push(vertex);
+        let max_number_vertices: usize = 4;
+        let vertices = min(max_number_vertices, self.number_of_vertices + 1);
+        let mut i = 0;
+        while v.len() < vertices {
+            v.push(self.vertices.get(i).get_or_insert(&Vec3::zero()).clone());
+            i = i + 1;
+        }
+        self.number_of_vertices = v.len();
+        self.vertices = v;
+        self
     }
 }
 
