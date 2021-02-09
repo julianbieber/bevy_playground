@@ -6,7 +6,6 @@ use std::borrow::Cow;
 
 use super::voxel::{VoxelTypes, HALF_VOXEL_SIZE};
 use super::world_structure::Terrain;
-use crate::voxel_world::world_structure::WorldStructureImpl;
 
 impl From<&Terrain> for Mesh {
     fn from(terrain: &Terrain) -> Self {
@@ -19,7 +18,7 @@ impl From<&Terrain> for Mesh {
         for (_, x_map) in voxels.iter() {
             for (_, z_map) in x_map.iter() {
                 for (_, voxel) in z_map.iter() {
-                    if !terrain.structure.is_surrounded(&voxel.position) {
+                    if !terrain.is_surrounded(&voxel.position) {
                         let voxel_world_position = voxel.position.to_vec();
                         let x = voxel_world_position.x;
                         let y = voxel_world_position.y;

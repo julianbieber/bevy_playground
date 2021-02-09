@@ -49,6 +49,20 @@ impl VoxelPosition {
         );
         (min, max)
     }
+
+    pub fn sphere(center: &Vec3, radius: f32) -> Vec<VoxelPosition> {
+        let center_voxel = VoxelPosition::from_vec3(center);
+        let voxel_radius = (radius / VOXEL_SIZE) as i32;
+        let mut voxels = Vec::with_capacity((voxel_radius + voxel_radius * voxel_radius) as usize);
+        for x in center_voxel.x - voxel_radius..center_voxel.x + voxel_radius {
+            for y in center_voxel.y - voxel_radius..center_voxel.y + voxel_radius {
+                for z in center_voxel.z - voxel_radius..center_voxel.z + voxel_radius {
+                    voxels.push(VoxelPosition { x, y, z });
+                }
+            }
+        }
+        voxels
+    }
 }
 
 pub trait VoxelBox {
