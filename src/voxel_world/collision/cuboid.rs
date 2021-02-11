@@ -27,7 +27,6 @@ pub fn collision_depth_cubiod(
                 ..world_2_voxel_space(transformed_center.z + half_z) + 1
             {
                 terrain
-                    .structure
                     .get_at(&potential_x, &potential_y, &potential_z)
                     .map(|terrain_voxel| {
                         if let Some((distance, axis)) = collision(

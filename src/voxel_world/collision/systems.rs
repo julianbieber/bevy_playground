@@ -50,7 +50,6 @@ fn collision_depth_sphere(terrain: &Terrain, center: Vec3, radius: f32) -> Vec3 
                 ..world_2_voxel_space(center.z + radius) + 1
             {
                 terrain
-                    .structure
                     .get_at(&potential_x, &potential_y, &potential_z)
                     .map(|terrain_voxel| {
                         let closest_point = terrain_voxel.position.to_box().closest_point(&center);

@@ -1,4 +1,5 @@
-use crate::delayed_despawn::DelayedDespawns;
+use std::sync::Arc;
+
 use crate::movement::model::{MoveEvent, UnitRotation};
 use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
@@ -6,6 +7,11 @@ use crate::player::model::ReceivesInput;
 use crate::{
     ai::model::{NPCBehaviours, NPC},
     unit_effects::{DelayedEffects, Effect, Effects},
+};
+use crate::{
+    delayed_despawn::{self, DelayedDespawns},
+    voxel_world::{voxel::VoxelPosition, world_structure::Terrain},
+    world::{DelayedWorldTransformations, WorldUpdateEvent},
 };
 use bevy::prelude::*;
 use bevy::utils::Duration;
@@ -54,6 +60,8 @@ pub fn update_behaviour_system(
     mut delayed_spawn_res: ResMut<DelayedParticleSpawns>,
     mut despanws_res: ResMut<DelayedDespawns>,
     mut effects_res: ResMut<DelayedEffects>,
+    mut world_transformations: ResMut<DelayedWorldTransformations>,
+    world_query: Query<(Entity, &Terrain)>,
 ) {
     for (_, player_transform) in player_query.iter() {
         for (entity, mut npc, npc_transform) in npcs_query.iter_mut() {
@@ -76,6 +84,19 @@ pub fn update_behaviour_system(
                         despanws_res
                             .despawns
                             .push((Timer::from_seconds(2.1, false), entity));
+                        let center = npc_transform.translation.clone();
+                        let delete =
+                            Arc::new(move |terrain: &Terrain| VoxelPosition::sphere(&center, 10.0));
+                        for (terrain_entity, _) in world_query.iter() {
+                            world_transformations.transformations.push((
+                                Timer::from_seconds(2.1, false),
+                                WorldUpdateEvent {
+                                    entity: terrain_entity,
+                                    delete: delete.clone(),
+                                },
+                            ));
+                        }
+
                         effects_res.effects.push((
                             Timer::from_seconds(2.1, false),
                             Effect {

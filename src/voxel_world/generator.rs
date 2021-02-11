@@ -70,7 +70,7 @@ impl PillarGenerator {
 
     pub fn voxels(&self) -> Terrain {
         let mut rng = SmallRng::from_entropy();
-        let mut world: WorldStructure = AHashMap::new();
+        let mut world = Terrain::new();
         for layer in 0..self.height {
             let radius = self.radius_at_level(layer);
             let radius_sq = radius * radius;
@@ -85,7 +85,8 @@ impl PillarGenerator {
                 }
             }
         }
-        Terrain { structure: world }
+        world.recalculate();
+        world
     }
 
     fn voxel_type(&self, mut rng: &mut SmallRng, y: i32) -> VoxelTypes {
