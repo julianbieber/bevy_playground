@@ -7,11 +7,11 @@ type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;
 
 pub type WorldStructure = AHashMap<i32, ZWorldCoordinate>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Terrain {
     pub structure: WorldStructure,
-    min: [i32; 3],
-    max: [i32; 3],
+    pub min: [i32; 3],
+    pub max: [i32; 3],
     min_count: [u32; 3],
     max_count: [u32; 3],
 }
@@ -42,8 +42,8 @@ impl Terrain {
 
             if *x > self.max[0] {
                 self.max[0] = *x;
-                self.max[0] = 1;
-            } else if *x == self.max[2] {
+                self.max_count[0] = 1;
+            } else if *x == self.max[0] {
                 self.max_count[0] += 1;
             }
 
@@ -57,7 +57,7 @@ impl Terrain {
 
                 if *z > self.max[2] {
                     self.max[2] = *z;
-                    self.max[2] = 1;
+                    self.max_count[2] = 1;
                 } else if *z == self.max[2] {
                     self.max_count[2] += 1;
                 }
@@ -72,8 +72,8 @@ impl Terrain {
 
                     if *y > self.max[1] {
                         self.max[1] = *y;
-                        self.max[1] = 1;
-                    } else if *y == self.max[2] {
+                        self.max_count[1] = 1;
+                    } else if *y == self.max[1] {
                         self.max_count[1] += 1;
                     }
                 }

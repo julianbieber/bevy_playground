@@ -9,7 +9,7 @@ use crate::{
     unit_effects::{DelayedEffects, Effect, Effects},
 };
 use crate::{
-    delayed_despawn::{self, DelayedDespawns},
+    delayed_despawn::DelayedDespawns,
     voxel_world::{voxel::VoxelPosition, world_structure::Terrain},
     world::{DelayedWorldTransformations, WorldUpdateEvent},
 };
