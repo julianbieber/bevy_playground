@@ -1,12 +1,13 @@
 use std::sync::{Arc, Mutex};
 
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use bevy::{prelude::*, tasks::AsyncComputeTaskPool, transform};
 
-use crate::particles::model::ParticleTypes;
 use crate::voxel_world::generator::VoxelWorld;
 use crate::voxel_world::voxel::{Voxel, VoxelPosition};
+use crate::{delayed_despawn, particles::model::ParticleTypes};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
+    voxel_world::voxel::world_2_voxel_space,
     voxel_world::world_structure::Terrain,
 };
 use ahash::AHashMap;
@@ -136,6 +137,7 @@ pub fn update_world_event_reader(
                         old_terrain.remove_voxel(voxel);
                     }
                 }
+                old_terrain.recalculate();
                 let new_mesh = Mesh::from(&old_terrain);
                 tx_c.send((new_mesh, old_terrain, Some(entity)))
             })
@@ -146,11 +148,45 @@ pub fn update_world_event_reader(
 pub fn erosion(
     particle_emitters_query: Query<(&ParticleTypes, &Transform)>,
     mut update_events: ResMut<Events<WorldUpdateEvent>>,
+    world_query: Query<(Entity, &Terrain)>,
 ) {
     for (particle_type, transform) in particle_emitters_query.iter() {
         match particle_type {
             ParticleTypes::Explosion { radius } => {}
-            ParticleTypes::HighStorm { depth } => {}
+            ParticleTypes::HighStorm { depth } => {
+                for (terrain_entity, _) in world_query.iter() {
+                    let highstorm_center = transform.translation.clone();
+                    let d = depth.clone();
+                    let mut rng = SmallRng::from_entropy();
+                    if rng.gen_range(0.0..1.0) < 0.01 {
+                        let delete = Arc::new(move |terrain: &Terrain| {
+                            let mut rng = SmallRng::from_entropy();
+                            let p = VoxelPosition {
+                                x: rng.gen_range(terrain.min[0]..terrain.max[0]),
+                                y: terrain.max[1],
+                                z: rng.gen_range(terrain.min[2]..terrain.max[2]),
+                            };
+                            let world_space = p.to_vec();
+                            if world_space.x > highstorm_center.x - d
+                                && world_space.x < highstorm_center.x + d
+                                && world_space.y > highstorm_center.y
+                                && world_space.y < highstorm_center.y + 60.0
+                                && world_space.z > highstorm_center.z - 200.0
+                                && world_space.z < highstorm_center.z + 200.0
+                            {
+                                vec![p]
+                            } else {
+                                Vec::new()
+                            }
+                        });
+
+                        update_events.send(WorldUpdateEvent {
+                            delete,
+                            entity: terrain_entity,
+                        });
+                    }
+                }
+            }
         }
     }
 }
