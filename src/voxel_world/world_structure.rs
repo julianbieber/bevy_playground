@@ -131,11 +131,11 @@ impl Terrain {
         true
     }
 
-    pub fn remove_voxel(&mut self, voxel: VoxelPosition) {
-        self.structure.get_mut(&voxel.x).map(|i| {
-            i.get_mut(&voxel.z).map(|i| {
-                i.remove(&voxel.y);
-            });
-        });
+    pub fn remove_voxel(&mut self, voxel: VoxelPosition) -> Option<Voxel> {
+        self.structure
+            .get_mut(&voxel.x)
+            .map(|i| i.get_mut(&voxel.z).map(|i| i.remove(&voxel.y)))
+            .flatten()
+            .flatten()
     }
 }

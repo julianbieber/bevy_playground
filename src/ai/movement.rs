@@ -93,6 +93,7 @@ pub fn update_behaviour_system(
                                 WorldUpdateEvent {
                                     entity: terrain_entity,
                                     delete: delete.clone(),
+                                    replace: false,
                                 },
                             ));
                         }

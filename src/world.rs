@@ -2,9 +2,16 @@ use std::sync::{Arc, Mutex};
 
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool, transform};
 
-use crate::voxel_world::generator::VoxelWorld;
-use crate::voxel_world::voxel::{Voxel, VoxelPosition};
 use crate::{delayed_despawn, particles::model::ParticleTypes};
+use crate::{
+    movement::model::MoveEvent,
+    unit_effects::DelayedEffects,
+    voxel_world::voxel::{Voxel, VoxelPosition},
+};
+use crate::{
+    movement::model::UnitRotation,
+    voxel_world::{self, generator::VoxelWorld},
+};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
     voxel_world::voxel::world_2_voxel_space,
@@ -15,10 +22,11 @@ use flume::{unbounded, Receiver, Sender};
 use rand::prelude::*;
 
 pub struct WorldPlugin;
+pub struct FreeFloatingVoxel;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        let (tx, rx) = unbounded::<(Mesh, Terrain, Option<Entity>)>();
+        let (tx, rx) = unbounded::<WorldUpdateResult>();
         app.insert_resource(tx)
             .insert_resource(rx)
             .insert_resource(DelayedWorldTransformations {
@@ -28,7 +36,8 @@ impl Plugin for WorldPlugin {
             .add_system(update_world_from_channel.system())
             .add_system(update_world_event_reader.system())
             .add_system(erosion.system())
-            .add_system(evaluate_delayed_transformations.system());
+            .add_system(evaluate_delayed_transformations.system())
+            .add_system(move_floating_voxels.system());
     }
 }
 
@@ -37,7 +46,7 @@ pub fn world_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Sender<(Mesh, Terrain, Option<Entity>)>>,
+    tx: Res<Sender<WorldUpdateResult>>,
 ) {
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     w.add_to_world(pool, tx);
@@ -75,7 +84,7 @@ pub fn update_world_from_channel(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    rx: Res<Receiver<(Mesh, Terrain, Option<Entity>)>>,
+    rx: Res<Receiver<WorldUpdateResult>>,
 ) {
     if !rx.is_empty() {
         let texture = asset_server.load("world_texture_color.png");
@@ -84,21 +93,38 @@ pub fn update_world_from_channel(
             ..Default::default()
         });
 
-        for (mesh, terrain, optional_entity) in rx.try_iter() {
-            if let Some(entity) = optional_entity {
+        for world_update_result in rx.try_iter() {
+            if let Some(entity) = world_update_result.existing_terrain_entity {
                 commands.set_current_entity(entity);
                 commands
                     .remove::<(Handle<Mesh>, Terrain)>(entity)
-                    .with(meshes.add(mesh))
-                    .with(terrain);
+                    .with(meshes.add(world_update_result.new_terrain_mesh))
+                    .with(world_update_result.terrain);
             } else {
                 commands
                     .spawn(PbrBundle {
-                        mesh: meshes.add(mesh),
+                        mesh: meshes.add(world_update_result.new_terrain_mesh),
                         material: material.clone(),
                         ..Default::default()
                     })
-                    .with(terrain);
+                    .with(world_update_result.terrain);
+            }
+
+            // TODO
+            for voxel in world_update_result.voxels_to_replace.iter() {
+                let mesh = meshes.add(Mesh::from(voxel));
+                let bundle = PbrBundle {
+                    mesh,
+                    material: material.clone(),
+                    transform: Transform::from_translation(voxel.position.to_vec()),
+                    ..Default::default()
+                };
+                commands
+                    .spawn(bundle)
+                    .with(FreeFloatingVoxel)
+                    .with(UnitRotation {
+                        rotation: Vec3::zero(),
+                    });
             }
         }
     }
@@ -108,23 +134,34 @@ pub fn update_world_from_channel(
 pub struct WorldUpdateEvent {
     pub entity: Entity,
     pub delete: Arc<dyn Fn(&Terrain) -> Vec<VoxelPosition> + Send + Sync>,
+    pub replace: bool,
+}
+
+pub struct WorldUpdateResult {
+    pub new_terrain_mesh: Mesh,
+    pub terrain: Terrain,
+    pub existing_terrain_entity: Option<Entity>,
+    pub voxels_to_replace: Vec<Voxel>,
 }
 
 pub fn update_world_event_reader(
     mut update_events: EventReader<WorldUpdateEvent>,
     terrain_query: Query<&Terrain>,
     pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Sender<(Mesh, Terrain, Option<Entity>)>>,
+    tx: Res<Sender<WorldUpdateResult>>,
 ) {
     let mut updates: AHashMap<
         Entity,
-        Vec<Arc<dyn Fn(&Terrain) -> Vec<VoxelPosition> + Send + Sync>>,
+        Vec<(
+            Arc<dyn Fn(&Terrain) -> Vec<VoxelPosition> + Send + Sync>,
+            bool,
+        )>,
     > = AHashMap::new();
     for event in update_events.iter() {
         updates
             .entry(event.entity)
             .or_insert(Vec::new())
-            .push(event.delete.clone());
+            .push((event.delete.clone(), event.replace));
     }
 
     for (entity, updates) in updates.into_iter() {
@@ -132,14 +169,24 @@ pub fn update_world_event_reader(
         let tx_c = tx.clone();
         pool.0
             .spawn(async move {
-                for voxel_fn in updates.into_iter() {
+                let mut replace_voxels: Vec<Voxel> = Vec::new();
+                for (voxel_fn, replace) in updates.into_iter() {
                     for voxel in voxel_fn(&old_terrain).into_iter() {
-                        old_terrain.remove_voxel(voxel);
+                        old_terrain.remove_voxel(voxel).map(|v| {
+                            if replace {
+                                replace_voxels.push(v);
+                            }
+                        });
                     }
                 }
                 old_terrain.recalculate();
                 let new_mesh = Mesh::from(&old_terrain);
-                tx_c.send((new_mesh, old_terrain, Some(entity)))
+                tx_c.send(WorldUpdateResult {
+                    new_terrain_mesh: new_mesh,
+                    terrain: old_terrain,
+                    existing_terrain_entity: Some(entity),
+                    voxels_to_replace: replace_voxels,
+                })
             })
             .detach();
     }
@@ -183,7 +230,49 @@ pub fn erosion(
                         update_events.send(WorldUpdateEvent {
                             delete,
                             entity: terrain_entity,
+                            replace: true,
                         });
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn move_floating_voxels(
+    voxel_query: Query<(Entity, &FreeFloatingVoxel, &Transform)>,
+    storm_query: Query<(&ParticleTypes, &Transform)>,
+    mut movement_events: ResMut<Events<MoveEvent>>,
+    time: Res<Time>,
+) {
+    let mut rng = SmallRng::from_entropy();
+    for (particle_type, transform) in storm_query.iter() {
+        match particle_type {
+            ParticleTypes::Explosion { .. } => {}
+            ParticleTypes::HighStorm { depth } => {
+                let highstorm_center = transform.translation;
+                for (voxel_entity, _, voxel_transform) in voxel_query.iter() {
+                    let translation = voxel_transform.translation;
+                    if translation.x > highstorm_center.x - depth
+                        && translation.x < highstorm_center.x + depth
+                        && translation.y > highstorm_center.y
+                        && translation.y < highstorm_center.y + 60.0
+                        && translation.z > highstorm_center.z - 200.0
+                        && translation.z < highstorm_center.z + 200.0
+                    {
+                        movement_events.send(MoveEvent {
+                            rotation_offset: Vec3::new(
+                                rng.gen_range(-0.1..0.1),
+                                rng.gen_range(-0.1..0.1),
+                                rng.gen_range(-0.1..0.1),
+                            ) * time.delta_seconds(),
+                            translation_offset: Vec3::new(
+                                rng.gen_range(-0.1..0.0),
+                                rng.gen_range(-0.5..1.0),
+                                rng.gen_range(-0.1..0.1),
+                            ) * time.delta_seconds(),
+                            entity: voxel_entity,
+                        })
                     }
                 }
             }
