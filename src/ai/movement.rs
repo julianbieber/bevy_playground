@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::movement::model::{MoveEvent, UnitRotation};
 use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
@@ -11,7 +10,10 @@ use crate::{
 use crate::{
     delayed_despawn::DelayedDespawns,
     voxel_world::{voxel::VoxelPosition, world_structure::Terrain},
-    world::{DelayedWorldTransformations, WorldUpdateEvent},
+};
+use crate::{
+    movement::model::{MoveEvent, UnitRotation},
+    world::model::{DelayedWorldTransformations, WorldUpdateEvent},
 };
 use bevy::prelude::*;
 use bevy::utils::Duration;

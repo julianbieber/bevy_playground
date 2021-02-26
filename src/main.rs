@@ -23,7 +23,7 @@ use crate::physics::collider::collision_update;
 use crate::player::PlayerPlugin;
 use crate::water::WaterPlugin;
 use voxel_world::collision::systems::terrain_collision_system;
-use world::{world_setup, WorldPlugin};
+use world::WorldPlugin;
 
 fn main() {
     App::build()
@@ -41,7 +41,6 @@ fn main() {
         // Adds a system that prints diagnostics to the console
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
-        .add_startup_system(world_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
         .add_system(terrain_collision_system.system())
         .add_system(collision_update.system())

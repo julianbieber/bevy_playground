@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bevy::{prelude::*, transform};
 
-use crate::{pickups::Energy, voxel_world::world_structure::Terrain, world::WorldUpdateEvent};
+use crate::{pickups::Energy, voxel_world::world_structure::Terrain};
 
 pub struct DelayedUnitEffectsPlugin;
 
