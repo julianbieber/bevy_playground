@@ -1,6 +1,5 @@
 use super::voxel::{Voxel, VoxelPosition};
 use ahash::AHashMap;
-use bevy::prelude::Vec3;
 
 type YWorldCoordinate = AHashMap<i32, Voxel>;
 type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;
@@ -131,11 +130,11 @@ impl Terrain {
         true
     }
 
-    pub fn remove_voxel(&mut self, voxel: VoxelPosition) {
-        self.structure.get_mut(&voxel.x).map(|i| {
-            i.get_mut(&voxel.z).map(|i| {
-                i.remove(&voxel.y);
-            });
-        });
+    pub fn remove_voxel(&mut self, voxel: VoxelPosition) -> Option<Voxel> {
+        self.structure
+            .get_mut(&voxel.x)
+            .map(|i| i.get_mut(&voxel.z).map(|i| i.remove(&voxel.y)))
+            .flatten()
+            .flatten()
     }
 }

@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::movement::model::{MoveEvent, UnitRotation};
 use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
@@ -11,7 +10,10 @@ use crate::{
 use crate::{
     delayed_despawn::DelayedDespawns,
     voxel_world::{voxel::VoxelPosition, world_structure::Terrain},
-    world::{DelayedWorldTransformations, WorldUpdateEvent},
+};
+use crate::{
+    movement::model::{MoveEvent, UnitRotation},
+    world::model::{DelayedWorldTransformations, WorldUpdateEvent},
 };
 use bevy::prelude::*;
 use bevy::utils::Duration;
@@ -85,14 +87,16 @@ pub fn update_behaviour_system(
                             .despawns
                             .push((Timer::from_seconds(2.1, false), entity));
                         let center = npc_transform.translation.clone();
-                        let delete =
-                            Arc::new(move |terrain: &Terrain| VoxelPosition::sphere(&center, 10.0));
+                        let delete = Arc::new(move |_terrain: &Terrain| {
+                            VoxelPosition::sphere(&center, 10.0)
+                        });
                         for (terrain_entity, _) in world_query.iter() {
                             world_transformations.transformations.push((
                                 Timer::from_seconds(2.1, false),
                                 WorldUpdateEvent {
                                     entity: terrain_entity,
                                     delete: delete.clone(),
+                                    replace: false,
                                 },
                             ));
                         }

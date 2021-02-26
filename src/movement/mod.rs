@@ -33,6 +33,8 @@ fn movement_system(
 
             let translation_offset = transform.rotation.mul_vec3(movement.translation_offset);
             transform.translation += translation_offset;
+        } else {
+            dbg!("Could not find entity");
         }
     }
 }
