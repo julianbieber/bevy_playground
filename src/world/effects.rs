@@ -18,7 +18,7 @@ pub fn erosion(
 ) {
     for (particle_type, transform) in particle_emitters_query.iter() {
         match particle_type {
-            ParticleTypes::Explosion { radius } => {}
+            ParticleTypes::Explosion { radius: _ } => {}
             ParticleTypes::HighStorm { depth } => {
                 for (terrain_entity, _) in world_query.iter() {
                     let highstorm_center = transform.translation.clone();

@@ -1,8 +1,6 @@
-use std::sync::Arc;
+use bevy::prelude::*;
 
-use bevy::{prelude::*, transform};
-
-use crate::{pickups::Energy, voxel_world::world_structure::Terrain};
+use crate::pickups::Energy;
 
 pub struct DelayedUnitEffectsPlugin;
 

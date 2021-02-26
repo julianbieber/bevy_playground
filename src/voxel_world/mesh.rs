@@ -4,7 +4,7 @@ use bevy::{
 };
 use std::borrow::Cow;
 
-use super::voxel::{self, Voxel, VoxelTypes, HALF_VOXEL_SIZE};
+use super::voxel::{Voxel, VoxelTypes, HALF_VOXEL_SIZE};
 use super::world_structure::Terrain;
 
 impl From<&Terrain> for Mesh {

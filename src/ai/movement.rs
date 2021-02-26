@@ -87,8 +87,9 @@ pub fn update_behaviour_system(
                             .despawns
                             .push((Timer::from_seconds(2.1, false), entity));
                         let center = npc_transform.translation.clone();
-                        let delete =
-                            Arc::new(move |terrain: &Terrain| VoxelPosition::sphere(&center, 10.0));
+                        let delete = Arc::new(move |_terrain: &Terrain| {
+                            VoxelPosition::sphere(&center, 10.0)
+                        });
                         for (terrain_entity, _) in world_query.iter() {
                             world_transformations.transformations.push((
                                 Timer::from_seconds(2.1, false),

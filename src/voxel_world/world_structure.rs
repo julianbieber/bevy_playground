@@ -1,6 +1,5 @@
 use super::voxel::{Voxel, VoxelPosition};
 use ahash::AHashMap;
-use bevy::prelude::Vec3;
 
 type YWorldCoordinate = AHashMap<i32, Voxel>;
 type ZWorldCoordinate = AHashMap<i32, YWorldCoordinate>;

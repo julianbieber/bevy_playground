@@ -1,7 +1,7 @@
 use crate::world::model::WorldUpdateResult;
 
 use super::voxel::{Voxel, VoxelTypes};
-use ahash::AHashMap;
+
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use flume::Sender;
 use lerp::Lerp;
@@ -33,14 +33,14 @@ impl VoxelWorld {
             pool.spawn(async move {
                 let terrain = pillar.voxels();
                 let m = Mesh::from(&terrain);
-                let foo = tx_copy.send(WorldUpdateResult {
-                    new_terrain_mesh: m,
-                    terrain: terrain,
-                    existing_terrain_entity: None,
-                    voxels_to_replace: Vec::new(),
-                });
-                dbg!(&foo);
-                foo.unwrap();
+                tx_copy
+                    .send(WorldUpdateResult {
+                        new_terrain_mesh: m,
+                        terrain: terrain,
+                        existing_terrain_entity: None,
+                        voxels_to_replace: Vec::new(),
+                    })
+                    .unwrap();
             })
             .detach();
         }

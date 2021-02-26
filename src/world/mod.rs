@@ -15,7 +15,6 @@ use self::{
     evaluation::{
         evaluate_delayed_transformations, update_world_event_reader, update_world_from_channel,
     },
-    internal_model::FreeFloatingVoxel,
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
 };
 
