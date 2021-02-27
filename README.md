@@ -6,9 +6,9 @@
 - [x] Explode Animation (Simple Particle System)
 - [x] Stormlight Pickups
 - [x] Explosions hit cost stormlight
-- [ ] Storms rip blocks out of world
+- [x] Storms rip blocks out of world
   - [x] generate voxel mesh in background
-  - [ ] remove voxels from world
-  - [ ] stom removes voxels from top and spawns new block with matching texture
-  - [ ] storm moves blocks
+  - [x] remove voxels from world
+  - [x] stom removes voxels from top and spawns new block with matching texture
+  - [x] storm moves blocks
 - [ ] Gravity control skills
