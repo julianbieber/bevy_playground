@@ -1,13 +1,38 @@
+use std::borrow::Borrow;
+
 use bevy::prelude::*;
 
 pub const HALF_VOXEL_SIZE: f32 = 0.5f32;
 const VOXEL_SIZE: f32 = HALF_VOXEL_SIZE * 2.0f32;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VoxelPosition {
     pub x: i32,
     pub y: i32,
     pub z: i32,
+}
+
+#[derive(Debug)]
+pub struct VoxelSurrounding {
+    pub top: VoxelPosition,
+    pub bottom: VoxelPosition,
+    pub left: VoxelPosition,
+    pub right: VoxelPosition,
+    pub front: VoxelPosition,
+    pub back: VoxelPosition,
+}
+
+impl VoxelSurrounding {
+    pub fn vec(&self) -> Vec<VoxelPosition> {
+        vec![
+            self.top.clone(),
+            self.bottom.clone(),
+            self.left.clone(),
+            self.right.clone(),
+            self.front.clone(),
+            self.back.clone(),
+        ]
+    }
 }
 
 impl VoxelPosition {
@@ -33,6 +58,41 @@ impl VoxelPosition {
 
     pub fn transform(&self) -> Mat4 {
         Transform::from_translation(self.to_vec()).compute_matrix()
+    }
+
+    pub fn surrounding(&self) -> VoxelSurrounding {
+        VoxelSurrounding {
+            top: VoxelPosition {
+                x: self.x,
+                y: self.y + 1,
+                z: self.z,
+            },
+            bottom: VoxelPosition {
+                x: self.x,
+                y: self.y - 1,
+                z: self.z,
+            },
+            left: VoxelPosition {
+                x: self.x - 1,
+                y: self.y,
+                z: self.z,
+            },
+            right: VoxelPosition {
+                x: self.x + 1,
+                y: self.y,
+                z: self.z,
+            },
+            front: VoxelPosition {
+                x: self.x,
+                y: self.y,
+                z: self.z - 1,
+            },
+            back: VoxelPosition {
+                x: self.x,
+                y: self.y,
+                z: self.z + 1,
+            },
+        }
     }
 
     pub fn to_box(&self) -> (Vec3, Vec3) {
