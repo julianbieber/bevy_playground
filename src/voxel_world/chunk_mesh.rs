@@ -20,7 +20,6 @@ impl From<&VoxelChunk> for Mesh {
 
         for voxel in chunk.get_voxels().iter() {
             let surrounding = voxel.position.surrounding();
-            dbg!(&surrounding);
 
             if chunk.get(&surrounding.top).is_none() {
                 top.push(voxel.clone());
@@ -327,7 +326,7 @@ impl From<&VoxelChunk> for Mesh {
         }
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), dbg!(vertices));
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs);
         mesh.set_indices(Some(Indices::U32(indices)));
