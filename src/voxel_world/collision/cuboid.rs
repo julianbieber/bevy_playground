@@ -2,11 +2,13 @@ use bevy::prelude::*;
 use cgmath::Matrix4;
 use collision::{algorithm::minkowski::GJK3, primitive::Cuboid, CollisionStrategy};
 
+use crate::voxel_world::{access::VoxelAccess, chunk::VoxelChunk, voxel::VoxelPosition};
+
 use super::super::voxel::{world_2_voxel_space, HALF_VOXEL_SIZE};
-use super::super::world_structure::*;
 
 pub fn collision_depth_cubiod(
-    terrain: &Terrain,
+    terrain: &Query<&VoxelChunk>,
+    voxel_access: &VoxelAccess,
     center: Vec3,
     transform: Mat4,
     half_x: f32,
@@ -26,21 +28,28 @@ pub fn collision_depth_cubiod(
             for potential_z in world_2_voxel_space(transformed_center.z - half_z) - 1
                 ..world_2_voxel_space(transformed_center.z + half_z) + 1
             {
-                terrain
-                    .get_at(&potential_x, &potential_y, &potential_z)
-                    .map(|terrain_voxel| {
-                        if let Some((distance, axis)) = collision(
-                            Vec3::new(half_x, half_y, half_z),
-                            &transform,
-                            Vec3::new(HALF_VOXEL_SIZE, HALF_VOXEL_SIZE, HALF_VOXEL_SIZE),
-                            &terrain_voxel.position.transform(),
-                        ) {
-                            if distance > max_distance {
-                                movement = axis * distance;
-                                max_distance = distance;
+                let position = VoxelPosition {
+                    x: potential_x,
+                    y: potential_y,
+                    z: potential_z,
+                };
+                if let Some(chunk_entity) = voxel_access.get_chunk_entity_containing(position) {
+                    if let Ok(chunk) = terrain.get(chunk_entity) {
+                        chunk.get(&position).map(|terrain_voxel| {
+                            if let Some((distance, axis)) = collision(
+                                Vec3::new(half_x, half_y, half_z),
+                                &transform,
+                                Vec3::new(HALF_VOXEL_SIZE, HALF_VOXEL_SIZE, HALF_VOXEL_SIZE),
+                                &terrain_voxel.position.transform(),
+                            ) {
+                                if distance > max_distance {
+                                    movement = axis * distance;
+                                    max_distance = distance;
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                }
             }
         }
     }

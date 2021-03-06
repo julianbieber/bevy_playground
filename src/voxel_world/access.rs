@@ -17,4 +17,10 @@ impl VoxelAccess {
     pub fn add_chunk(&mut self, boundary: ChunkBoundaries, e: Entity) {
         self.chunks.insert(boundary, e);
     }
+
+    pub fn new() -> VoxelAccess {
+        VoxelAccess {
+            chunks: AHashMap::new(),
+        }
+    }
 }

@@ -7,10 +7,7 @@ use crate::{
     ai::model::{NPCBehaviours, NPC},
     unit_effects::{DelayedEffects, Effect, Effects},
 };
-use crate::{
-    delayed_despawn::DelayedDespawns,
-    voxel_world::{voxel::VoxelPosition, world_structure::Terrain},
-};
+use crate::{delayed_despawn::DelayedDespawns, voxel_world::voxel::VoxelPosition};
 use crate::{
     movement::model::{MoveEvent, UnitRotation},
     world::model::{DelayedWorldTransformations, WorldUpdateEvent},
@@ -63,7 +60,6 @@ pub fn update_behaviour_system(
     mut despanws_res: ResMut<DelayedDespawns>,
     mut effects_res: ResMut<DelayedEffects>,
     mut world_transformations: ResMut<DelayedWorldTransformations>,
-    world_query: Query<(Entity, &Terrain)>,
 ) {
     for (_, player_transform) in player_query.iter() {
         for (entity, mut npc, npc_transform) in npcs_query.iter_mut() {
@@ -87,19 +83,14 @@ pub fn update_behaviour_system(
                             .despawns
                             .push((Timer::from_seconds(2.1, false), entity));
                         let center = npc_transform.translation.clone();
-                        let delete = Arc::new(move |_terrain: &Terrain| {
-                            VoxelPosition::sphere(&center, 10.0)
-                        });
-                        for (terrain_entity, _) in world_query.iter() {
-                            world_transformations.transformations.push((
-                                Timer::from_seconds(2.1, false),
-                                WorldUpdateEvent {
-                                    entity: terrain_entity,
-                                    delete: delete.clone(),
-                                    replace: false,
-                                },
-                            ));
-                        }
+                        let delete = Arc::new(move || VoxelPosition::sphere(&center, 10.0));
+                        world_transformations.transformations.push((
+                            Timer::from_seconds(2.1, false),
+                            WorldUpdateEvent {
+                                delete: delete.clone(),
+                                replace: false,
+                            },
+                        ));
 
                         effects_res.effects.push((
                             Timer::from_seconds(2.1, false),

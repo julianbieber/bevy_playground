@@ -1,15 +1,10 @@
-use std::sync::Arc;
-
-use ahash::AHashMap;
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use flume::{Receiver, Sender};
+use std::collections::HashSet;
 
 use crate::{
     movement::model::UnitRotation,
-    voxel_world::{
-        voxel::{Voxel, VoxelPosition},
-        world_structure::Terrain,
-    },
+    voxel_world::{access::VoxelAccess, chunk::VoxelChunk},
 };
 
 use super::{
@@ -44,50 +39,53 @@ pub fn evaluate_delayed_transformations(
 
 pub fn update_world_event_reader(
     mut update_events: EventReader<WorldUpdateEvent>,
-    terrain_query: Query<&Terrain>,
     pool: ResMut<AsyncComputeTaskPool>,
+    mut voxel_chunk_query: Query<(&mut VoxelChunk,)>,
     tx: Res<Sender<WorldUpdateResult>>,
+    chunk_access: Res<VoxelAccess>,
 ) {
-    let mut updates: AHashMap<
-        Entity,
-        Vec<(
-            Arc<dyn Fn(&Terrain) -> Vec<VoxelPosition> + Send + Sync>,
-            bool,
-        )>,
-    > = AHashMap::new();
+    let mut replaces = Vec::new();
+    let mut changed = HashSet::new();
     for event in update_events.iter() {
-        updates
-            .entry(event.entity)
-            .or_insert(Vec::new())
-            .push((event.delete.clone(), event.replace));
-    }
-
-    for (entity, updates) in updates.into_iter() {
-        let mut old_terrain = terrain_query.get(entity).unwrap().clone();
-        let tx_c = tx.clone();
-        pool.0
-            .spawn(async move {
-                let mut replace_voxels: Vec<Voxel> = Vec::new();
-                for (voxel_fn, replace) in updates.into_iter() {
-                    for voxel in voxel_fn(&old_terrain).into_iter() {
-                        old_terrain.remove_voxel(voxel).map(|v| {
-                            if replace {
-                                replace_voxels.push(v);
-                            }
-                        });
+        let deletes = (event.delete)();
+        for delete in deletes {
+            if let Some(entity) = chunk_access.get_chunk_entity_containing(delete) {
+                if let Ok((mut chunk,)) = voxel_chunk_query.get_mut(entity) {
+                    if let Some(voxel) = chunk.remove(delete) {
+                        if event.replace {
+                            replaces.push(voxel);
+                        }
+                        changed.insert(entity);
                     }
                 }
-                old_terrain.recalculate();
-                let new_mesh = Mesh::from(&old_terrain);
-                tx_c.send(WorldUpdateResult {
-                    new_terrain_mesh: new_mesh,
-                    terrain: old_terrain,
-                    existing_terrain_entity: Some(entity),
-                    voxels_to_replace: replace_voxels,
-                })
-            })
-            .detach();
+            }
+        }
     }
+
+    let mut entity_chunks = Vec::with_capacity(changed.len());
+    for e in changed {
+        if let Ok((foo,)) = voxel_chunk_query.get_mut(e) {
+            entity_chunks.push((e, foo.clone()));
+        }
+    }
+
+    let tx_c = tx.clone();
+    pool.0
+        .spawn(async move {
+            let entity_mesh: Vec<_> = entity_chunks
+                .into_iter()
+                .map(|(e, chunk)| {
+                    let mesh = Mesh::from(&chunk);
+                    (e, mesh)
+                })
+                .collect();
+
+            tx_c.send(WorldUpdateResult {
+                entity_2_mesh: entity_mesh,
+                voxels_to_replace: replaces,
+            })
+        })
+        .detach();
 }
 
 pub fn update_world_from_channel(
@@ -105,24 +103,14 @@ pub fn update_world_from_channel(
         });
 
         for world_update_result in rx.try_iter() {
-            if let Some(entity) = world_update_result.existing_terrain_entity {
+            for (entity, mesh) in world_update_result.entity_2_mesh {
                 commands.set_current_entity(entity);
                 commands
-                    .remove::<(Handle<Mesh>, Terrain)>(entity)
-                    .with(meshes.add(world_update_result.new_terrain_mesh))
-                    .with(world_update_result.terrain);
-            } else {
-                commands
-                    .spawn(PbrBundle {
-                        mesh: meshes.add(world_update_result.new_terrain_mesh),
-                        material: material.clone(),
-                        ..Default::default()
-                    })
-                    .with(world_update_result.terrain);
+                    .remove::<(Handle<Mesh>,)>(entity)
+                    .with(meshes.add(mesh));
             }
-
-            for voxel in world_update_result.voxels_to_replace.iter() {
-                let mesh = meshes.add(Mesh::from(voxel));
+            for voxel in world_update_result.voxels_to_replace {
+                let mesh = meshes.add(Mesh::from(&voxel));
                 let bundle = PbrBundle {
                     mesh,
                     material: material.clone(),

@@ -1,5 +1,6 @@
 use crate::voxel_world::voxel::{Voxel, VoxelPosition};
 
+#[derive(Clone)]
 pub struct VoxelChunk {
     voxels: Vec<Voxel>,
 }
