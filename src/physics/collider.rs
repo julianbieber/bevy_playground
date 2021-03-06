@@ -1,6 +1,7 @@
 use bevy::ecs::Query;
 use bevy::prelude::*;
 use cgmath::num_traits::Float;
+use itertools::Itertools;
 use std::cmp;
 use std::cmp::min;
 use std::collections::HashMap;
@@ -349,15 +350,14 @@ impl Collider {
         transform: &Mat4,
     ) -> Vec<Vec3> {
         let mut edges: Vec<Vec3> = Vec::new();
-
-        for x in vec![-half_width_x, half_width_x] {
-            for y in vec![-half_height_y, half_height_y] {
-                for z in vec![-half_depth_z, half_depth_z] {
-                    let local_edge = Collider::compute_local_edge(local_position, x, y, z);
-                    let global_edge = Collider::compute_global_edge(transform.clone(), local_edge);
-                    edges.push(global_edge);
-                }
-            } //iter_tools
+        for (x, y, z) in iproduct!(
+            vec![-half_width_x, half_width_x].into_iter(),
+            vec![-half_height_y, half_height_y].into_iter(),
+            vec![-half_depth_z, half_depth_z].into_iter()
+        ) {
+            let local_edge = Collider::compute_local_edge(local_position, x, y, z);
+            let global_edge = Collider::compute_global_edge(transform.clone(), local_edge);
+            edges.push(global_edge);
         }
         edges
     }
@@ -506,16 +506,10 @@ impl Simplex {
     }
 
     pub fn push_front(&mut self, vertex: Vec3) -> &mut Simplex {
-        let mut v = Vec::new();
-        v.push(vertex);
-        let max_number_vertices: usize = 4;
-        let vertices = min(max_number_vertices, self.vertices.len() + 1);
-        let mut i = 0;
-        while v.len() < vertices {
-            v.push(self.vertices.get(i).get_or_insert(&Vec3::zero()).clone());
-            i = i + 1;
-        } //queue
-        self.vertices = v;
+        self.vertices.insert(0, vertex);
+        while self.vertices.len() > 4 {
+            self.vertices.remove(4);
+        }
         self
     }
 }
