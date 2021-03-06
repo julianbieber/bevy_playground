@@ -24,6 +24,8 @@ use crate::player::PlayerPlugin;
 use crate::water::WaterPlugin;
 use voxel_world::collision::systems::terrain_collision_system;
 use world::WorldPlugin;
+#[macro_use]
+extern crate itertools;
 
 fn main() {
     App::build()
