@@ -1,3 +1,4 @@
+pub mod access;
 pub mod chunk;
 pub mod chunk_mesh;
 pub mod collision;
