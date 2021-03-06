@@ -1,6 +1,6 @@
 use crate::voxel_world::voxel::{Voxel, VoxelPosition};
-use bevy::prelude::Vec3;
 
+#[derive(Clone)]
 pub struct VoxelChunk {
     voxels: Vec<Voxel>,
 }
@@ -14,7 +14,7 @@ pub struct ChunkBoundaries {
 const CHUNK_SIZE: i32 = 16;
 
 impl ChunkBoundaries {
-    fn aligned(position: VoxelPosition) -> ChunkBoundaries {
+    pub fn aligned(position: VoxelPosition) -> ChunkBoundaries {
         let min = [
             position.x / CHUNK_SIZE,
             position.y / CHUNK_SIZE,
@@ -28,6 +28,38 @@ impl ChunkBoundaries {
                 min[2] + CHUNK_SIZE - 1,
             ],
         }
+    }
+
+    pub fn aligned_boundaries_in(other: &ChunkBoundaries) -> Vec<ChunkBoundaries> {
+        let other_length = other.length();
+        let min = VoxelPosition {
+            x: other.min[0],
+            y: other.min[1],
+            z: other.min[2],
+        };
+        let mut boundaries = Vec::with_capacity(
+            (other_length[0] / CHUNK_SIZE * other_length[1] / CHUNK_SIZE * other_length[2]
+                / CHUNK_SIZE
+                + 1) as usize,
+        );
+        boundaries.push(ChunkBoundaries::aligned(min));
+        for x in (min.x..min.x + other_length[0]).step_by(CHUNK_SIZE as usize) {
+            for y in (min.y..min.y + other_length[1]).step_by(CHUNK_SIZE as usize) {
+                for z in (min.z..min.z + other_length[2]).step_by(CHUNK_SIZE as usize) {
+                    boundaries.push(ChunkBoundaries::aligned(VoxelPosition { x, y, z }));
+                }
+            }
+        }
+
+        boundaries
+    }
+
+    fn length(&self) -> [i32; 3] {
+        [
+            self.max[0] - self.min[0],
+            self.max[1] - self.min[1],
+            self.max[2] - self.min[2],
+        ]
     }
 }
 

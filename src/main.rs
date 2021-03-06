@@ -22,7 +22,7 @@ use crate::particles::ParticlePlugin;
 use crate::physics::collider::collision_update;
 use crate::player::PlayerPlugin;
 use crate::water::WaterPlugin;
-use voxel_world::collision::systems::terrain_collision_system;
+use voxel_world::{access::VoxelAccess, collision::systems::terrain_collision_system};
 use world::WorldPlugin;
 #[macro_use]
 extern crate itertools;
@@ -44,6 +44,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
+        .insert_resource(VoxelAccess::new())
         .add_system(terrain_collision_system.system())
         .add_system(collision_update.system())
         .run();

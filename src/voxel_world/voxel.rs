@@ -5,7 +5,7 @@ use bevy::prelude::*;
 pub const HALF_VOXEL_SIZE: f32 = 0.5f32;
 const VOXEL_SIZE: f32 = HALF_VOXEL_SIZE * 2.0f32;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct VoxelPosition {
     pub x: i32,
     pub y: i32,

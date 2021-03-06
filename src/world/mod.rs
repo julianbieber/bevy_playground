@@ -3,16 +3,15 @@ mod evaluation;
 mod internal_model;
 pub mod model;
 
+use ahash::AHashMap;
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 
-use crate::voxel_world::generator::VoxelWorld;
+use crate::voxel_world::{
+    access::VoxelAccess, chunk::ChunkBoundaries, generator::VoxelWorld, voxel::Voxel,
+};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
-    voxel_world::{
-        chunk::VoxelChunk,
-        chunk_mesh,
-        voxel::{Voxel, VoxelPosition, VoxelTypes},
-    },
+    voxel_world::{chunk::VoxelChunk, chunk_mesh},
 };
 use flume::{unbounded, Sender};
 use rand::prelude::*;
@@ -52,65 +51,40 @@ fn world_setup(
     pool: ResMut<AsyncComputeTaskPool>,
     tx: Res<Sender<WorldUpdateResult>>,
     asset_server: Res<AssetServer>,
+    mut chunk_access: ResMut<VoxelAccess>,
 ) {
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
-    w.add_to_world(pool, tx);
-
-    let mut test_chunk = VoxelChunk::empty();
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 0, y: 50, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 0, y: 51, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 0, y: 49, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: -1, y: 50, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: -1, y: 51, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: -1, y: 49, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 1, y: 50, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 1, y: 51, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-    test_chunk.set(Voxel {
-        position: VoxelPosition { x: 1, y: 49, z: 0 },
-        typ: VoxelTypes::DarkRock1,
-    });
-
-    let chunk_mesh = meshes.add(Mesh::from(&test_chunk));
-
+    let mut chunk_map = AHashMap::new();
+    for pillar in w.pillars {
+        for voxel in pillar.voxels() {
+            let matching_boundary = ChunkBoundaries::aligned(voxel.position);
+            chunk_map
+                .entry(matching_boundary)
+                .or_insert(VoxelChunk::empty())
+                .set(voxel);
+        }
+    }
     let chunk_texture = asset_server.load("world_texture_color.png");
-    let chunk_material = materials.add(StandardMaterial {
-        albedo_texture: Some(chunk_texture),
-        ..Default::default()
-    });
-    let chunk_bundle = PbrBundle {
-        mesh: chunk_mesh,
-        material: chunk_material.clone(),
-        transform: Transform::from_translation(Vec3::zero()),
-        ..Default::default()
-    };
+    for (boundary, chunk) in chunk_map {
+        let chunk_mesh = meshes.add(Mesh::from(&chunk));
 
-    commands.spawn(chunk_bundle);
+        let chunk_material = materials.add(StandardMaterial {
+            albedo_texture: Some(chunk_texture.clone()),
+            ..Default::default()
+        });
+        let chunk_bundle = PbrBundle {
+            mesh: chunk_mesh,
+            material: chunk_material.clone(),
+            transform: Transform::from_translation(Vec3::zero()),
+            ..Default::default()
+        };
+        let chunk_entity = commands
+            .spawn(chunk_bundle)
+            .with(chunk)
+            .current_entity()
+            .unwrap();
+        chunk_access.add_chunk(boundary, chunk_entity);
+    }
 
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),

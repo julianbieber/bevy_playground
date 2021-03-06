@@ -2,13 +2,9 @@ use crate::world::model::WorldUpdateResult;
 
 use super::voxel::{Voxel, VoxelTypes};
 
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
-use flume::Sender;
 use lerp::Lerp;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-
-use super::world_structure::*;
 
 pub struct VoxelWorld {
     pub pillars: Vec<PillarGenerator>,
@@ -21,29 +17,6 @@ impl VoxelWorld {
             .map(|_| PillarGenerator::new(&mut rng, width, depth))
             .collect();
         VoxelWorld { pillars }
-    }
-
-    pub fn add_to_world(
-        self,
-        pool: ResMut<AsyncComputeTaskPool>,
-        tx: Res<Sender<WorldUpdateResult>>,
-    ) {
-        for pillar in self.pillars.into_iter() {
-            let tx_copy = tx.clone();
-            pool.spawn(async move {
-                let terrain = pillar.voxels();
-                let m = Mesh::from(&terrain);
-                tx_copy
-                    .send(WorldUpdateResult {
-                        new_terrain_mesh: m,
-                        terrain: terrain,
-                        existing_terrain_entity: None,
-                        voxels_to_replace: Vec::new(),
-                    })
-                    .unwrap();
-            })
-            .detach();
-        }
     }
 }
 
@@ -77,9 +50,9 @@ impl PillarGenerator {
         }
     }
 
-    pub fn voxels(&self) -> Terrain {
+    pub fn voxels(&self) -> Vec<Voxel> {
         let mut rng = SmallRng::from_entropy();
-        let mut world = Terrain::new();
+        let mut world = Vec::new();
         for layer in 0..self.height {
             let radius = self.radius_at_level(layer);
             let radius_sq = radius * radius;
@@ -89,12 +62,11 @@ impl PillarGenerator {
                         + (self.position.1 - z) * (self.position.1 - z);
                     if distance_sq <= radius_sq {
                         let voxel = Voxel::new(x, layer, z, self.voxel_type(&mut rng, layer));
-                        world.add_voxel(voxel);
+                        world.push(voxel);
                     }
                 }
             }
         }
-        world.recalculate();
         world
     }
 
