@@ -1,5 +1,3 @@
-use crate::world::model::WorldUpdateResult;
-
 use super::voxel::{Voxel, VoxelTypes};
 
 use lerp::Lerp;

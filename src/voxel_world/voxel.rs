@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use bevy::prelude::*;
 
 pub const HALF_VOXEL_SIZE: f32 = 0.5f32;
@@ -46,6 +44,10 @@ impl VoxelPosition {
 
     pub fn new(x: i32, y: i32, z: i32) -> VoxelPosition {
         VoxelPosition { x, y, z }
+    }
+
+    pub fn voxel_distance(d: f32) -> i32 {
+        (d / VOXEL_SIZE) as i32
     }
 
     pub fn to_vec(&self) -> Vec3 {

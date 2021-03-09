@@ -1,9 +1,15 @@
 use std::sync::Arc;
 
 use bevy::prelude::*;
+use itertools::Chunk;
 
 use crate::{
-    movement::model::MoveEvent, particles::model::ParticleTypes, voxel_world::voxel::VoxelPosition,
+    movement::model::MoveEvent,
+    particles::model::ParticleTypes,
+    voxel_world::{
+        chunk::{ChunkBoundaries, VoxelChunk},
+        voxel::VoxelPosition,
+    },
 };
 
 use super::{internal_model::FreeFloatingVoxel, model::WorldUpdateEvent};
@@ -17,22 +23,61 @@ pub fn erosion(
         match particle_type {
             ParticleTypes::Explosion { radius: _ } => {}
             ParticleTypes::HighStorm { depth } => {
-                let highstorm_center = transform.translation.clone();
-                let d = depth.clone();
                 let mut rng = SmallRng::from_entropy();
                 if rng.gen_range(0.0..1.0) < 0.01 {
-                    let delete = Arc::new(move || {
-                        // todo get highest voxel at x|z
-                        Vec::new()
+                    let highstorm_center = transform.translation.clone();
+                    let highstorm_center_voxel = VoxelPosition::from_vec3(&highstorm_center);
+
+                    let d = depth.clone();
+                    let d_voxel = VoxelPosition::voxel_distance(d);
+                    let boundaries = ChunkBoundaries {
+                        min: [
+                            highstorm_center_voxel.x - 10,
+                            highstorm_center_voxel.y - 100,
+                            highstorm_center_voxel.z - d_voxel / 2,
+                        ],
+                        max: [
+                            highstorm_center_voxel.x + 10,
+                            highstorm_center_voxel.y + 100,
+                            highstorm_center_voxel.z + d_voxel / 2,
+                        ],
+                    };
+                    let boundaries_clone = boundaries.clone();
+                    let delete = Arc::new(move |chunks: &Vec<VoxelChunk>| {
+                        select_a_highest_voxel(&boundaries_clone, chunks)
                     });
 
                     update_events.send(WorldUpdateEvent {
+                        chunk_filter: vec![boundaries],
                         delete,
                         replace: true,
                     });
                 }
             }
         }
+    }
+}
+
+fn select_a_highest_voxel(
+    storm_boundaries: &ChunkBoundaries,
+    chunks: &Vec<VoxelChunk>,
+) -> Vec<VoxelPosition> {
+    let voxels: Vec<_> = chunks
+        .iter()
+        .flat_map(|c| c.get_voxels().iter())
+        .filter(|v| storm_boundaries.contains(&v.position))
+        .collect();
+
+    if let Some(highest) = voxels.iter().map(|v| v.position.y).max() {
+        let highest_voxels: Vec<_> = voxels
+            .into_iter()
+            .filter(|v| v.position.y == highest)
+            .collect();
+        let mut rng = SmallRng::from_entropy();
+        let position = rng.gen_range(0..highest_voxels.len());
+        vec![highest_voxels[position].position.clone()]
+    } else {
+        vec![]
     }
 }
 
