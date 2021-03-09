@@ -5,10 +5,10 @@ pub struct VoxelChunk {
     voxels: Vec<Voxel>,
 }
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct ChunkBoundaries {
-    min: [i32; 3],
-    max: [i32; 3],
+    pub min: [i32; 3],
+    pub max: [i32; 3],
 }
 
 const CHUNK_SIZE: i32 = 16;
@@ -60,6 +60,15 @@ impl ChunkBoundaries {
             self.max[1] - self.min[1],
             self.max[2] - self.min[2],
         ]
+    }
+
+    pub fn contains(&self, position: &VoxelPosition) -> bool {
+        position.x >= self.min[0]
+            && position.x <= self.max[0]
+            && position.y >= self.min[1]
+            && position.y <= self.max[1]
+            && position.z >= self.min[2]
+            && position.z <= self.max[2]
     }
 }
 

@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::particles::model::ParticleDescription;
 use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
 use crate::{
@@ -11,6 +10,10 @@ use crate::{delayed_despawn::DelayedDespawns, voxel_world::voxel::VoxelPosition}
 use crate::{
     movement::model::{MoveEvent, UnitRotation},
     world::model::{DelayedWorldTransformations, WorldUpdateEvent},
+};
+use crate::{
+    particles::model::ParticleDescription, voxel_world::chunk::ChunkBoundaries,
+    voxel_world::chunk::VoxelChunk,
 };
 use bevy::prelude::*;
 use bevy::utils::Duration;
@@ -83,11 +86,30 @@ pub fn update_behaviour_system(
                             .despawns
                             .push((Timer::from_seconds(2.1, false), entity));
                         let center = npc_transform.translation.clone();
-                        let delete = Arc::new(move || VoxelPosition::sphere(&center, 10.0));
+                        let center_in_voxel = VoxelPosition::from_vec3(&center);
+                        let explosion_radius = 10.0;
+                        let explosion_radius_in_voxel =
+                            VoxelPosition::voxel_distance(explosion_radius);
+
+                        let delete = Arc::new(move |_: &Vec<VoxelChunk>| {
+                            VoxelPosition::sphere(&center, 10.0)
+                        });
                         world_transformations.transformations.push((
                             Timer::from_seconds(2.1, false),
                             WorldUpdateEvent {
-                                delete: delete.clone(),
+                                chunk_filter: vec![ChunkBoundaries {
+                                    min: [
+                                        center_in_voxel.x - explosion_radius_in_voxel,
+                                        center_in_voxel.y - explosion_radius_in_voxel,
+                                        center_in_voxel.z - explosion_radius_in_voxel,
+                                    ],
+                                    max: [
+                                        center_in_voxel.x + explosion_radius_in_voxel,
+                                        center_in_voxel.y + explosion_radius_in_voxel,
+                                        center_in_voxel.z + explosion_radius_in_voxel,
+                                    ],
+                                }],
+                                delete: delete,
                                 replace: false,
                             },
                         ));

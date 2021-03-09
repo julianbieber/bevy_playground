@@ -5,8 +5,8 @@ use bevy::{
 use std::borrow::Cow;
 
 use super::{
-    chunk::{self, VoxelChunk},
-    voxel::{Voxel, VoxelTypes, HALF_VOXEL_SIZE},
+    chunk::VoxelChunk,
+    voxel::{VoxelTypes, HALF_VOXEL_SIZE},
 };
 
 impl From<&VoxelChunk> for Mesh {

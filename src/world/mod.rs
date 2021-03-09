@@ -4,16 +4,14 @@ mod internal_model;
 pub mod model;
 
 use ahash::AHashMap;
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use bevy::prelude::*;
 
-use crate::voxel_world::{
-    access::VoxelAccess, chunk::ChunkBoundaries, generator::VoxelWorld, voxel::Voxel,
-};
+use crate::voxel_world::{access::VoxelAccess, chunk::ChunkBoundaries, generator::VoxelWorld};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
-    voxel_world::{chunk::VoxelChunk, chunk_mesh},
+    voxel_world::chunk::VoxelChunk,
 };
-use flume::{unbounded, Sender};
+use flume::unbounded;
 use rand::prelude::*;
 
 use self::{
@@ -48,8 +46,6 @@ fn world_setup(
     commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    pool: ResMut<AsyncComputeTaskPool>,
-    tx: Res<Sender<WorldUpdateResult>>,
     asset_server: Res<AssetServer>,
     mut chunk_access: ResMut<VoxelAccess>,
 ) {

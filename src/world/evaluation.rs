@@ -1,10 +1,14 @@
+use std::collections::HashSet;
+
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use flume::{Receiver, Sender};
-use std::collections::HashSet;
 
 use crate::{
     movement::model::UnitRotation,
-    voxel_world::{access::VoxelAccess, chunk::VoxelChunk},
+    voxel_world::{
+        access::VoxelAccess,
+        chunk::{ChunkBoundaries, VoxelChunk},
+    },
 };
 
 use super::{
@@ -44,10 +48,22 @@ pub fn update_world_event_reader(
     tx: Res<Sender<WorldUpdateResult>>,
     chunk_access: Res<VoxelAccess>,
 ) {
-    let mut replaces = Vec::new();
     let mut changed = HashSet::new();
+    let mut replaces = Vec::new();
+
     for event in update_events.iter() {
-        let deletes = (event.delete)();
+        let filtered_chunks: Vec<_> = event
+            .chunk_filter
+            .iter()
+            .flat_map(|boundary| ChunkBoundaries::aligned_boundaries_in(boundary))
+            .flat_map(|b| {
+                chunk_access
+                    .get_chunk(&b, &mut voxel_chunk_query)
+                    .into_iter()
+            })
+            .collect();
+
+        let deletes = (event.delete)(&filtered_chunks);
         for delete in deletes {
             if let Some(entity) = chunk_access.get_chunk_entity_containing(delete) {
                 if let Ok((mut chunk,)) = voxel_chunk_query.get_mut(entity) {
