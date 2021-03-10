@@ -35,7 +35,7 @@ fn evaluate_delayed_effects(
 ) {
     let mut at_least_one = false;
     for (timer, effect) in effects_res.effects.iter_mut() {
-        if timer.tick(time.delta_seconds()).just_finished() {
+        if timer.tick(time.delta()).just_finished() {
             at_least_one = true;
             for (unit_transform, mut energy) in units_query.iter_mut() {
                 if unit_transform.translation.distance_squared(effect.center)

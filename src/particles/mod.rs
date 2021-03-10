@@ -4,6 +4,8 @@ mod primitives;
 mod render;
 mod spawn;
 
+use std::time::Duration;
+
 use bevy::{prelude::*, render::pipeline::RenderPipeline, tasks::AsyncComputeTaskPool};
 
 use crate::particles::mesh::create_particle_mesh;
@@ -24,7 +26,7 @@ impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut AppBuilder) {
         let (tx, rx) = unbounded::<(Mesh, ParticleDescription)>();
         let mut timer = Timer::from_seconds(50.0, true);
-        timer.tick(40.0);
+        timer.tick(Duration::from_secs(40));
         app.insert_resource(ExplosionSpawnCoolDown { timer })
             .add_asset::<ParticleDirectionMaterial>()
             .insert_resource(tx)
@@ -52,7 +54,7 @@ fn evaluate_delayed_particles(
 ) {
     let mut at_least_one = false;
     for (timer, explosion) in delayed_particle_spawns_res.spawns.iter_mut() {
-        if timer.tick(time.delta_seconds()).just_finished() {
+        if timer.tick(time.delta()).just_finished() {
             let e = explosion.clone();
             let tx_cloned = tx.clone();
             pool.spawn(async move {
@@ -77,7 +79,7 @@ fn evaluate_delayed_particles(
 }
 
 fn spawn_from_channel(
-    commands: &mut Commands,
+    mut commands: Commands,
     particle_pipeline: Res<ParticlePipeline>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ParticleDirectionMaterial>>,
@@ -86,7 +88,7 @@ fn spawn_from_channel(
 ) {
     for (mesh, particles) in rx.try_iter() {
         let entity = spawn_particles(
-            commands,
+            &mut commands,
             &mut meshes,
             &mut materials,
             mesh,

@@ -19,7 +19,7 @@ impl Plugin for PlayerPlugin {
 }
 
 fn player_setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::*;
+use bevy::{app::Events, prelude::*};
 
 use crate::{
     movement::model::MoveEvent,

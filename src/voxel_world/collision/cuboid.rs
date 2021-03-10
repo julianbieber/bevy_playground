@@ -16,7 +16,7 @@ pub fn collision_depth_cubiod(
     half_z: f32,
 ) -> Vec3 {
     let transformed_center = transform.transform_point3(center);
-    let mut movement = Vec3::zero();
+    let mut movement = Vec3::ZERO;
     let mut max_distance = 0.0f32;
 
     for potential_x in world_2_voxel_space(transformed_center.x - half_x) - 1

@@ -67,7 +67,7 @@ pub fn set_water_position(mut position_2_transform_query: Query<(&mut WaterPosit
 }
 
 pub fn setup_water_layer(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut shaders: ResMut<Assets<Shader>>,

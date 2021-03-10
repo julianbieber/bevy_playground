@@ -1,5 +1,5 @@
 use ahash::AHashMap;
-use bevy::{ecs::Query, prelude::Entity};
+use bevy::prelude::{Entity, Query};
 
 use super::{
     chunk::{ChunkBoundaries, VoxelChunk},

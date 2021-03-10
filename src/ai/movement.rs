@@ -15,8 +15,8 @@ use crate::{
     particles::model::ParticleDescription, voxel_world::chunk::ChunkBoundaries,
     voxel_world::chunk::VoxelChunk,
 };
-use bevy::prelude::*;
 use bevy::utils::Duration;
+use bevy::{app::Events, prelude::*};
 use rand::prelude::*;
 
 pub fn npc_movement_system(
@@ -38,7 +38,7 @@ pub fn npc_movement_system(
                     rng.gen_range(-0.1f32..0.1f32),
                     0.0,
                 ),
-                NPCBehaviours::EXPLODE => Vec3::zero(),
+                NPCBehaviours::EXPLODE => Vec3::ZERO,
             };
             if let Some(forward) = match npc.behaviour {
                 NPCBehaviours::EXPLODE => None,

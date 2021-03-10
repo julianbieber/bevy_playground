@@ -16,12 +16,12 @@ pub struct DelayedDespawns {
 
 fn evaluate_delayed_despanws(
     mut despanws_res: ResMut<DelayedDespawns>,
-    commands: &mut Commands,
+    mut commands: Commands,
     time: Res<Time>,
 ) {
     let mut at_least_one = false;
     for (timer, entity) in despanws_res.despawns.iter_mut() {
-        if timer.tick(time.delta_seconds()).just_finished() {
+        if timer.tick(time.delta()).just_finished() {
             commands.despawn(entity.clone());
             at_least_one = true;
         }

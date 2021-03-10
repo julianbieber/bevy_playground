@@ -42,10 +42,11 @@ impl VoxelPosition {
         }
     }
 
-    pub fn up_to(x: i32, y_top:i32, z: i32) -> Vec<VoxelPosition> {
-        (-60 .. y_top).into_iter().map(|y| {
-            VoxelPosition::new(x, y, z)
-        }).collect()
+    pub fn up_to(x: i32, y_top: i32, z: i32) -> Vec<VoxelPosition> {
+        (-60..y_top)
+            .into_iter()
+            .map(|y| VoxelPosition::new(x, y, z))
+            .collect()
     }
 
     pub fn new(x: i32, y: i32, z: i32) -> VoxelPosition {
