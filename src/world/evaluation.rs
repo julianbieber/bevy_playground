@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
 use flume::{Receiver, Sender};
 
 use crate::{
@@ -23,7 +23,7 @@ pub fn evaluate_delayed_transformations(
 ) {
     let mut at_least_one = false;
     for (timer, effect) in effects_res.transformations.iter_mut() {
-        if timer.tick(time.delta_seconds()).just_finished() {
+        if timer.tick(time.delta()).just_finished() {
             at_least_one = true;
             update_events.send((*effect).clone())
         }
@@ -105,7 +105,7 @@ pub fn update_world_event_reader(
 }
 
 pub fn update_world_from_channel(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,

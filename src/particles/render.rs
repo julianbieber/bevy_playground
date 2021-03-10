@@ -21,7 +21,7 @@ pub struct ParticlePipeline {
 }
 
 pub fn setup_particles(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut shaders: ResMut<Assets<Shader>>,
     mut render_graph: ResMut<RenderGraph>,

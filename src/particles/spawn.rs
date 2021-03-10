@@ -1,4 +1,4 @@
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
 
 use crate::particles::model::ParticleDescription;
 use crate::{movement::model::MoveEvent, particles::mesh::create_particle_mesh};
@@ -17,7 +17,7 @@ pub fn spawn_regular_explosions_system(
     pool: ResMut<AsyncComputeTaskPool>,
     tx: Res<Sender<(Mesh, ParticleDescription)>>,
 ) {
-    if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
+    if spawn_timer.timer.tick(time.delta()).just_finished() {
         spawn_timer.timer.reset();
         let tx_copy = tx.clone();
         pool.0

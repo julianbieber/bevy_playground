@@ -27,7 +27,7 @@ impl Plugin for EnergyPlugin {
 }
 
 fn add_energy_to_players(
-    commands: &mut Commands,
+    mut commands: Commands,
     player_query: Query<(Entity, &PlayerMarker), Without<Energy>>,
 ) {
     for (entity, _) in player_query.iter() {
@@ -41,7 +41,7 @@ struct EnergySpawnTimer {
 }
 
 fn regularily_spawn_energy(
-    commands: &mut Commands,
+    mut commands: Commands,
     storm_query: Query<(&Transform, &ParticleTypes)>,
     mut spawn_timer: ResMut<EnergySpawnTimer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -49,7 +49,7 @@ fn regularily_spawn_energy(
     time: Res<Time>,
     mut despanws_res: ResMut<DelayedDespawns>,
 ) {
-    if spawn_timer.timer.tick(time.delta_seconds()).just_finished() {
+    if spawn_timer.timer.tick(time.delta()).just_finished() {
         let mut rng = SmallRng::from_entropy();
         for (storm_transform, particle_type) in storm_query.iter() {
             match particle_type {
@@ -90,7 +90,7 @@ fn regularily_spawn_energy(
 }
 
 fn draw_in_energy(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut players_query: Query<(&mut Energy, &Transform), With<PlayerMarker>>,
     pickups_query: Query<(Entity, &Energy, &Transform), Without<PlayerMarker>>,
 ) {
@@ -116,7 +116,7 @@ fn draw_in_energy(
 
 struct EnergyText;
 
-fn setup_ui(commands: &mut Commands, asset_server: Res<AssetServer>) {
+fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraMono-Medium.ttf");
     commands
         .spawn(UiCameraBundle::default())

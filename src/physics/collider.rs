@@ -1,4 +1,3 @@
-use bevy::ecs::Query;
 use bevy::prelude::*;
 use cgmath::num_traits::Float;
 use itertools::Itertools;

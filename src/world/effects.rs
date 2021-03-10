@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use bevy::prelude::*;
-use itertools::Chunk;
+use bevy::{app::Events, prelude::*};
 
 use crate::{
     movement::model::MoveEvent,

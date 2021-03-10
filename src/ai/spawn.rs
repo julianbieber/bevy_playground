@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::ai::model::*;
 use bevy::prelude::*;
 
@@ -9,16 +11,18 @@ pub struct SpawnCoolDown {
 }
 
 pub fn enemy_spawn_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut cooldown: ResMut<SpawnCoolDown>,
     time: Res<Time>,
 ) {
-    if cooldown.timer.tick(time.delta_seconds()).just_finished() {
+    if cooldown.timer.tick(time.delta()).just_finished() {
         let mut rng = SmallRng::from_entropy();
         cooldown.timer.reset();
-        cooldown.timer.set_duration(rng.gen_range(0.5f32..2.0f32));
+        cooldown
+            .timer
+            .set_duration(Duration::from_millis(rng.gen_range(500..2000)));
 
         let cube_handle = meshes.add(Mesh::from(shape::Cube {
             size: rng.gen_range(0.5f32..5.0f32),
