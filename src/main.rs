@@ -55,5 +55,5 @@ fn window_setup(mut windows: ResMut<Windows>) {
     window.set_cursor_lock_mode(true);
     window.set_cursor_visibility(false);
     window.set_maximized(true);
-    window.set_vsync(false);
+    window.set_vsync(true);
 }
