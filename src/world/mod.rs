@@ -6,7 +6,7 @@ pub mod model;
 use ahash::AHashMap;
 use bevy::prelude::*;
 
-use crate::voxel_world::{access::VoxelAccess, chunk::ChunkBoundaries, generator::VoxelWorld};
+use crate::voxel_world::{access::VoxelAccess, chunk::ChunkBoundaries, generator::VoxelWorld, voxel::{Voxel, VoxelPosition, VoxelTypes}};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
     voxel_world::chunk::VoxelChunk,
@@ -21,6 +21,8 @@ use self::{
     },
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
 };
+
+use noise::{NoiseFn, Perlin};
 
 pub struct WorldPlugin;
 
@@ -60,6 +62,27 @@ fn world_setup(
                 .set(voxel);
         }
     }
+    let stretch_factor = 30.0;
+    // add voxels via noise 
+    let noise = Perlin::new();
+    for x_i in -100 .. 100 {
+        let x = x_i as f64 / stretch_factor;
+        for z_i in -100 .. 100 {
+            let z = z_i as f64 / stretch_factor;
+            let y = noise.get([x, z]);
+            for p in VoxelPosition::up_to(x_i, (y * 30.0) as i32, z_i) {
+                let matching_boundary = ChunkBoundaries::aligned(p);
+                chunk_map.entry(matching_boundary)
+                    .or_insert(VoxelChunk::empty())
+                    .set(Voxel{
+                        position: p,
+                        typ: VoxelTypes::CrackedRock
+                    });   
+            }
+        }
+    } 
+
+
     let chunk_texture = asset_server.load("world_texture_color.png");
     for (boundary, chunk) in chunk_map {
         let chunk_mesh = meshes.add(Mesh::from(&chunk));
