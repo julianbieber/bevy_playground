@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, time::Instant};
 
 use super::{
     chunk::VoxelChunk,
@@ -11,14 +11,17 @@ use super::{
 
 impl From<&VoxelChunk> for Mesh {
     fn from(chunk: &VoxelChunk) -> Self {
-        let mut top = Vec::new();
-        let mut bottom = Vec::new();
-        let mut left = Vec::new();
-        let mut right = Vec::new();
-        let mut front = Vec::new();
-        let mut back = Vec::new();
+        let timer = Instant::now();
+        let voxels = chunk.get_voxels();
+        let mut top = Vec::with_capacity(voxels.len());
+        let mut bottom = Vec::with_capacity(voxels.len());
+        let mut left = Vec::with_capacity(voxels.len());
+        let mut right = Vec::with_capacity(voxels.len());
+        let mut front = Vec::with_capacity(voxels.len());
+        let mut back = Vec::with_capacity(voxels.len());
+        //println!("first vecs {:?}", timer.elapsed());
 
-        for voxel in chunk.get_voxels().iter() {
+        for voxel in voxels.iter() {
             let surrounding = voxel.position.surrounding();
 
             if chunk.get(&surrounding.top).is_none() {
@@ -40,6 +43,7 @@ impl From<&VoxelChunk> for Mesh {
                 back.push(voxel.clone());
             }
         }
+        //println!("surroundings {:?}", timer.elapsed());
         let vertices_count =
             (top.len() + bottom.len() + left.len() + right.len() + front.len() + back.len()) * 4;
         let mut indices: Vec<u32> = Vec::with_capacity(vertices_count * 6);
@@ -48,7 +52,7 @@ impl From<&VoxelChunk> for Mesh {
         let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(vertices_count);
 
         let mut current_index = 0;
-
+        //println!("second vecs {:?}", timer.elapsed());
         for voxel in top.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -94,7 +98,7 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("top {:?}", timer.elapsed());
         for voxel in bottom.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -140,7 +144,7 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("bottom {:?}", timer.elapsed());
         for voxel in left.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -186,7 +190,7 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("left {:?}", timer.elapsed());
         for voxel in right.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -232,7 +236,7 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("right {:?}", timer.elapsed());
         for voxel in front.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -278,7 +282,7 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("front {:?}", timer.elapsed());
         for voxel in back.iter() {
             let base = voxel.position.to_vec();
             vertices.push([
@@ -324,12 +328,13 @@ impl From<&VoxelChunk> for Mesh {
 
             current_index += 4;
         }
-
+        //println!("back {:?}", timer.elapsed());
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs);
         mesh.set_indices(Some(Indices::U32(indices)));
+        //println!("mesh {:?}", timer.elapsed());
         mesh
     }
 }

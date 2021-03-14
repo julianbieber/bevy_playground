@@ -63,7 +63,7 @@ fn select_a_highest_voxel(
 ) -> Vec<VoxelPosition> {
     let voxels: Vec<_> = chunks
         .iter()
-        .flat_map(|c| c.get_voxels().iter())
+        .flat_map(|c| c.get_voxels().into_iter())
         .filter(|v| storm_boundaries.contains(&v.position))
         .collect();
 
