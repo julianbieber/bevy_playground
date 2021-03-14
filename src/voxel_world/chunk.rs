@@ -1,8 +1,11 @@
+use ahash::AHashMap;
+
 use crate::voxel_world::voxel::{Voxel, VoxelPosition};
 
 #[derive(Clone)]
 pub struct VoxelChunk {
-    voxels: Vec<Voxel>,
+    voxels: AHashMap<i32, AHashMap<i32, AHashMap<i32, Voxel>>>,
+    count: usize,
 }
 
 #[derive(Eq, PartialEq, Hash, Clone)]
@@ -11,7 +14,7 @@ pub struct ChunkBoundaries {
     pub max: [i32; 3],
 }
 
-const CHUNK_SIZE: i32 = 16;
+const CHUNK_SIZE: i32 = 32;
 
 impl ChunkBoundaries {
     pub fn aligned(position: VoxelPosition) -> ChunkBoundaries {
@@ -74,65 +77,56 @@ impl ChunkBoundaries {
 
 impl VoxelChunk {
     pub fn empty() -> VoxelChunk {
-        VoxelChunk { voxels: Vec::new() }
+        VoxelChunk {
+            voxels: AHashMap::new(),
+            count: 0,
+        }
     }
 
-    pub fn boundaries(&self) -> ChunkBoundaries {
-        let mut min = [i32::max_value(), i32::max_value(), i32::max_value()];
-        let mut max = [i32::min_value(), i32::min_value(), i32::min_value()];
-
-        for voxel in self.voxels.iter() {
-            if voxel.position.x < min[0] {
-                min[0] = voxel.position.x;
-            }
-            if voxel.position.y < min[1] {
-                min[1] = voxel.position.y;
-            }
-            if voxel.position.z < min[2] {
-                min[2] = voxel.position.z;
-            }
-
-            if voxel.position.x > max[0] {
-                max[0] = voxel.position.x;
-            }
-            if voxel.position.y > max[1] {
-                max[1] = voxel.position.y;
-            }
-            if voxel.position.z > max[2] {
-                max[2] = voxel.position.z;
+    pub fn get_voxels(&self) -> Vec<Voxel> {
+        let mut voxels = Vec::with_capacity(self.count);
+        for (_, xs) in self.voxels.iter() {
+            for (_, ys) in xs.iter() {
+                for (_, voxel) in ys.iter() {
+                    voxels.push(voxel.clone());
+                }
             }
         }
 
-        ChunkBoundaries { min, max }
-    }
-
-    pub fn get_voxels(&self) -> &Vec<Voxel> {
-        &self.voxels
+        voxels
     }
 
     pub fn set(&mut self, voxel: Voxel) {
-        if let Some(old) = self
+        if let None = self
             .voxels
-            .iter_mut()
-            .find(|v| v.position == voxel.position)
+            .entry(voxel.position.x)
+            .or_insert(AHashMap::new())
+            .entry(voxel.position.y)
+            .or_insert(AHashMap::new())
+            .insert(voxel.position.z, voxel)
         {
-            *old = voxel;
-        } else {
-            self.voxels.push(voxel);
+            self.count += 1;
         }
     }
 
     pub fn remove(&mut self, position: VoxelPosition) -> Option<Voxel> {
-        let vec_position = self
+        let old = self
             .voxels
-            .iter()
-            .enumerate()
-            .find(|(_, v)| v.position == position)
-            .map(|t| t.0);
-        vec_position.map(|i| self.voxels.remove(i))
+            .entry(position.x)
+            .or_insert(AHashMap::new())
+            .entry(position.y)
+            .or_insert(AHashMap::new())
+            .remove(&position.z);
+        if old.is_some() {
+            self.count -= 1;
+        }
+        old
     }
 
     pub fn get(&self, position: &VoxelPosition) -> Option<&Voxel> {
-        self.voxels.iter().find(|v| v.position == *position)
+        self.voxels
+            .get(&position.x)
+            .and_then(|ys| ys.get(&position.y))
+            .and_then(|zs| zs.get(&position.z))
     }
 }
