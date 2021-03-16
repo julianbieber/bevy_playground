@@ -1,6 +1,9 @@
 pub mod model;
 
-use crate::movement::model::{MoveEvent, UnitRotation};
+use crate::{
+    movement::model::{MoveEvent, UnitRotation},
+    player::PlayerPosition,
+};
 use bevy::prelude::*;
 
 pub struct MovementPlugin;
@@ -15,6 +18,7 @@ impl Plugin for MovementPlugin {
 fn movement_system(
     mut movement_events: EventReader<MoveEvent>,
     mut units_query: Query<(&mut Transform, &mut UnitRotation)>,
+    mut player_position: ResMut<PlayerPosition>,
 ) {
     for movement in movement_events.iter() {
         if let Ok((mut transform, mut unit_rotation)) = units_query.get_mut(movement.entity) {
@@ -33,6 +37,9 @@ fn movement_system(
 
             let translation_offset = transform.rotation.mul_vec3(movement.translation_offset);
             transform.translation += translation_offset;
+            if movement.is_player {
+                player_position.position = transform.translation;
+            }
         } else {
             dbg!("Could not find entity");
         }

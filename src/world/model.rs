@@ -3,7 +3,8 @@ use std::sync::Arc;
 use bevy::prelude::*;
 
 use crate::voxel_world::{
-    chunk::{ChunkBoundaries, VoxelChunk},
+    boundaries::ChunkBoundaries,
+    chunk::VoxelChunk,
     voxel::{Voxel, VoxelPosition},
 };
 

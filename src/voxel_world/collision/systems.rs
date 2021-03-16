@@ -64,9 +64,8 @@ fn collision_depth_sphere(
                 if let Some(chunk_entity) = voxel_access.get_chunk_entity_containing(position) {
                     if let Ok(chunk) = terrain.get(chunk_entity) {
                         chunk.get(&position).map(|terrain_voxel| {
-                            let closest_point =
-                                terrain_voxel.position.to_box().closest_point(&center);
-                            let voxel_world_position = terrain_voxel.position.to_vec();
+                            let closest_point = position.to_box().closest_point(&center);
+                            let voxel_world_position = position.to_vec();
                             let distance = center.distance(closest_point);
                             if distance < radius {
                                 let x_distance = (center.x - voxel_world_position.x).abs();

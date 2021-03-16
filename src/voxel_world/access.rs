@@ -1,10 +1,7 @@
 use ahash::AHashMap;
 use bevy::prelude::{Entity, Query};
 
-use super::{
-    chunk::{ChunkBoundaries, VoxelChunk},
-    voxel::VoxelPosition,
-};
+use super::{boundaries::ChunkBoundaries, chunk::VoxelChunk, voxel::VoxelPosition};
 
 pub struct VoxelAccess {
     chunks: AHashMap<ChunkBoundaries, Entity>,
@@ -25,7 +22,7 @@ impl VoxelAccess {
         self.chunks.insert(boundary, e);
     }
 
-    /// query is only mutable since immutable .get calls are not implemented if the inner type is mutable; the inner type is mutable since the caller needs to mutaute the chunk afterwards
+    /// query is only mutable since immutable .get calls are not implemented if the inner type is mutable; the inner type is mutable since the caller needs to mutate the chunk afterwards
     pub fn get_chunk(
         &self,
         boundary: &ChunkBoundaries,

@@ -5,10 +5,7 @@ use flume::{Receiver, Sender};
 
 use crate::{
     movement::model::UnitRotation,
-    voxel_world::{
-        access::VoxelAccess,
-        chunk::{ChunkBoundaries, VoxelChunk},
-    },
+    voxel_world::{access::VoxelAccess, boundaries::ChunkBoundaries, chunk::VoxelChunk},
 };
 
 use super::{
