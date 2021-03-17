@@ -75,10 +75,10 @@ impl WaterSurrounding {
             (x + offset, z + offset),
         ];
 
-        let mut lowest_known_point = Vec2::zero();
+        let mut lowest_known_point = Vec2::ZERO;
         let mut lowest_known_height = std::f32::INFINITY;
 
-        let mut highest_known_point = Vec2::zero();
+        let mut highest_known_point = Vec2::ZERO;
         let mut highest_known_height = std::f32::NEG_INFINITY;
 
         for (around_x, around_z) in points_around.into_iter() {

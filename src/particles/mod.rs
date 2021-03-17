@@ -124,7 +124,7 @@ fn spawn_particles(
         .with(materials.add(ParticleDirectionMaterial { multiplier: 0.0 }))
         .with(typ)
         .with(UnitRotation {
-            rotation: Vec3::zero(),
+            rotation: Vec3::ZERO,
         })
         .current_entity()
         .unwrap()

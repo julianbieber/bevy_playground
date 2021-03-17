@@ -6,15 +6,8 @@ mod world_gen;
 
 use ahash::AHashMap;
 use bevy::prelude::*;
-use itertools::Chunk;
 
-use crate::voxel_world::{
-    self,
-    access::VoxelAccess,
-    boundaries::ChunkBoundaries,
-    generator::VoxelWorld,
-    voxel::{Voxel, VoxelPosition, VoxelTypes},
-};
+use crate::voxel_world::{boundaries::ChunkBoundaries, generator::VoxelWorld};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
     voxel_world::chunk::VoxelChunk,

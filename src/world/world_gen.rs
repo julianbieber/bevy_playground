@@ -20,7 +20,7 @@ pub struct GeneratedChunks {
     generated: Vec<ChunkBoundaries>,
 }
 
-const CHUNKS_IN_EACH_DIRECTION: i32 = 8;
+const CHUNKS_IN_EACH_DIRECTION: i32 = 3;
 
 pub struct GenerationResult {
     boundaries: ChunkBoundaries,

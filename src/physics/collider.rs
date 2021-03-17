@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use cgmath::num_traits::Float;
-use itertools::Itertools;
-use std::cmp;
-use std::cmp::min;
+
 use std::collections::HashMap;
 use std::ops::AddAssign;
 
@@ -27,25 +25,6 @@ impl ColliderShapes {
             half_depth_z: half_side,
         }
     }
-}
-
-pub fn cuboid_edges_untransformed() -> Vec<Vec3> {
-    let top_left_front = Vec3::new(-1.0, 1.0, 1.0);
-    let top_left_back = Vec3::new(-1.0, 1.0, -1.0);
-    let lower_left_front = Vec3::new(-1.0, -1.0, 1.0);
-    let top_right_front = Vec3::new(1.0, 1.0, 1.0);
-    vec![
-        top_left_back - top_left_front,
-        top_right_front - top_left_front,
-        lower_left_front - top_left_front,
-    ]
-}
-
-pub fn cuboid_edges(transform_matrix: &Mat4) -> Vec<Vec3> {
-    cuboid_edges_untransformed()
-        .iter()
-        .map(|v| transform_matrix.transform_vector3(*v))
-        .collect()
 }
 
 pub struct Collider {

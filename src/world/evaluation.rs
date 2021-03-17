@@ -77,8 +77,8 @@ pub fn update_world_event_reader(
 
     let mut entity_chunks = Vec::with_capacity(changed.len());
     for e in changed {
-        if let Ok((foo,)) = voxel_chunk_query.get_mut(e) {
-            entity_chunks.push((e, foo.clone()));
+        if let Ok((chunk,)) = voxel_chunk_query.get_mut(e) {
+            entity_chunks.push((e, chunk.clone()));
         }
     }
 
@@ -134,7 +134,7 @@ pub fn update_world_from_channel(
                     .spawn(bundle)
                     .with(FreeFloatingVoxel)
                     .with(UnitRotation {
-                        rotation: Vec3::zero(),
+                        rotation: Vec3::ZERO,
                     });
             }
         }

@@ -105,8 +105,8 @@ pub fn setup_water_layer(
         })
         .with(material)
         .with(WaterPosition {
-            position: Vec3::zero(),
-            size: Vec2::zero(),
+            position: Vec3::ZERO,
+            size: Vec2::ZERO,
         });
 }
 

@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
 };
-use std::{borrow::Cow, time::Instant};
+use std::borrow::Cow;
 
 use super::{
     chunk::VoxelChunk,
