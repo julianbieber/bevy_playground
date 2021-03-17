@@ -45,8 +45,9 @@ pub fn move_particle_emitters(
             ParticleTypes::Explosion { .. } => {}
             ParticleTypes::HighStorm { .. } => movement_events.send(MoveEvent {
                 entity: e,
-                rotation_offset: Vec3::zero(),
+                rotation_offset: Vec3::ZERO,
                 translation_offset: Vec3::new(-10.0, 0.0, 0.0) * time.delta_seconds(),
+                is_player: false,
             }),
         }
     }

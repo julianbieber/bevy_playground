@@ -35,12 +35,12 @@ pub fn collision_depth_cubiod(
                 };
                 if let Some(chunk_entity) = voxel_access.get_chunk_entity_containing(position) {
                     if let Ok(chunk) = terrain.get(chunk_entity) {
-                        chunk.get(&position).map(|terrain_voxel| {
+                        chunk.get(&position).map(|_| {
                             if let Some((distance, axis)) = collision(
                                 Vec3::new(half_x, half_y, half_z),
                                 &transform,
                                 Vec3::new(HALF_VOXEL_SIZE, HALF_VOXEL_SIZE, HALF_VOXEL_SIZE),
-                                &terrain_voxel.position.transform(),
+                                &position.transform(),
                             ) {
                                 if distance > max_distance {
                                     movement = axis * distance;

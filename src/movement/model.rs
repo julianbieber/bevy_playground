@@ -13,4 +13,5 @@ pub struct MoveEvent {
     pub rotation_offset: Vec3,
     pub translation_offset: Vec3,
     pub entity: Entity,
+    pub is_player: bool,
 }

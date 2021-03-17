@@ -213,3 +213,13 @@ pub enum VoxelTypes {
     LightRock1,
     LightRock2,
 }
+
+pub const ALL_VOXEL_TYPES: [VoxelTypes; 7] = [
+    VoxelTypes::DarkRock1,
+    VoxelTypes::DarkRock2,
+    VoxelTypes::Lava,
+    VoxelTypes::Moss,
+    VoxelTypes::CrackedRock,
+    VoxelTypes::LightRock1,
+    VoxelTypes::LightRock2,
+];

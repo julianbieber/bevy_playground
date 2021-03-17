@@ -12,7 +12,7 @@ use crate::{
     world::model::{DelayedWorldTransformations, WorldUpdateEvent},
 };
 use crate::{
-    particles::model::ParticleDescription, voxel_world::chunk::ChunkBoundaries,
+    particles::model::ParticleDescription, voxel_world::boundaries::ChunkBoundaries,
     voxel_world::chunk::VoxelChunk,
 };
 use bevy::utils::Duration;
@@ -49,6 +49,7 @@ pub fn npc_movement_system(
                         rotation_offset,
                         translation_offset: forward,
                         entity: npc_entity,
+                        is_player: false,
                     });
                 }
             }

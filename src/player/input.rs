@@ -17,7 +17,7 @@ pub fn publish_player_movements(
     time: Res<Time>,
 ) {
     for (entity, _, unit_rotation) in input_receiver_query.iter_mut() {
-        let mut frame_rotation = Vec3::zero();
+        let mut frame_rotation = Vec3::ZERO;
         for event in mouse_events.iter() {
             let look = event.delta;
             frame_rotation.x -= (look.x).to_radians() / ROTATION_SPEED_X;
@@ -26,7 +26,7 @@ pub fn publish_player_movements(
         frame_rotation *= time.delta_seconds();
         let rotation = cap_rotation(frame_rotation, &unit_rotation);
 
-        let mut movement_before_rotation = Vec3::zero();
+        let mut movement_before_rotation = Vec3::ZERO;
         if keys.pressed(KeyCode::W) {
             movement_before_rotation.z -= PLAYER_SPEED;
         }
@@ -49,6 +49,7 @@ pub fn publish_player_movements(
             rotation_offset: rotation,
             translation_offset: movement_before_rotation * time.delta_seconds(),
             entity,
+            is_player: true,
         });
     }
 }

@@ -5,10 +5,7 @@ use bevy::{app::Events, prelude::*};
 use crate::{
     movement::model::MoveEvent,
     particles::model::ParticleTypes,
-    voxel_world::{
-        chunk::{ChunkBoundaries, VoxelChunk},
-        voxel::VoxelPosition,
-    },
+    voxel_world::{boundaries::ChunkBoundaries, chunk::VoxelChunk, voxel::VoxelPosition},
 };
 
 use super::{internal_model::FreeFloatingVoxel, model::WorldUpdateEvent};
@@ -113,6 +110,7 @@ pub fn move_floating_voxels(
                                 rng.gen_range(-0.1..0.1) * 10.0,
                             ) * time.delta_seconds(),
                             entity: voxel_entity,
+                            is_player: false,
                         })
                     }
                 }

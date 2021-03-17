@@ -14,7 +14,7 @@ pub fn terrain_collision_system(
     mut movable_colliders_query: Query<(&mut Transform, &Collider)>,
 ) {
     for (mut transform, collider) in movable_colliders_query.iter_mut() {
-        let mut impulse = Vec3::zero();
+        let mut impulse = Vec3::ZERO;
         let transform_matrix = transform.compute_matrix();
         let transformed_center = transform_matrix.transform_point3(collider.local_position);
 
@@ -46,7 +46,7 @@ fn collision_depth_sphere(
     center: Vec3,
     radius: f32,
 ) -> Vec3 {
-    let mut overlapping_move = Vec3::zero();
+    let mut overlapping_move = Vec3::ZERO;
     for potential_x in
         world_2_voxel_space(center.x - radius) - 1..world_2_voxel_space(center.x + radius) + 1
     {
@@ -63,10 +63,9 @@ fn collision_depth_sphere(
                 };
                 if let Some(chunk_entity) = voxel_access.get_chunk_entity_containing(position) {
                     if let Ok(chunk) = terrain.get(chunk_entity) {
-                        chunk.get(&position).map(|terrain_voxel| {
-                            let closest_point =
-                                terrain_voxel.position.to_box().closest_point(&center);
-                            let voxel_world_position = terrain_voxel.position.to_vec();
+                        chunk.get(&position).map(|_terrain_voxel| {
+                            let closest_point = position.to_box().closest_point(&center);
+                            let voxel_world_position = position.to_vec();
                             let distance = center.distance(closest_point);
                             if distance < radius {
                                 let x_distance = (center.x - voxel_world_position.x).abs();

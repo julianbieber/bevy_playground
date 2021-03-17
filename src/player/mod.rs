@@ -8,6 +8,9 @@ use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 
 pub struct PlayerMarker;
+pub struct PlayerPosition {
+    pub position: Vec3,
+}
 
 pub struct PlayerPlugin;
 
@@ -27,6 +30,9 @@ fn player_setup(
     let cube_material_handle = materials.add(StandardMaterial {
         albedo: Color::rgb(0.0, 1.0, 0.0),
         ..Default::default()
+    });
+    commands.insert_resource(PlayerPosition {
+        position: Vec3::new(0.0, 22.0, 0.0),
     });
     commands
         .spawn(PbrBundle {
@@ -52,7 +58,7 @@ fn player_setup(
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y;
-            let up = Vec3::unit_y();
+            let up = Vec3::Y;
             let camera_looking_point = -camera_position + 2.0 * camera_position_y * up;
             parent.spawn(PerspectiveCameraBundle {
                 transform: Transform::from_translation(camera_position)

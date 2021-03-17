@@ -2,16 +2,12 @@ mod effects;
 mod evaluation;
 mod internal_model;
 pub mod model;
+mod world_gen;
 
 use ahash::AHashMap;
 use bevy::prelude::*;
 
-use crate::voxel_world::{
-    access::VoxelAccess,
-    chunk::ChunkBoundaries,
-    generator::VoxelWorld,
-    voxel::{Voxel, VoxelPosition, VoxelTypes},
-};
+use crate::voxel_world::{boundaries::ChunkBoundaries, generator::VoxelWorld};
 use crate::{
     physics::collider::{Collider, ColliderShapes},
     voxel_world::chunk::VoxelChunk,
@@ -25,10 +21,16 @@ use self::{
         evaluate_delayed_transformations, update_world_event_reader, update_world_from_channel,
     },
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
+    world_gen::{read_generation_results, setup_world_gen, start_generation},
 };
 
-use noise::{NoiseFn, Perlin};
+struct VoxelTexture {
+    pub handle: Handle<Texture>,
+}
 
+pub struct AdditionalVoxels {
+    voxels: AHashMap<ChunkBoundaries, VoxelChunk>,
+}
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
@@ -45,7 +47,10 @@ impl Plugin for WorldPlugin {
             .add_system(erosion.system())
             .add_system(evaluate_delayed_transformations.system())
             .add_system(move_floating_voxels.system())
-            .add_startup_system(world_setup.system());
+            .add_startup_system(world_setup.system())
+            .add_startup_system(setup_world_gen.system())
+            .add_system(start_generation.system())
+            .add_system(read_generation_results.system());
     }
 }
 
@@ -54,8 +59,11 @@ fn world_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
-    mut chunk_access: ResMut<VoxelAccess>,
 ) {
+    commands.insert_resource(VoxelTexture {
+        handle: asset_server.load("world_texture_color.png"),
+    }); // Preloading the texture prevents a race condition.
+
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     let mut chunk_map = AHashMap::new();
     for pillar in w.pillars {
@@ -67,48 +75,7 @@ fn world_setup(
                 .set(voxel);
         }
     }
-    let stretch_factor = 30.0;
-    // add voxels via noise
-    let noise = Perlin::new();
-    for x_i in -100..100 {
-        let x = x_i as f64 / stretch_factor;
-        for z_i in -100..100 {
-            let z = z_i as f64 / stretch_factor;
-            let y = noise.get([x, z]);
-            for p in VoxelPosition::up_to(x_i, (y * 30.0) as i32, z_i) {
-                let matching_boundary = ChunkBoundaries::aligned(p);
-                chunk_map
-                    .entry(matching_boundary)
-                    .or_insert(VoxelChunk::empty())
-                    .set(Voxel {
-                        position: p,
-                        typ: VoxelTypes::CrackedRock,
-                    });
-            }
-        }
-    }
-
-    let chunk_texture = asset_server.load("world_texture_color.png");
-    for (boundary, chunk) in chunk_map {
-        let chunk_mesh = meshes.add(Mesh::from(&chunk));
-
-        let chunk_material = materials.add(StandardMaterial {
-            albedo_texture: Some(chunk_texture.clone()),
-            ..Default::default()
-        });
-        let chunk_bundle = PbrBundle {
-            mesh: chunk_mesh,
-            material: chunk_material.clone(),
-            transform: Transform::from_translation(Vec3::zero()),
-            ..Default::default()
-        };
-        let chunk_entity = commands
-            .spawn(chunk_bundle)
-            .with(chunk)
-            .current_entity()
-            .unwrap();
-        chunk_access.add_chunk(boundary, chunk_entity);
-    }
+    commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
 
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),
