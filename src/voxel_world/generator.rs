@@ -41,9 +41,9 @@ impl PillarGenerator {
             rock_types: vec![
                 VoxelTypes::DarkRock1,
                 VoxelTypes::DarkRock2,
-                VoxelTypes::LightRock1,
-                VoxelTypes::LightRock2,
-                VoxelTypes::CrackedRock,
+                VoxelTypes::GreyRock1,
+                VoxelTypes::GreyRock2,
+                VoxelTypes::BrownRock,
             ],
         }
     }
@@ -72,7 +72,7 @@ impl PillarGenerator {
         if y == self.height - 1 {
             VoxelTypes::Moss
         } else if y == 0 {
-            VoxelTypes::Lava
+            VoxelTypes::GroundRock1
         } else {
             self.rock_types.choose(&mut rng).unwrap().clone()
         }

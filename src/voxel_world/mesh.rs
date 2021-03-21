@@ -43,13 +43,14 @@ impl From<&Voxel> for Mesh {
 
 fn uvs_from_typ(typ: &VoxelTypes) -> (f32, f32, f32, f32) {
     match typ {
-        VoxelTypes::DarkRock1 => (0.0f32, 0.25f32, 0.5f32, 1.0f32),
-        VoxelTypes::DarkRock2 => (0.25f32, 0.5f32, 0.5f32, 1.0f32),
-        VoxelTypes::Lava => (0.25, 0.5, 0.0, 0.5),
-        VoxelTypes::Moss => (0.5, 0.75, 0.0, 0.5),
-        VoxelTypes::LightRock1 => (0.75, 1.0, 0.0, 0.5),
-        VoxelTypes::LightRock2 => (0.5, 0.75, 0.5, 1.0),
-        VoxelTypes::CrackedRock => (0.0, 0.25, 0.0, 0.5),
+        VoxelTypes::DarkRock1 => (0.0, 0.125, 0.0, 1.0),
+        VoxelTypes::Moss => (0.125, 0.25, 0.0, 1.0),
+        VoxelTypes::GreyRock1 => (0.25, 0.375, 0.0, 1.0),
+        VoxelTypes::GreyRock2 => (0.375, 0.5, 0.0, 1.0),
+        VoxelTypes::BrownRock => (0.5, 0.625, 0.0, 1.0),
+        VoxelTypes::DarkRock2 => (0.625, 0.75, 0.0, 1.0),
+        VoxelTypes::GroundRock1 => (0.75, 0.875, 0.0, 1.0),
+        VoxelTypes::Snow => (0.875, 1.0, 0.0, 1.0),
     }
 }
 

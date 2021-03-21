@@ -205,21 +205,12 @@ impl Voxel {
 
 #[derive(Clone, Debug)]
 pub enum VoxelTypes {
-    DarkRock1,
-    DarkRock2,
-    Lava,
     Moss,
-    CrackedRock,
-    LightRock1,
-    LightRock2,
+    DarkRock1,
+    GreyRock1,
+    GreyRock2,
+    BrownRock,
+    DarkRock2,
+    GroundRock1,
+    Snow,
 }
-
-pub const ALL_VOXEL_TYPES: [VoxelTypes; 7] = [
-    VoxelTypes::DarkRock1,
-    VoxelTypes::DarkRock2,
-    VoxelTypes::Lava,
-    VoxelTypes::Moss,
-    VoxelTypes::CrackedRock,
-    VoxelTypes::LightRock1,
-    VoxelTypes::LightRock2,
-];

@@ -6,7 +6,7 @@ pub struct ChunkBoundaries {
     pub max: [i32; 3],
 }
 
-const CHUNK_SIZE: i32 = 32;
+const CHUNK_SIZE: i32 = 64;
 
 impl ChunkBoundaries {
     pub fn aligned(position: VoxelPosition) -> ChunkBoundaries {
