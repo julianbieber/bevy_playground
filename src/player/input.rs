@@ -7,7 +7,7 @@ const ROTATION_SPEED_X: f32 = 0.3f32;
 const ROTATION_SPEED_Y: f32 = 0.3f32;
 
 // m/s
-const PLAYER_SPEED: f32 = 3.0f32;
+const PLAYER_SPEED: f32 = 5.0f32;
 
 pub fn publish_player_movements(
     mut mouse_events: EventReader<MouseMotion>,
