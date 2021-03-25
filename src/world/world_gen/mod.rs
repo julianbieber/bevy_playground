@@ -19,6 +19,7 @@ use crate::{
 use self::{height::HeightGen, type_decision::VoxelTypeDecision};
 
 use super::AdditionalVoxels;
+use crate::voxel_world::distance_2_lod;
 
 pub struct GeneratedChunks {
     generated: Vec<ChunkBoundaries>,
@@ -74,6 +75,11 @@ pub fn start_generation(
                         .unwrap_or(vec![]);
                     let cloned_voxel_type_decision = voxel_type_decision.clone();
                     let cloned_height_gen = height_gen.clone();
+                    let lod = distance_2_lod(
+                        player_position
+                            .position
+                            .distance(cloned_boundary.center().to_vec()),
+                    );
                     pool.spawn(async move {
                         generate_chunk(
                             cloned_boundary,
@@ -81,6 +87,7 @@ pub fn start_generation(
                             cloned_height_gen,
                             cloned_sender,
                             additional,
+                            lod,
                         );
                     })
                     .detach()
@@ -96,9 +103,11 @@ fn generate_chunk(
     height_gen: HeightGen,
     sender: Sender<GenerationResult>,
     additional: Vec<Voxel>,
+    lod: i32,
 ) {
     let mut rng = SmallRng::from_entropy();
-    let mut chunk = VoxelChunk::empty();
+    let mut chunk = VoxelChunk::empty(boundaries.clone());
+    chunk.lod = lod;
     for x_i in boundaries.min[0]..boundaries.max[0] {
         for z_i in boundaries.min[2]..boundaries.max[2] {
             let total_y = height_gen.get_height_factor(x_i, z_i);

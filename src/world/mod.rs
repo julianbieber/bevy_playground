@@ -69,9 +69,10 @@ fn world_setup(
     for pillar in w.pillars {
         for voxel in pillar.voxels() {
             let matching_boundary = ChunkBoundaries::aligned(voxel.position);
+            let m = matching_boundary.clone();
             chunk_map
                 .entry(matching_boundary)
-                .or_insert(VoxelChunk::empty())
+                .or_insert(VoxelChunk::empty(m))
                 .set(voxel);
         }
     }

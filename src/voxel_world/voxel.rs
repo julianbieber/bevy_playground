@@ -1,7 +1,41 @@
 use bevy::prelude::*;
 
 pub const HALF_VOXEL_SIZE: f32 = 0.5f32;
-const VOXEL_SIZE: f32 = HALF_VOXEL_SIZE * 2.0f32;
+pub const VOXEL_SIZE: f32 = HALF_VOXEL_SIZE * 2.0f32;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VoxelDirection {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    FRONT,
+    BACK,
+}
+
+#[derive(Debug)]
+pub struct VoxelFace {
+    pub direction: VoxelDirection,
+    pub center: Vec3,
+    pub size: f32,
+    pub typ: VoxelTypes,
+}
+
+impl VoxelFace {
+    pub fn from_voxels(
+        center: Vec3,
+        typ: VoxelTypes,
+        direction: VoxelDirection,
+        lod: i32,
+    ) -> VoxelFace {
+        VoxelFace {
+            center,
+            size: lod as f32 * HALF_VOXEL_SIZE,
+            typ,
+            direction,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct VoxelPosition {
@@ -69,38 +103,49 @@ impl VoxelPosition {
         Transform::from_translation(self.to_vec()).compute_matrix()
     }
 
-    pub fn surrounding(&self) -> VoxelSurrounding {
-        VoxelSurrounding {
-            top: VoxelPosition {
+    pub fn in_direction(&self, direction: VoxelDirection) -> VoxelPosition {
+        match direction {
+            VoxelDirection::UP => VoxelPosition {
                 x: self.x,
                 y: self.y + 1,
                 z: self.z,
             },
-            bottom: VoxelPosition {
+            VoxelDirection::DOWN => VoxelPosition {
                 x: self.x,
                 y: self.y - 1,
                 z: self.z,
             },
-            left: VoxelPosition {
+            VoxelDirection::LEFT => VoxelPosition {
                 x: self.x - 1,
                 y: self.y,
                 z: self.z,
             },
-            right: VoxelPosition {
+            VoxelDirection::RIGHT => VoxelPosition {
                 x: self.x + 1,
                 y: self.y,
                 z: self.z,
             },
-            front: VoxelPosition {
+            VoxelDirection::FRONT => VoxelPosition {
                 x: self.x,
                 y: self.y,
                 z: self.z - 1,
             },
-            back: VoxelPosition {
+            VoxelDirection::BACK => VoxelPosition {
                 x: self.x,
                 y: self.y,
                 z: self.z + 1,
             },
+        }
+    }
+
+    pub fn surrounding(&self) -> VoxelSurrounding {
+        VoxelSurrounding {
+            top: self.in_direction(VoxelDirection::UP),
+            bottom: self.in_direction(VoxelDirection::DOWN),
+            left: self.in_direction(VoxelDirection::LEFT),
+            right: self.in_direction(VoxelDirection::RIGHT),
+            front: self.in_direction(VoxelDirection::FRONT),
+            back: self.in_direction(VoxelDirection::BACK),
         }
     }
 
@@ -203,7 +248,7 @@ impl Voxel {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VoxelTypes {
     Moss,
     DarkRock1,

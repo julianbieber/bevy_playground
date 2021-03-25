@@ -19,6 +19,14 @@ impl ChunkBoundaries {
         }
     }
 
+    pub fn center(&self) -> VoxelPosition {
+        VoxelPosition {
+            x: self.min[0] + CHUNK_SIZE / 2,
+            y: self.min[0] + CHUNK_SIZE / 2,
+            z: self.min[0] + CHUNK_SIZE / 2,
+        }
+    }
+
     fn aligned_axis(v: i32) -> (i32, i32) {
         if v >= 0 {
             let m = (v / CHUNK_SIZE) * CHUNK_SIZE;

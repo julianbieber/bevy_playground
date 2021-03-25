@@ -2,19 +2,23 @@ use ahash::AHashMap;
 
 use crate::voxel_world::voxel::{Voxel, VoxelPosition};
 
-use super::voxel::VoxelTypes;
+use super::{boundaries::ChunkBoundaries, voxel::VoxelTypes};
 
 #[derive(Clone)]
 pub struct VoxelChunk {
     voxels: AHashMap<i32, AHashMap<i32, AHashMap<i32, VoxelTypes>>>,
     pub count: usize,
+    pub lod: i32,
+    pub boundary: ChunkBoundaries,
 }
 
 impl VoxelChunk {
-    pub fn empty() -> VoxelChunk {
+    pub fn empty(boundary: ChunkBoundaries) -> VoxelChunk {
         VoxelChunk {
             voxels: AHashMap::new(),
             count: 0,
+            lod: 1,
+            boundary,
         }
     }
 
