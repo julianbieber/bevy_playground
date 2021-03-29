@@ -12,6 +12,9 @@ use super::{
     internal_model::FreeFloatingVoxel,
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
 };
+use crate::player::PlayerPosition;
+use crate::voxel_world::distance_2_lod;
+use crate::voxel_world::voxel::VoxelPosition;
 
 pub fn evaluate_delayed_transformations(
     mut effects_res: ResMut<DelayedWorldTransformations>,
@@ -41,11 +44,22 @@ pub fn evaluate_delayed_transformations(
 pub fn update_world_event_reader(
     mut update_events: EventReader<WorldUpdateEvent>,
     pool: ResMut<AsyncComputeTaskPool>,
-    mut voxel_chunk_query: Query<(&mut VoxelChunk,)>,
+    mut voxel_chunk_query: Query<(Entity, &mut VoxelChunk)>,
     tx: Res<Sender<WorldUpdateResult>>,
     chunk_access: Res<VoxelAccess>,
+    player_position: Res<PlayerPosition>,
 ) {
     let mut changed = HashSet::new();
+
+    for (entity, mut voxel_chunk) in voxel_chunk_query.iter_mut() {
+        let center: Vec3 = voxel_chunk.boundary.center().to_vec();
+        let lod = distance_2_lod(center.distance(player_position.position));
+        if lod != voxel_chunk.lod {
+            voxel_chunk.lod = lod;
+            changed.insert(entity);
+        }
+    }
+
     let mut replaces = Vec::new();
 
     for event in update_events.iter() {
@@ -63,7 +77,7 @@ pub fn update_world_event_reader(
         let deletes = (event.delete)(&filtered_chunks);
         for delete in deletes {
             if let Some(entity) = chunk_access.get_chunk_entity_containing(delete) {
-                if let Ok((mut chunk,)) = voxel_chunk_query.get_mut(entity) {
+                if let Ok((_, mut chunk)) = voxel_chunk_query.get_mut(entity) {
                     if let Some(voxel) = chunk.remove(delete) {
                         if event.replace {
                             replaces.push(voxel);
@@ -77,7 +91,7 @@ pub fn update_world_event_reader(
 
     let mut entity_chunks = Vec::with_capacity(changed.len());
     for e in changed {
-        if let Ok((chunk,)) = voxel_chunk_query.get_mut(e) {
+        if let Ok((_, chunk)) = voxel_chunk_query.get_mut(e) {
             entity_chunks.push((e, chunk.clone()));
         }
     }

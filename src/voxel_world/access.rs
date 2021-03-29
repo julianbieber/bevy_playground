@@ -26,10 +26,10 @@ impl VoxelAccess {
     pub fn get_chunk(
         &self,
         boundary: &ChunkBoundaries,
-        query: &mut Query<(&mut VoxelChunk,)>,
+        query: &mut Query<(Entity, &mut VoxelChunk)>,
     ) -> Option<VoxelChunk> {
         self.get_chunk_entity(boundary)
-            .and_then(|entity| query.get_mut(entity).map(|c| c.0.clone()).ok())
+            .and_then(|entity| query.get_mut(entity).map(|c| c.1.clone()).ok())
     }
 
     pub fn new() -> VoxelAccess {
