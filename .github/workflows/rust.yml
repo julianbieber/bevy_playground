@@ -25,6 +25,6 @@ jobs:
     - name: Check the format
       run: cargo fmt --all -- --check
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --release
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --release
