@@ -196,7 +196,7 @@ pub fn world_2_voxel_space(s: f32) -> i32 {
     (s / VOXEL_SIZE).ceil() as i32
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Voxel {
     pub position: VoxelPosition,
     pub typ: VoxelTypes,
@@ -248,7 +248,7 @@ impl Voxel {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Copy, Hash)]
 pub enum VoxelTypes {
     Moss,
     DarkRock1,

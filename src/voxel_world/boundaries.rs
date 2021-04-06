@@ -6,7 +6,7 @@ pub struct ChunkBoundaries {
     pub max: [i32; 3],
 }
 
-const CHUNK_SIZE: i32 = 64;
+pub const CHUNK_SIZE: i32 = 64;
 
 impl ChunkBoundaries {
     pub fn aligned(position: VoxelPosition) -> ChunkBoundaries {
@@ -32,7 +32,7 @@ impl ChunkBoundaries {
             let m = (v / CHUNK_SIZE) * CHUNK_SIZE;
             (m, m + CHUNK_SIZE)
         } else {
-            let m = (v / CHUNK_SIZE) * CHUNK_SIZE;
+            let m = ((v + 1) / CHUNK_SIZE) * CHUNK_SIZE;
             (m - CHUNK_SIZE, m)
         }
     }
@@ -86,11 +86,11 @@ impl ChunkBoundaries {
 
     pub fn contains(&self, position: &VoxelPosition) -> bool {
         position.x >= self.min[0]
-            && position.x <= self.max[0]
+            && position.x < self.max[0]
             && position.y >= self.min[1]
-            && position.y <= self.max[1]
+            && position.y < self.max[1]
             && position.z >= self.min[2]
-            && position.z <= self.max[2]
+            && position.z < self.max[2]
     }
 }
 
@@ -135,5 +135,16 @@ mod test {
             [-CHUNK_SIZE, -CHUNK_SIZE, -CHUNK_SIZE]
         );
         assert_eq!(aligned_boundaries.max, [0, 0, 0]);
+    }
+
+    #[test]
+    fn test_aligned_chunk_boundaries_at_max() {
+        let aligned_boundaries = ChunkBoundaries::aligned(VoxelPosition {
+            x: -64,
+            y: -64,
+            z: -64,
+        });
+
+        assert_eq!(aligned_boundaries.min, [-64, -64, -64]);
     }
 }

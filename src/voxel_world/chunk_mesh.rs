@@ -4,11 +4,7 @@ use bevy::{
 };
 use std::borrow::Cow;
 
-use super::{
-    chunk::VoxelChunk,
-    lod::combine_voxels,
-    voxel::{VoxelTypes, HALF_VOXEL_SIZE},
-};
+use super::{chunk::VoxelChunk, lod::combine_voxels, voxel::VoxelTypes};
 
 impl From<&VoxelChunk> for Mesh {
     fn from(chunk: &VoxelChunk) -> Self {
