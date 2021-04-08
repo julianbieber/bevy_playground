@@ -28,13 +28,13 @@ pub fn enemy_spawn_system(
             size: rng.gen_range(0.5f32..5.0f32),
         }));
         let cube_material_handle = materials.add(StandardMaterial {
-            albedo: Color::rgb(1.0, 0.0, rng.gen_range(0.0f32..1.0f32)),
+            base_color: Color::rgb(1.0, 0.0, rng.gen_range(0.0f32..1.0f32)),
             ..Default::default()
         });
 
         commands
             // parent cube
-            .spawn(PbrBundle {
+            .spawn_bundle(PbrBundle {
                 mesh: cube_handle,
                 material: cube_material_handle,
                 transform: Transform::from_translation(Vec3::new(
@@ -44,12 +44,12 @@ pub fn enemy_spawn_system(
                 )),
                 ..Default::default()
             })
-            .with(NPC {
+            .insert(NPC {
                 behaviour: NPCBehaviours::RANDOM,
                 velocity: rng.gen_range(1.0f32..5.0f32),
             })
-            .with(Movable)
-            .with(UnitRotation {
+            .insert(Movable)
+            .insert(UnitRotation {
                 ..Default::default()
             });
     }

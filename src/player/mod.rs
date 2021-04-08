@@ -28,20 +28,20 @@ fn player_setup(
 ) {
     let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
-        albedo: Color::rgb(0.0, 1.0, 0.0),
+        base_color: Color::rgb(0.0, 1.0, 0.0),
         ..Default::default()
     });
     commands.insert_resource(PlayerPosition {
         position: Vec3::new(0.0, 22.0, 0.0),
     });
     commands
-        .spawn(PbrBundle {
+        .spawn_bundle(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
             transform: Transform::from_translation(Vec3::new(0.0, 22.0, 0.0)),
             ..Default::default()
         })
-        .with(Collider {
+        .insert(Collider {
             collider_shape: ColliderShapes::Cuboid {
                 half_width_x: 0.25,
                 half_height_y: 0.25,
@@ -49,18 +49,18 @@ fn player_setup(
             },
             local_position: Vec3::new(0.0, 0.0, 0.0),
         })
-        .with(ReceivesInput)
-        .with(Movable)
-        .with(UnitRotation {
+        .insert(ReceivesInput)
+        .insert(Movable)
+        .insert(UnitRotation {
             ..Default::default()
         })
-        .with(PlayerMarker)
+        .insert(PlayerMarker)
         .with_children(|parent| {
             let camera_position = Vec3::new(0.0, 1.0, 5.0);
             let camera_position_y = camera_position.y;
             let up = Vec3::Y;
             let camera_looking_point = -camera_position + 2.0 * camera_position_y * up;
-            parent.spawn(PerspectiveCameraBundle {
+            parent.spawn_bundle(PerspectiveCameraBundle {
                 transform: Transform::from_translation(camera_position)
                     .looking_at(camera_looking_point, up),
                 ..Default::default()

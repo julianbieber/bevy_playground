@@ -25,7 +25,9 @@ use self::{
 };
 
 struct VoxelTexture {
-    pub handle: Handle<Texture>,
+    pub color: Handle<Texture>,
+    pub normal: Handle<Texture>,
+    pub roughness: Handle<Texture>,
 }
 
 pub struct AdditionalVoxels {
@@ -61,7 +63,9 @@ fn world_setup(
     asset_server: Res<AssetServer>,
 ) {
     commands.insert_resource(VoxelTexture {
-        handle: asset_server.load("world_texture_color.png"),
+        color: asset_server.load("world_texture_color.png"),
+        roughness: asset_server.load("world_texture_roughnes.png"),
+        normal: asset_server.load("world_texture_normal.png"),
     }); // Preloading the texture prevents a race condition.
 
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
@@ -78,25 +82,31 @@ fn world_setup(
     }
     commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
 
-    commands.spawn(LightBundle {
-        transform: Transform::from_translation(Vec3::new(4.0, 100.0, 4.0)),
+    commands.spawn_bundle(LightBundle {
+        transform: Transform::from_translation(Vec3::new(0.0, 100.0, 0.0)),
+        light: Light {
+            intensity: 100000.0,
+            range: 1000.0,
+            fov: f32::to_radians(360.0),
+            ..Default::default()
+        },
         ..Default::default()
     });
 
     let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
-        albedo: Color::rgb(0.0, 1.0, 0.0),
+        base_color: Color::hex("00ff00").unwrap(),
         ..Default::default()
     });
     commands
         // parent cube
-        .spawn(PbrBundle {
+        .spawn_bundle(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
             transform: Transform::from_translation(Vec3::new(0.0, 22.0, 0.1)),
             ..Default::default()
         })
-        .with(Collider {
+        .insert(Collider {
             collider_shape: ColliderShapes::Cuboid {
                 half_width_x: 0.25,
                 half_height_y: 0.25,

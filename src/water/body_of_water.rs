@@ -95,7 +95,7 @@ pub fn setup_water_layer(
     let mut transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
     transform.scale = Vec3::new(10.0, 1.0, 10.0);
     commands
-        .spawn(MeshBundle {
+        .spawn_bundle(MeshBundle {
             mesh,
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle,
@@ -103,8 +103,8 @@ pub fn setup_water_layer(
             transform,
             ..Default::default()
         })
-        .with(material)
-        .with(WaterPosition {
+        .insert(material)
+        .insert(WaterPosition {
             position: Vec3::ZERO,
             size: Vec2::ZERO,
         });
