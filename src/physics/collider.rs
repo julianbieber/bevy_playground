@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use cgmath::num_traits::Float;
 
+use bevy::math::Vec4Swizzles;
 use std::collections::HashMap;
 use std::ops::AddAssign;
 
@@ -188,18 +189,24 @@ impl Collider {
                 half_height_y,
                 half_depth_z,
             } => {
-                Collider::gjk(
+                let collider: Vec<Vec3> = Collider::compute_vertices(
                     self_half_width_x,
                     self_half_height_y,
                     self_half_depth_z,
                     self.local_position,
+                    transform,
+                );
+                let other_collider: Vec<Vec3> = Collider::compute_vertices(
                     half_width_x,
                     half_height_y,
                     half_depth_z,
                     other.local_position,
-                    transform,
                     other_transform,
                 );
+                if let Some(collision) = Collider::gjk(&collider, &other_collider) {
+                    let impulse = Collider::epa(collision.simplex, collider, other_collider);
+                    return Option::Some(impulse.penetration_depth * impulse.normal);
+                }
                 None
             }
         }
@@ -248,35 +255,9 @@ impl Collider {
         }
     }
 
-    fn gjk(
-        self_half_width_x: f32,
-        self_half_height_y: f32,
-        self_half_depth_z: f32,
-        self_local_position: Vec3,
-        half_width_x: f32,
-        half_height_y: f32,
-        half_depth_z: f32,
-        local_position: Vec3,
-        transform: &Mat4,
-        other_transform: &Mat4,
-    ) -> bool {
-        let vertices: Vec<Vec3> = Collider::compute_vertices(
-            self_half_width_x,
-            self_half_height_y,
-            self_half_depth_z,
-            self_local_position,
-            transform,
-        );
-        let other_vertices: Vec<Vec3> = Collider::compute_vertices(
-            half_width_x,
-            half_height_y,
-            half_depth_z,
-            local_position,
-            other_transform,
-        );
-
+    fn gjk(vertices: &Vec<Vec3>, other_vertices: &Vec<Vec3>) -> Option<SimplexDirectionCollision> {
         let mut support: Vec3 =
-            Collider::support(vertices.clone(), other_vertices.clone(), Vec3::unit_x());
+            Collider::support(vertices.to_owned(), other_vertices.to_owned(), Vec3::X);
         let mut simplex = Simplex::new();
         simplex.push_front(support);
 
@@ -289,19 +270,19 @@ impl Collider {
             support = Collider::support(vertices.clone(), other_vertices.clone(), direction);
 
             if support.dot(direction) <= 0.0 {
-                return false; // no collision
+                return None; // no collision
             }
             simplex.push_front(support);
             let next_simplex: SimplexDirectionCollision =
                 Collider::next_simplex(simplex, direction);
             if next_simplex.is_colliding {
-                return true;
+                return Option::Some(next_simplex);
             }
             simplex = next_simplex.simplex;
             direction = next_simplex.direction;
             number_of_iterations += 1;
         }
-        false
+        None
     }
 
     fn find_furthest_point(direction: Vec3, vertices: &Vec<Vec3>) -> Vec3 {
@@ -341,7 +322,7 @@ impl Collider {
     }
 
     fn compute_local_edge(local_position: Vec3, x: f32, y: f32, z: f32) -> Vec3 {
-        local_position + x * Vec3::unit_x() + y * Vec3::unit_y() + z * Vec3::unit_z()
+        local_position + x * Vec3::X + y * Vec3::Y + z * Vec3::Z
     }
 
     fn compute_global_edge(transform: Mat4, local_edge: Vec3) -> Vec3 {
@@ -465,6 +446,201 @@ impl Collider {
             is_colliding: true,
         }
     }
+
+    fn epa(simplex: Simplex, colliderA: Vec<Vec3>, colliderB: Vec<Vec3>) -> CollisionPoints {
+        let mut polytop: Polytop = Polytop::new(simplex.vertices.clone());
+
+        let mut min_normal: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+        let mut min_distance: f32 = f32::infinity();
+
+        let mut normals_min_triangle = Collider::get_face_normals(&polytop.polytop, &polytop.faces);
+
+        let mut number_of_iterations = 0;
+        let max_number_of_iterations = 20;
+
+        while number_of_iterations < max_number_of_iterations && min_distance == f32::infinity() {
+            number_of_iterations += 1;
+
+            min_normal =
+                normals_min_triangle.normals[normals_min_triangle.min_triangle as usize].xyz();
+            min_distance = normals_min_triangle.w(normals_min_triangle.min_triangle as usize);
+
+            let support: Vec3 =
+                Collider::support((*colliderA).to_owned(), (*colliderB).to_owned(), min_normal);
+            let s_distance: f32 = min_normal.dot(support);
+
+            if f32::abs(s_distance - min_distance) > 0.01f32 {
+                min_distance = f32::infinity();
+            }
+
+            let mut unique_edges: Vec<Vec<usize>> = Vec::new();
+
+            for mut i in 0..(normals_min_triangle.normals.len()) {
+                let mut number_removed_normals = 0;
+
+                if i < normals_min_triangle.normals.len() - number_removed_normals {
+                    if Collider::same_direction(
+                        Vec3::from(normals_min_triangle.normals[i]),
+                        support,
+                    ) {
+                        number_removed_normals += 1;
+                        let f: i64 = (i * 3) as i64;
+                        Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f, f + 1);
+                        Collider::add_if_unique_edge(
+                            &mut unique_edges,
+                            &polytop.faces,
+                            f + 1,
+                            f + 2,
+                        );
+                        Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f + 2, f);
+
+                        polytop.remove_face(f as usize);
+
+                        normals_min_triangle.remove_normal(i);
+
+                        i -= 1;
+                    }
+                }
+            }
+            let mut new_faces: Vec<usize> = Vec::new();
+            for x in unique_edges.iter() {
+                new_faces.push(x[0]);
+                new_faces.push(x[1]);
+                new_faces.push(polytop.polytop.len());
+            }
+
+            polytop.polytop.push(support);
+
+            let mut new_normals_min_triangle =
+                Collider::get_face_normals(&polytop.polytop, &new_faces);
+            let mut old_min_distance: f32 = f32::infinity();
+
+            old_min_distance = normals_min_triangle.find_minimal_distance(old_min_distance);
+
+            if new_normals_min_triangle.w(new_normals_min_triangle.min_triangle as usize)
+                < old_min_distance
+            {
+                new_normals_min_triangle.min_triangle = new_normals_min_triangle.min_triangle
+                    + normals_min_triangle.normals.len() as u64;
+            }
+
+            polytop.faces.append(&mut new_faces.clone());
+            normals_min_triangle
+                .normals
+                .append(&mut new_normals_min_triangle.normals);
+        }
+
+        min_distance = Collider::zero_if_infinity(min_distance);
+
+        CollisionPoints {
+            normal: min_normal,
+            penetration_depth: min_distance + 0.001f32,
+            has_collision: true,
+        }
+    }
+
+    fn zero_if_infinity(u: f32) -> f32 {
+        if u.is_infinite() {
+            return 0.0f32;
+        }
+        u
+    }
+
+    fn get_face_normals(polytope: &Vec<Vec3>, faces: &Vec<usize>) -> FaceNormalsMinTriangle {
+        let mut normals: Vec<Vec4> = Vec::new();
+        let mut min_triangle: u64 = 0;
+        let mut min_distance: f32 = f32::infinity();
+        for i in (0..faces.len()).step_by(3) {
+            let a: Vec3 = polytope[faces[i]];
+            let b: Vec3 = polytope[faces[i + 1]];
+            let c: Vec3 = polytope[faces[i + 2]];
+
+            let mut normal: Vec3 = (b - a).cross(c - a).normalize();
+            let mut distance: f32 = normal.dot(a);
+
+            if distance < 0.0f32 {
+                normal *= -1.0f32;
+                distance *= -1.0f32;
+            }
+            normals.push(Vec4::new(normal.x, normal.y, normal.z, distance));
+            if distance < min_distance {
+                min_triangle = (i / 3) as u64;
+                min_distance = distance;
+            }
+        }
+
+        FaceNormalsMinTriangle {
+            normals,
+            min_triangle,
+        }
+    }
+
+    fn add_if_unique_edge(edges: &mut Vec<Vec<usize>>, faces: &Vec<usize>, a: i64, b: i64) -> () {
+        //use different type, s.t. it
+        let reverse = edges
+            .iter()
+            .position(|x| *x == vec![faces[b as usize], faces[a as usize]]);
+        if reverse.is_some() {
+            edges.remove(reverse.unwrap());
+        } else {
+            edges.push(vec![faces[a as usize], faces[b as usize]]);
+        }
+    }
+}
+
+struct Polytop {
+    polytop: Vec<Vec3>,
+    faces: Vec<usize>,
+}
+impl Polytop {
+    pub fn new(simplex_vertices: Vec<Vec3>) -> Self {
+        let polytop: Vec<Vec3> = simplex_vertices;
+        let faces: Vec<usize> = vec![0, 1, 2, 0, 3, 1, 0, 2, 3, 1, 3, 2];
+        Self { polytop, faces }
+    }
+
+    pub fn remove_face(&mut self, f: usize) -> &mut Polytop {
+        self.faces[(f + 2) as usize] = *self.faces.last().unwrap();
+        self.faces.pop();
+        self.faces[(f + 1) as usize] = *self.faces.last().unwrap();
+        self.faces.pop();
+        self.faces[f as usize] = *self.faces.last().unwrap();
+        self.faces.pop();
+        self
+    }
+}
+
+struct CollisionPoints {
+    normal: Vec3,
+    penetration_depth: f32,
+    has_collision: bool,
+}
+
+struct FaceNormalsMinTriangle {
+    normals: Vec<Vec4>,
+    min_triangle: u64,
+}
+
+impl FaceNormalsMinTriangle {
+    pub fn remove_normal(&mut self, i: usize) -> &mut FaceNormalsMinTriangle {
+        self.normals[i] = *self.normals.last().unwrap();
+        self.normals.pop();
+        self
+    }
+
+    pub fn w(&self, i: usize) -> f32 {
+        self.normals[i].w
+    }
+
+    pub fn find_minimal_distance(&mut self, mut current_minimum: f32) -> f32 {
+        for i in 0..self.normals.len() {
+            if self.w(i) < current_minimum {
+                current_minimum = self.w(i);
+                self.min_triangle = i as u64;
+            }
+        }
+        current_minimum
+    }
 }
 
 struct SimplexDirectionCollision {
@@ -491,7 +667,6 @@ impl Simplex {
         self
     }
 }
-
 pub fn collision_update(mut query: Query<(Entity, &Collider, &mut Transform)>) {
     let mut colliders = Vec::new();
     let mut other_colliders = Vec::new();
@@ -505,10 +680,10 @@ pub fn collision_update(mut query: Query<(Entity, &Collider, &mut Transform)>) {
             if !entity.id().eq(&other_entity.id()) {
                 let impulse = collider
                     .detect_collision(other_collider, collider_transform, other_transform)
-                    .unwrap_or(Vec3::zero());
+                    .unwrap_or(Vec3::ZERO);
                 impulses
                     .entry(entity.id())
-                    .or_insert(Vec3::zero())
+                    .or_insert(Vec3::ZERO)
                     .function(impulse);
             }
         }
