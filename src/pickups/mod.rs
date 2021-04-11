@@ -31,8 +31,7 @@ fn add_energy_to_players(
     player_query: Query<(Entity, &PlayerMarker), Without<Energy>>,
 ) {
     for (entity, _) in player_query.iter() {
-        commands.set_current_entity(entity);
-        commands.with(Energy { amount: 0.0 });
+        commands.entity(entity).insert(Energy { amount: 0.0 });
     }
 }
 
@@ -60,11 +59,11 @@ fn regularily_spawn_energy(
                         subdivisions: 5,
                     }));
                     let material = materials.add(StandardMaterial {
-                        albedo: Color::rgb(0.6, 0.6, 0.7),
+                        base_color: Color::rgb(0.6, 0.6, 0.7),
                         ..Default::default()
                     });
                     let entity = commands
-                        .spawn(PbrBundle {
+                        .spawn_bundle(PbrBundle {
                             mesh: sphere,
                             material: material,
                             transform: Transform::from_translation(Vec3::new(
@@ -77,9 +76,8 @@ fn regularily_spawn_energy(
                             )),
                             ..Default::default()
                         })
-                        .with(Energy { amount: 10.0 })
-                        .current_entity()
-                        .unwrap();
+                        .insert(Energy { amount: 10.0 })
+                        .id();
                     despanws_res
                         .despawns
                         .push((Timer::from_seconds(100.0, false), entity));
@@ -110,7 +108,7 @@ fn draw_in_energy(
     }
 
     for e in despawn_entities.into_iter() {
-        commands.despawn(e);
+        commands.entity(e).despawn();
     }
 }
 
@@ -118,9 +116,9 @@ struct EnergyText;
 
 fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraMono-Medium.ttf");
+    commands.spawn_bundle(UiCameraBundle::default());
     commands
-        .spawn(UiCameraBundle::default())
-        .spawn(TextBundle {
+        .spawn_bundle(TextBundle {
             style: Style {
                 align_self: AlignSelf::FlexEnd,
                 position_type: PositionType::Absolute,
@@ -142,7 +140,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             ),
             ..Default::default()
         })
-        .with(EnergyText);
+        .insert(EnergyText);
 }
 
 fn display_energy(

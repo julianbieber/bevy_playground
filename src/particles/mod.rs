@@ -115,17 +115,16 @@ fn spawn_particles(
     typ: ParticleTypes,
 ) -> Entity {
     commands
-        .spawn(MeshBundle {
+        .spawn_bundle(MeshBundle {
             mesh: meshes.add(mesh),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(handle)]),
             transform: Transform::from_translation(position),
             ..Default::default()
         })
-        .with(materials.add(ParticleDirectionMaterial { multiplier: 0.0 }))
-        .with(typ)
-        .with(UnitRotation {
+        .insert(materials.add(ParticleDirectionMaterial { multiplier: 0.0 }))
+        .insert(typ)
+        .insert(UnitRotation {
             rotation: Vec3::ZERO,
         })
-        .current_entity()
-        .unwrap()
+        .id()
 }

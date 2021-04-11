@@ -146,10 +146,15 @@ pub fn read_generation_results(
 ) {
     for generation in receiver.try_iter() {
         let chunk_texture = asset_server.load("world_texture_color.png");
+        let chunk_roughness = asset_server.load("world_texture_roughnes.png");
+        //let chunk_normal = asset_server.load("world_texture_normal.png");
         let chunk_mesh = meshes.add(generation.mesh);
 
         let chunk_material = materials.add(StandardMaterial {
-            albedo_texture: Some(chunk_texture),
+            base_color_texture: Some(chunk_texture),
+            metallic_roughness_texture: Some(chunk_roughness),
+            metallic: 1.0,
+            // normal_map: Some(chunk_normal),
             ..Default::default()
         });
         let chunk_bundle = PbrBundle {
@@ -159,10 +164,9 @@ pub fn read_generation_results(
             ..Default::default()
         };
         let chunk_entity = commands
-            .spawn(chunk_bundle)
-            .with(generation.chunk)
-            .current_entity()
-            .unwrap();
+            .spawn_bundle(chunk_bundle)
+            .insert(generation.chunk)
+            .id();
         chunk_access.add_chunk(generation.boundaries, chunk_entity);
     }
 }

@@ -22,7 +22,7 @@ fn evaluate_delayed_despanws(
     let mut at_least_one = false;
     for (timer, entity) in despanws_res.despawns.iter_mut() {
         if timer.tick(time.delta()).just_finished() {
-            commands.despawn(entity.clone());
+            commands.entity(entity.clone()).despawn();
             at_least_one = true;
         }
     }

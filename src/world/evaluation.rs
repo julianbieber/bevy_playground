@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fs::metadata};
 
 use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
 use flume::{Receiver, Sender};
@@ -124,17 +124,22 @@ pub fn update_world_from_channel(
 ) {
     if !rx.is_empty() {
         let texture = asset_server.load("world_texture_color.png");
+        let chunk_roughness = asset_server.load("world_texture_roughnes.png");
+        //let chunk_normal = asset_server.load("world_texture_normal.png");
         let material = materials.add(StandardMaterial {
-            albedo_texture: Some(texture),
+            base_color_texture: Some(texture),
+            metallic_roughness_texture: Some(chunk_roughness),
+            metallic: 1.0,
+            //normal_map: Some(chunk_normal),
             ..Default::default()
         });
 
         for world_update_result in rx.try_iter() {
             for (entity, mesh) in world_update_result.entity_2_mesh {
-                commands.set_current_entity(entity);
                 commands
-                    .remove::<(Handle<Mesh>,)>(entity)
-                    .with(meshes.add(mesh));
+                    .entity(entity)
+                    .remove::<(Handle<Mesh>,)>()
+                    .insert(meshes.add(mesh));
             }
             for voxel in world_update_result.voxels_to_replace {
                 let mesh = meshes.add(Mesh::from(&voxel));
@@ -145,9 +150,9 @@ pub fn update_world_from_channel(
                     ..Default::default()
                 };
                 commands
-                    .spawn(bundle)
-                    .with(FreeFloatingVoxel)
-                    .with(UnitRotation {
+                    .spawn_bundle(bundle)
+                    .insert(FreeFloatingVoxel)
+                    .insert(UnitRotation {
                         rotation: Vec3::ZERO,
                     });
             }
