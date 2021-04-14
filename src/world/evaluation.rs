@@ -8,13 +8,13 @@ use crate::{
     voxel_world::{access::VoxelAccess, boundaries::ChunkBoundaries, chunk::VoxelChunk},
 };
 
+use super::VoxelTexture;
 use super::{
     internal_model::FreeFloatingVoxel,
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
 };
 use crate::player::PlayerPosition;
 use crate::voxel_world::distance_2_lod;
-use crate::voxel_world::voxel::VoxelPosition;
 
 pub fn evaluate_delayed_transformations(
     mut effects_res: ResMut<DelayedWorldTransformations>,
@@ -119,43 +119,30 @@ pub fn update_world_from_channel(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    material: Res<VoxelTexture>,
     rx: Res<Receiver<WorldUpdateResult>>,
 ) {
-    if !rx.is_empty() {
-        let texture = asset_server.load("world_texture_color.png");
-        let chunk_roughness = asset_server.load("world_texture_roughnes.png");
-        //let chunk_normal = asset_server.load("world_texture_normal.png");
-        let material = materials.add(StandardMaterial {
-            base_color_texture: Some(texture),
-            metallic_roughness_texture: Some(chunk_roughness),
-            metallic: 1.0,
-            //normal_map: Some(chunk_normal),
-            ..Default::default()
-        });
-
-        for world_update_result in rx.try_iter() {
-            for (entity, mesh) in world_update_result.entity_2_mesh {
-                commands
-                    .entity(entity)
-                    .remove::<(Handle<Mesh>,)>()
-                    .insert(meshes.add(mesh));
-            }
-            for voxel in world_update_result.voxels_to_replace {
-                let mesh = meshes.add(Mesh::from(&voxel));
-                let bundle = PbrBundle {
-                    mesh,
-                    material: material.clone(),
-                    transform: Transform::from_translation(voxel.position.to_vec()),
-                    ..Default::default()
-                };
-                commands
-                    .spawn_bundle(bundle)
-                    .insert(FreeFloatingVoxel)
-                    .insert(UnitRotation {
-                        rotation: Vec3::ZERO,
-                    });
-            }
+    for world_update_result in rx.try_iter() {
+        for (entity, mesh) in world_update_result.entity_2_mesh {
+            commands
+                .entity(entity)
+                .remove::<(Handle<Mesh>,)>()
+                .insert(meshes.add(mesh));
+        }
+        for voxel in world_update_result.voxels_to_replace {
+            let mesh = meshes.add(Mesh::from(&voxel));
+            let bundle = PbrBundle {
+                mesh,
+                material: material.material.clone(),
+                transform: Transform::from_translation(voxel.position.to_vec()),
+                ..Default::default()
+            };
+            commands
+                .spawn_bundle(bundle)
+                .insert(FreeFloatingVoxel)
+                .insert(UnitRotation {
+                    rotation: Vec3::ZERO,
+                });
         }
     }
 }

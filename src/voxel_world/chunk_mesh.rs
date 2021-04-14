@@ -14,6 +14,7 @@ impl From<&VoxelChunk> for Mesh {
         let mut indices: Vec<u32> = Vec::with_capacity(vertices_count * 6);
         let mut vertices: Vec<[f32; 3]> = Vec::with_capacity(vertices_count);
         let mut normals: Vec<[f32; 3]> = Vec::with_capacity(vertices_count);
+        let mut tangents: Vec<[f32; 4]> = Vec::with_capacity(vertices_count);
         let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(vertices_count);
 
         let mut current_index = 0;
@@ -45,6 +46,12 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([0.0, 1.0, 0.0]);
                     normals.push([0.0, 1.0, 0.0]);
                     normals.push([0.0, 1.0, 0.0]);
+
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+
                     indices.push(current_index + 0);
                     indices.push(current_index + 1);
                     indices.push(current_index + 2);
@@ -79,6 +86,11 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([0.0, -1.0, 0.0]);
                     normals.push([0.0, -1.0, 0.0]);
 
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+
                     indices.push(current_index + 0);
                     indices.push(current_index + 2);
                     indices.push(current_index + 1);
@@ -112,6 +124,12 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([-1.0, 0.0, 0.0]);
                     normals.push([-1.0, 0.0, 0.0]);
                     normals.push([-1.0, 0.0, 0.0]);
+
+                    tangents.push([0.0, 0.0, 1.0, 1.0]);
+                    tangents.push([0.0, 0.0, 1.0, 1.0]);
+                    tangents.push([0.0, 0.0, 1.0, 1.0]);
+                    tangents.push([0.0, 0.0, 1.0, 1.0]);
+
                     indices.push(current_index + 0);
                     indices.push(current_index + 2);
                     indices.push(current_index + 1);
@@ -146,6 +164,11 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([1.0, 0.0, 0.0]);
                     normals.push([1.0, 0.0, 0.0]);
                     normals.push([1.0, 0.0, 0.0]);
+
+                    tangents.push([0.0, 0.0, 1.0, -1.0]);
+                    tangents.push([0.0, 0.0, 1.0, -1.0]);
+                    tangents.push([0.0, 0.0, 1.0, -1.0]);
+                    tangents.push([0.0, 0.0, 1.0, -1.0]);
 
                     indices.push(current_index + 0);
                     indices.push(current_index + 1);
@@ -182,6 +205,11 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([0.0, 0.0, -1.0]);
                     normals.push([0.0, 0.0, -1.0]);
 
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+                    tangents.push([1.0, 0.0, 0.0, -1.0]);
+
                     indices.push(current_index + 0);
                     indices.push(current_index + 1);
                     indices.push(current_index + 2);
@@ -217,6 +245,11 @@ impl From<&VoxelChunk> for Mesh {
                     normals.push([0.0, 0.0, 1.0]);
                     normals.push([0.0, 0.0, 1.0]);
 
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+                    tangents.push([1.0, 0.0, 0.0, 1.0]);
+
                     indices.push(current_index + 0);
                     indices.push(current_index + 2);
                     indices.push(current_index + 1);
@@ -237,6 +270,7 @@ impl From<&VoxelChunk> for Mesh {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_TANGENT), tangents);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs);
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh

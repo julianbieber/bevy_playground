@@ -24,10 +24,8 @@ use self::{
     world_gen::{read_generation_results, setup_world_gen, start_generation},
 };
 
-struct VoxelTexture {
-    pub color: Handle<Texture>,
-    pub normal: Handle<Texture>,
-    pub roughness: Handle<Texture>,
+pub struct VoxelTexture {
+    pub material: Handle<StandardMaterial>,
 }
 
 pub struct AdditionalVoxels {
@@ -62,11 +60,21 @@ fn world_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
+    let chunk_texture = asset_server.load("world_texture_color.png");
+    let chunk_roughness = asset_server.load("world_texture_roughnes.png");
+    let chunk_normal = asset_server.load("world_texture_normal.png");
+
+    let chunk_material = materials.add(StandardMaterial {
+        base_color_texture: Some(chunk_texture),
+        metallic_roughness_texture: Some(chunk_roughness),
+        metallic: 0.2,
+        roughness: 1.0,
+        normal_map: Some(chunk_normal),
+        ..Default::default()
+    });
     commands.insert_resource(VoxelTexture {
-        color: asset_server.load("world_texture_color.png"),
-        roughness: asset_server.load("world_texture_roughnes.png"),
-        normal: asset_server.load("world_texture_normal.png"),
-    }); // Preloading the texture prevents a race condition.
+        material: chunk_material,
+    });
 
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     let mut chunk_map = AHashMap::new();

@@ -18,7 +18,7 @@ use crate::{
 
 use self::{height::HeightGen, type_decision::VoxelTypeDecision};
 
-use super::AdditionalVoxels;
+use super::{AdditionalVoxels, VoxelTexture};
 use crate::voxel_world::distance_2_lod;
 
 pub struct GeneratedChunks {
@@ -140,26 +140,14 @@ pub fn read_generation_results(
     mut commands: Commands,
     receiver: Res<Receiver<GenerationResult>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
     mut chunk_access: ResMut<VoxelAccess>,
+    material: Res<VoxelTexture>,
 ) {
     for generation in receiver.try_iter() {
-        let chunk_texture = asset_server.load("world_texture_color.png");
-        let chunk_roughness = asset_server.load("world_texture_roughnes.png");
-        //let chunk_normal = asset_server.load("world_texture_normal.png");
         let chunk_mesh = meshes.add(generation.mesh);
-
-        let chunk_material = materials.add(StandardMaterial {
-            base_color_texture: Some(chunk_texture),
-            metallic_roughness_texture: Some(chunk_roughness),
-            metallic: 1.0,
-            // normal_map: Some(chunk_normal),
-            ..Default::default()
-        });
         let chunk_bundle = PbrBundle {
             mesh: chunk_mesh,
-            material: chunk_material,
+            material: material.material.clone(),
             transform: Transform::from_translation(Vec3::ZERO),
             ..Default::default()
         };
