@@ -11,15 +11,17 @@ impl From<&Voxel> for Mesh {
         let mut vertices: Vec<[f32; 3]> = Vec::new();
         let mut normals: Vec<[f32; 3]> = Vec::new();
         let mut uvs: Vec<[f32; 2]> = Vec::new();
+        let mut tangents: Vec<[f32; 4]> = Vec::new();
         let mut indices: Vec<u32> = Vec::new();
         let (u_min, u_max, v_min, v_max) = uvs_from_typ(&voxel.typ);
 
         let v = voxel_vertices(0.0, 0.0, 0.0, u_min, u_max, v_min, v_max);
 
-        for (position, normal, uv) in v.iter() {
-            vertices.push(*position);
-            normals.push(*normal);
-            uvs.push(*uv);
+        for (position, normal, tangent, uv) in v.into_iter() {
+            vertices.push(position);
+            normals.push(normal);
+            tangents.push(tangent);
+            uvs.push(uv);
         }
 
         let local_indices = [
@@ -36,6 +38,7 @@ impl From<&Voxel> for Mesh {
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION), vertices);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL), normals);
         mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_UV_0), uvs);
+        mesh.set_attribute(Cow::Borrowed(Mesh::ATTRIBUTE_TANGENT), tangents);
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh
     }
@@ -62,7 +65,7 @@ fn voxel_vertices(
     u_max: f32,
     v_min: f32,
     v_max: f32,
-) -> Vec<([f32; 3], [f32; 3], [f32; 2])> {
+) -> Vec<([f32; 3], [f32; 3], [f32; 4], [f32; 2])> {
     vec![
         // top (0., 0., size)
         (
@@ -72,6 +75,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 0., 1.0f32],
+            [1.0, 0.0, 0.0, 1.0],
             [u_min, v_min],
         ),
         (
@@ -81,6 +85,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 0., 1.0f32],
+            [1.0, 0.0, 0.0, 1.0],
             [u_max, v_min],
         ),
         (
@@ -90,6 +95,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 0., 1.0f32],
+            [1.0, 0.0, 0.0, 1.0],
             [u_max, v_max],
         ),
         (
@@ -99,6 +105,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 0., 1.0f32],
+            [1.0, 0.0, 0.0, 1.0],
             [u_min, v_max],
         ),
         // bottom (0., 0., -size)
@@ -109,6 +116,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 0., -1.0f32],
+            [1.0, 0.0, 0.0, -1.0],
             [u_max, v_min],
         ),
         (
@@ -118,6 +126,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 0., -1.0f32],
+            [1.0, 0.0, 0.0, -1.0],
             [u_min, v_min],
         ),
         (
@@ -127,6 +136,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 0., -1.0f32],
+            [1.0, 0.0, 0.0, -1.0],
             [u_min, v_max],
         ),
         (
@@ -136,6 +146,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 0., -1.0f32],
+            [1.0, 0.0, 0.0, -1.0],
             [u_max, v_max],
         ),
         // right (size, 0., 0.)
@@ -146,6 +157,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, -1.0],
             [u_min, v_min],
         ),
         (
@@ -155,6 +167,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, -1.0],
             [u_max, v_min],
         ),
         (
@@ -164,6 +177,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, -1.0],
             [u_max, v_max],
         ),
         (
@@ -173,6 +187,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, -1.0],
             [u_min, v_max],
         ),
         // left (-size, 0., 0.)
@@ -183,6 +198,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [-1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, 1.0],
             [u_max, v_min],
         ),
         (
@@ -192,6 +208,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [-1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, 1.0],
             [u_min, v_min],
         ),
         (
@@ -201,6 +218,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [-1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, 1.0],
             [u_min, v_max],
         ),
         (
@@ -210,6 +228,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [-1.0f32, 0., 0.],
+            [0.0, 0.0, 1.0, 1.0],
             [u_max, v_max],
         ),
         // front (0., size, 0.)
@@ -220,6 +239,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 1.0f32, 0.],
+            [1.0, 0.0, 0.0, -1.0],
             [u_max, v_min],
         ),
         (
@@ -229,6 +249,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., 1.0f32, 0.],
+            [1.0, 0.0, 0.0, -1.0],
             [u_min, v_min],
         ),
         (
@@ -238,6 +259,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 1.0f32, 0.],
+            [1.0, 0.0, 0.0, -1.0],
             [u_min, v_max],
         ),
         (
@@ -247,6 +269,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., 1.0f32, 0.],
+            [1.0, 0.0, 0.0, -1.0],
             [u_max, v_max],
         ),
         // back (0., -size, 0.)
@@ -257,6 +280,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., -1.0f32, 0.],
+            [1.0, 0.0, 0.0, 1.0],
             [u_min, v_min],
         ),
         (
@@ -266,6 +290,7 @@ fn voxel_vertices(
                 z + HALF_VOXEL_SIZE,
             ],
             [0., -1.0f32, 0.],
+            [1.0, 0.0, 0.0, 1.0],
             [u_max, v_min],
         ),
         (
@@ -275,6 +300,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., -1.0f32, 0.],
+            [1.0, 0.0, 0.0, 1.0],
             [u_max, v_max],
         ),
         (
@@ -284,6 +310,7 @@ fn voxel_vertices(
                 z - HALF_VOXEL_SIZE,
             ],
             [0., -1.0f32, 0.],
+            [1.0, 0.0, 0.0, 1.0],
             [u_min, v_max],
         ),
     ]
