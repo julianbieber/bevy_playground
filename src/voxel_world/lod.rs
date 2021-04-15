@@ -1,4 +1,4 @@
-use std::{ops::AddAssign, time::Instant};
+use std::ops::AddAssign;
 
 use super::voxel::{VoxelDirection, VoxelPosition};
 use super::{chunk::VoxelChunk, voxel::VoxelFace};

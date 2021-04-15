@@ -90,12 +90,11 @@ fn world_setup(
     }
     commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
 
-    commands.spawn_bundle(LightBundle {
+    commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 100.0, 0.0)),
-        light: Light {
+        point_light: PointLight {
             intensity: 100000.0,
             range: 1000.0,
-            fov: f32::to_radians(360.0),
             ..Default::default()
         },
         ..Default::default()
