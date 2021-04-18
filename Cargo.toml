@@ -17,6 +17,7 @@ cgmath = "0.17"
 flume = "0.10.1"
 itertools = "0.10.0"
 noise = "0.7.0"
+mimalloc = "0.1.25"
 
 [profile.release]
 debug = true

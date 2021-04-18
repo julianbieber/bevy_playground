@@ -47,40 +47,43 @@ fn regularily_spawn_energy(
     mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
     mut despanws_res: ResMut<DelayedDespawns>,
+    energy_query: Query<(&Energy,)>,
 ) {
     if spawn_timer.timer.tick(time.delta()).just_finished() {
-        let mut rng = SmallRng::from_entropy();
-        for (storm_transform, particle_type) in storm_query.iter() {
-            match particle_type {
-                ParticleTypes::Explosion { .. } => {}
-                ParticleTypes::HighStorm { depth } => {
-                    let sphere = meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 1.0,
-                        subdivisions: 5,
-                    }));
-                    let material = materials.add(StandardMaterial {
-                        base_color: Color::rgb(0.6, 0.6, 0.7),
-                        ..Default::default()
-                    });
-                    let entity = commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: sphere,
-                            material: material,
-                            transform: Transform::from_translation(Vec3::new(
-                                rng.gen_range(
-                                    storm_transform.translation.x - depth
-                                        ..storm_transform.translation.x + depth,
-                                ),
-                                rng.gen_range(0.0f32..100.0f32),
-                                rng.gen_range(-100.0f32..100.0f32),
-                            )),
+        if energy_query.iter().count() < 10 {
+            let mut rng = SmallRng::from_entropy();
+            for (storm_transform, particle_type) in storm_query.iter() {
+                match particle_type {
+                    ParticleTypes::Explosion { .. } => {}
+                    ParticleTypes::HighStorm { depth } => {
+                        let sphere = meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 1.0,
+                            subdivisions: 5,
+                        }));
+                        let material = materials.add(StandardMaterial {
+                            base_color: Color::rgb(0.6, 0.6, 0.7),
                             ..Default::default()
-                        })
-                        .insert(Energy { amount: 10.0 })
-                        .id();
-                    despanws_res
-                        .despawns
-                        .push((Timer::from_seconds(100.0, false), entity));
+                        });
+                        let entity = commands
+                            .spawn_bundle(PbrBundle {
+                                mesh: sphere,
+                                material: material,
+                                transform: Transform::from_translation(Vec3::new(
+                                    rng.gen_range(
+                                        storm_transform.translation.x - depth
+                                            ..storm_transform.translation.x + depth,
+                                    ),
+                                    rng.gen_range(0.0f32..100.0f32),
+                                    rng.gen_range(-100.0f32..100.0f32),
+                                )),
+                                ..Default::default()
+                            })
+                            .insert(Energy { amount: 10.0 })
+                            .id();
+                        despanws_res
+                            .despawns
+                            .push((Timer::from_seconds(100.0, false), entity));
+                    }
                 }
             }
         }
