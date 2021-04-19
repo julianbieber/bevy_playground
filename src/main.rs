@@ -27,8 +27,13 @@ use world::WorldPlugin;
 #[macro_use]
 extern crate itertools;
 
+use mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 fn main() {
     App::build()
+        .insert_resource(DefaultTaskPoolOptions::with_num_threads(8))
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldPlugin)
         .add_plugin(ParticlePlugin)
