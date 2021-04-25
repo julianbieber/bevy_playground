@@ -37,7 +37,7 @@ impl VoxelFace {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct VoxelPosition {
     pub x: i32,
     pub y: i32,

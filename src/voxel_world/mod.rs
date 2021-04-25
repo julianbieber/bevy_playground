@@ -7,6 +7,7 @@ pub mod generator;
 mod lod;
 mod mesh;
 pub mod voxel;
+pub mod water;
 
 pub fn distance_2_lod(distance: f32) -> i32 {
     if distance < 300.0 {
