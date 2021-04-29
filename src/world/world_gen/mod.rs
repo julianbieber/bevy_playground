@@ -56,9 +56,9 @@ pub fn start_generation(
     let player_chunk =
         ChunkBoundaries::aligned(VoxelPosition::from_vec3(&player_position.position));
 
-    for x in -CHUNKS_IN_EACH_DIRECTION..CHUNKS_IN_EACH_DIRECTION + 1 {
-        for y in -1..4 + 1 {
-            for z in -CHUNKS_IN_EACH_DIRECTION..CHUNKS_IN_EACH_DIRECTION + 1 {
+    for x in 0..1  {
+        for y in 0..1  {
+            for z in 0..1 {
                 let boundaries = player_chunk.in_direction([x, y, z]);
                 if let None = generated_chunks
                     .generated
@@ -144,7 +144,7 @@ pub fn read_generation_results(
     material: Res<VoxelTexture>,
 ) {
     for generation in receiver.try_iter() {
-        let chunk_mesh = meshes.add(generation.mesh);
+        /*let chunk_mesh = meshes.add(generation.mesh);
         let chunk_bundle = PbrBundle {
             mesh: chunk_mesh,
             material: material.material.clone(),
@@ -155,6 +155,6 @@ pub fn read_generation_results(
             .spawn_bundle(chunk_bundle)
             .insert(generation.chunk)
             .id();
-        chunk_access.add_chunk(generation.boundaries, chunk_entity);
+        chunk_access.add_chunk(generation.boundaries, chunk_entity);*/
     }
 }

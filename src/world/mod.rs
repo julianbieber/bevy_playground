@@ -42,15 +42,15 @@ impl Plugin for WorldPlugin {
                 transformations: Vec::new(),
             })
             .add_event::<WorldUpdateEvent>()
-            .add_system(update_world_from_channel.system())
+            //.add_system(update_world_from_channel.system())
             .add_system(update_world_event_reader.system())
-            .add_system(erosion.system())
-            .add_system(evaluate_delayed_transformations.system())
-            .add_system(move_floating_voxels.system())
+            //.add_system(erosion.system())
+            //.add_system(evaluate_delayed_transformations.system())
+            //.add_system(move_floating_voxels.system())
             .add_startup_system(world_setup.system())
             .add_startup_system(setup_world_gen.system())
             .add_system(start_generation.system())
-            .add_system(read_generation_results.system());
+            ;//.add_system(read_generation_results.system());
     }
 }
 
@@ -60,7 +60,7 @@ fn world_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    let chunk_texture = asset_server.load("world_texture_color.png");
+    /*let chunk_texture = asset_server.load("world_texture_color.png");
     let chunk_roughness = asset_server.load("world_texture_roughnes.png");
     let chunk_normal = asset_server.load("world_texture_normal.png");
 
@@ -74,7 +74,7 @@ fn world_setup(
     });
     commands.insert_resource(VoxelTexture {
         material: chunk_material,
-    });
+    });*/
 
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     let mut chunk_map = AHashMap::new();
@@ -90,7 +90,7 @@ fn world_setup(
     }
     commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
 
-    commands.spawn_bundle(PointLightBundle {
+    /*commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 100.0, 0.0)),
         point_light: PointLight {
             intensity: 100000.0,
@@ -98,14 +98,14 @@ fn world_setup(
             ..Default::default()
         },
         ..Default::default()
-    });
+    });*/
 
-    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
+    /*let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 0.5 }));
     let cube_material_handle = materials.add(StandardMaterial {
         base_color: Color::hex("00ff00").unwrap(),
         ..Default::default()
-    });
-    commands
+    });*/
+    /*commands
         // parent cube
         .spawn_bundle(PbrBundle {
             mesh: cube_handle,
@@ -120,5 +120,5 @@ fn world_setup(
                 half_depth_z: 0.25,
             },
             local_position: Vec3::new(0.0, 0.0, 0.0),
-        });
+        });*/
 }

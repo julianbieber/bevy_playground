@@ -34,8 +34,8 @@ fn player_setup(
     commands.insert_resource(PlayerPosition {
         position: Vec3::new(0.0, 22.0, 0.0),
     });
-    commands
-        .spawn_bundle(PbrBundle {
+    commands.
+        spawn_bundle(PbrBundle {
             mesh: cube_handle,
             material: cube_material_handle,
             transform: Transform::from_translation(Vec3::new(0.0, 22.0, 0.0)),

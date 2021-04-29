@@ -18,11 +18,11 @@ impl Plugin for EnergyPlugin {
         app.insert_resource(EnergySpawnTimer {
             timer: Timer::new(Duration::from_millis(600), true),
         })
-        .add_startup_system(setup_ui.system())
+        //.add_startup_system(setup_ui.system())
         .add_system(add_energy_to_players.system())
         .add_system(draw_in_energy.system())
-        .add_system(regularily_spawn_energy.system())
-        .add_system(display_energy.system());
+        .add_system(regularily_spawn_energy.system());
+        //.add_system(display_energy.system());
     }
 }
 
@@ -56,15 +56,15 @@ fn regularily_spawn_energy(
                 match particle_type {
                     ParticleTypes::Explosion { .. } => {}
                     ParticleTypes::HighStorm { depth } => {
-                        let sphere = meshes.add(Mesh::from(shape::Icosphere {
+                        /*let sphere = meshes.add(Mesh::from(shape::Icosphere {
                             radius: 1.0,
                             subdivisions: 5,
                         }));
                         let material = materials.add(StandardMaterial {
                             base_color: Color::rgb(0.6, 0.6, 0.7),
                             ..Default::default()
-                        });
-                        let entity = commands
+                        });*/
+                        /*let entity = commands
                             .spawn_bundle(PbrBundle {
                                 mesh: sphere,
                                 material: material,
@@ -82,7 +82,7 @@ fn regularily_spawn_energy(
                             .id();
                         despanws_res
                             .despawns
-                            .push((Timer::from_seconds(100.0, false), entity));
+                            .push((Timer::from_seconds(100.0, false), entity));*/
                     }
                 }
             }

@@ -12,10 +12,10 @@ pub struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_asset::<WaterMaterial>()
+        /*app.add_asset::<WaterMaterial>()
             .add_startup_system(setup_water_layer.system())
             .add_system(update_material_time.system())
             .add_system(set_water_position.system())
-            .add_system(apply_water_raise.system());
+            .add_system(apply_water_raise.system());*/
     }
 }

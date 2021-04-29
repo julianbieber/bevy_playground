@@ -87,7 +87,7 @@ fn spawn_from_channel(
     mut despanws_res: ResMut<DelayedDespawns>,
 ) {
     for (mesh, particles) in rx.try_iter() {
-        let entity = spawn_particles(
+        /*let entity = spawn_particles(
             &mut commands,
             &mut meshes,
             &mut materials,
@@ -101,7 +101,7 @@ fn spawn_from_channel(
         );
         despanws_res
             .despawns
-            .push((Timer::new(particles.duration, false), entity));
+            .push((Timer::new(particles.duration, false), entity));*/
     }
 }
 

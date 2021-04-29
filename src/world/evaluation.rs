@@ -130,8 +130,8 @@ pub fn update_world_from_channel(
                 .insert(meshes.add(mesh));
         }
         for voxel in world_update_result.voxels_to_replace {
-            let mesh = meshes.add(Mesh::from(&voxel));
-            let bundle = PbrBundle {
+            //let mesh = meshes.add(Mesh::from(&voxel));
+            /*let bundle = PbrBundle {
                 mesh,
                 material: material.material.clone(),
                 transform: Transform::from_translation(voxel.position.to_vec()),
@@ -142,7 +142,7 @@ pub fn update_world_from_channel(
                 .insert(FreeFloatingVoxel)
                 .insert(UnitRotation {
                     rotation: Vec3::ZERO,
-                });
+                });*/
         }
     }
 }

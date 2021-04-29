@@ -28,11 +28,17 @@ use world::WorldPlugin;
 extern crate itertools;
 
 use mimalloc::MiMalloc;
+use bevy::log::{LogSettings, Level};
+
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() {
     App::build()
+        .insert_resource(LogSettings {
+                         level: Level::TRACE,
+                         filter: "trace".to_string(),
+            })
         .insert_resource(DefaultTaskPoolOptions::with_num_threads(8))
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldPlugin)

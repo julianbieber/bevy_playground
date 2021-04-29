@@ -89,12 +89,12 @@ pub fn setup_water_layer(
         .unwrap();
 
     let water = Water::new((50.0, 50.0), 1000);
-    let mesh = meshes.add(Mesh::from(water));
+    /*let mesh = meshes.add(Mesh::from(water));
 
-    let material = materials.add(WaterMaterial { time: 0.0f32 });
+    let material = materials.add(WaterMaterial { time: 0.0f32 });*/
     let mut transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
     transform.scale = Vec3::new(10.0, 1.0, 10.0);
-    commands
+    /*commands
         .spawn_bundle(MeshBundle {
             mesh,
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
@@ -107,7 +107,7 @@ pub fn setup_water_layer(
         .insert(WaterPosition {
             position: Vec3::ZERO,
             size: Vec2::ZERO,
-        });
+        });*/
 }
 
 struct Water {

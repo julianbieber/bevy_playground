@@ -26,15 +26,15 @@ pub fn enemy_spawn_system(
                 .timer
                 .set_duration(Duration::from_millis(rng.gen_range(500..2000)));
 
-            let cube_handle = meshes.add(Mesh::from(shape::Cube {
+            /*let cube_handle = meshes.add(Mesh::from(shape::Cube {
                 size: rng.gen_range(0.5f32..5.0f32),
             }));
             let cube_material_handle = materials.add(StandardMaterial {
                 base_color: Color::rgb(1.0, 0.0, rng.gen_range(0.0f32..1.0f32)),
                 ..Default::default()
-            });
+            });*/
 
-            commands
+            /*commands
                 // parent cube
                 .spawn_bundle(PbrBundle {
                     mesh: cube_handle,
@@ -53,7 +53,7 @@ pub fn enemy_spawn_system(
                 .insert(Movable)
                 .insert(UnitRotation {
                     ..Default::default()
-                });
+                });*/
         }
     }
 }
