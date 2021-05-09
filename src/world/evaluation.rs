@@ -1,5 +1,3 @@
-use std::{collections::HashSet, fs::metadata};
-
 use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
 use flume::{Receiver, Sender};
 
@@ -15,6 +13,8 @@ use super::{
 };
 use crate::player::PlayerPosition;
 use crate::voxel_world::distance_2_lod;
+use ahash::AHashSet;
+use bevy::render::mesh::Indices;
 
 pub fn evaluate_delayed_transformations(
     mut effects_res: ResMut<DelayedWorldTransformations>,
@@ -49,7 +49,7 @@ pub fn update_world_event_reader(
     chunk_access: Res<VoxelAccess>,
     player_position: Res<PlayerPosition>,
 ) {
-    let mut changed = HashSet::new();
+    let mut changed = AHashSet::new();
 
     for (entity, mut voxel_chunk) in voxel_chunk_query.iter_mut() {
         let center: Vec3 = voxel_chunk.boundary.center().to_vec();
@@ -117,17 +117,23 @@ pub fn update_world_event_reader(
 
 pub fn update_world_from_channel(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     material: Res<VoxelTexture>,
     rx: Res<Receiver<WorldUpdateResult>>,
 ) {
     for world_update_result in rx.try_iter() {
         for (entity, mesh) in world_update_result.entity_2_mesh {
-            commands
-                .entity(entity)
-                .remove::<(Handle<Mesh>,)>()
-                .insert(meshes.add(mesh));
+            if match mesh.indices().unwrap() {
+                Indices::U16(i) => i.len() != 0,
+                Indices::U32(i) => i.len() != 0,
+            } {
+                commands
+                    .entity(entity)
+                    .remove::<(Handle<Mesh>,)>()
+                    .insert(meshes.add(mesh));
+            } else {
+                commands.entity(entity).remove_bundle::<PbrBundle>();
+            }
         }
         for voxel in world_update_result.voxels_to_replace {
             let mesh = meshes.add(Mesh::from(&voxel));

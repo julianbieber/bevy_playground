@@ -144,17 +144,22 @@ pub fn read_generation_results(
     material: Res<VoxelTexture>,
 ) {
     for generation in receiver.try_iter() {
-        let chunk_mesh = meshes.add(generation.mesh);
-        let chunk_bundle = PbrBundle {
-            mesh: chunk_mesh,
-            material: material.material.clone(),
-            transform: Transform::from_translation(Vec3::ZERO),
-            ..Default::default()
-        };
-        let chunk_entity = commands
-            .spawn_bundle(chunk_bundle)
-            .insert(generation.chunk)
-            .id();
-        chunk_access.add_chunk(generation.boundaries, chunk_entity);
+        if generation.chunk.count > 0 {
+            let chunk_mesh = meshes.add(generation.mesh);
+            let chunk_bundle = PbrBundle {
+                mesh: chunk_mesh,
+                material: material.material.clone(),
+                transform: Transform::from_translation(Vec3::ZERO),
+                ..Default::default()
+            };
+            let chunk_entity = commands
+                .spawn_bundle(chunk_bundle)
+                .insert(generation.chunk)
+                .id();
+            chunk_access.add_chunk(generation.boundaries, chunk_entity);
+        } else {
+            let chunk_entity = commands.spawn_bundle((generation.chunk,)).id();
+            chunk_access.add_chunk(generation.boundaries, chunk_entity);
+        }
     }
 }

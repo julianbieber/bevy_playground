@@ -125,7 +125,7 @@ fn bottom_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Opt
         (base_x..base_x + chunk.lod).into_iter(),
         (base_z..base_z + chunk.lod).into_iter()
     ) {
-        for y in (base_y..base_y + chunk.lod) {
+        for y in base_y..base_y + chunk.lod {
             let p = VoxelPosition { x, y, z };
             if let Some(t) = chunk.get(&p) {
                 for (inner, c) in type_2_count.iter_mut() {
