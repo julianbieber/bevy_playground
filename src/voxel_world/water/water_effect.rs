@@ -1,4 +1,4 @@
-use crate::water::body_of_water::{WaterMaterial, WaterPosition};
+use super::body_of_water::WaterMaterial;
 use bevy::prelude::*;
 
 pub struct WaterEffected {
@@ -18,38 +18,13 @@ impl WaterEffected {
 pub fn apply_water_raise(
     water_materials: Res<Assets<WaterMaterial>>,
     mut water_effected_query: Query<(&mut WaterEffected, &mut Transform)>,
-    water_query: Query<(&Handle<WaterMaterial>, &WaterPosition)>,
+    water_query: Query<(&Handle<WaterMaterial>,)>,
 ) {
-    for (mut water_effected, mut transform) in water_effected_query.iter_mut() {
-        for (water_material_handle, water_position) in water_query.iter() {
-            if water_position.lies_within(transform.translation) {
-                let water_material = water_materials.get(water_material_handle).unwrap();
-                let position = transform.translation;
-                let water_level =
-                    calculate_water_height(water_material.time, position.x, position.z);
-                if position.y < water_level {
-                    let new_force =
-                        WaterSurrounding::from_point(water_material.time, position.x, position.z)
-                            .calculate_force();
-                    water_effected.add(new_force);
-
-                    transform.translation += Vec3::new(
-                        water_effected.force.x,
-                        water_level - position.y,
-                        water_effected.force.y,
-                    );
-                } else {
-                    water_effected.reset();
-                }
-            } else {
-                water_effected.reset();
-            }
-        }
-    }
+    // TODO
 }
 
 fn calculate_water_height(t: f32, x: f32, _z: f32) -> f32 {
-    (t * 0.1 + x).sin()
+    0.0 // TODO
 }
 
 #[derive(Debug)]

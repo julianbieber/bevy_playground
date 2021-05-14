@@ -7,7 +7,6 @@ mod pickups;
 mod player;
 mod unit_effects;
 mod voxel_world;
-mod water;
 mod world;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -21,7 +20,7 @@ use crate::movement::MovementPlugin;
 use crate::particles::ParticlePlugin;
 use crate::physics::collider::collision_update;
 use crate::player::PlayerPlugin;
-use crate::water::WaterPlugin;
+use crate::voxel_world::water::WaterPlugin;
 use voxel_world::{access::VoxelAccess, collision::systems::terrain_collision_system};
 use world::WorldPlugin;
 #[macro_use]
