@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -9,9 +11,14 @@ use bevy::{
     },
 };
 
-use crate::voxel_world::{access::VoxelAccess, chunk::VoxelChunk, voxel::VoxelPosition};
+use crate::voxel_world::{
+    access::VoxelAccess, chunk::VoxelChunk, voxel::VoxelPosition, water::water_source::WaterSource,
+};
 
-use super::{water::Water, water_shaders::*};
+use super::{
+    water::{Water, WaterOperations},
+    water_shaders::*,
+};
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
@@ -58,10 +65,8 @@ pub fn setup_water_object(
         .add_node_edge("water_material", base::node::MAIN_PASS)
         .unwrap();
 
-    let mut water = Water::new();
+    let water = Water::new();
     let mesh = meshes.add(water.initial_mesh());
-
-    water.add(VoxelPosition::new(0, 20, 0));
 
     let material = materials.add(WaterMaterial { time: 0.0f32 });
     let transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
@@ -81,27 +86,34 @@ pub fn setup_water_object(
         })
         .insert(water)
         .insert(material);
+
+    commands.spawn().insert(WaterSource::new());
 }
 
 pub fn internal_water_physics(
-    mut water_query: Query<(&mut Water,)>,
+    water_query: Query<(&Water,)>,
+    mut water_operations: ResMut<WaterOperations>,
     voxel_access: Res<VoxelAccess>,
 ) {
-    for (mut water,) in water_query.iter_mut() {
-        for (position, w) in water.voxels.iter_mut() {
+    for (water,) in water_query.iter() {
+        for (position, _) in water.voxels.iter() {
             let down = position.in_direction(crate::voxel_world::voxel::VoxelDirection::DOWN);
-            
+            if water.voxels.get(&down).is_none() && voxel_access.get_voxel(down).is_none() {
+                water_operations.add(down);
+                water_operations.remove(position.clone());
+            }
         }
     }
 }
 
 pub fn update_water_mesh(
     mut water_query: Query<(&mut Water, &Handle<Mesh>)>,
+    mut water_operations: ResMut<WaterOperations>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for (mut water, handle_current_mesh) in water_query.iter_mut() {
         if let Some(mut current_mesh) = meshes.get_mut(handle_current_mesh) {
-            water.update_mesh(&mut current_mesh);
+            water.update_mesh(&mut current_mesh, &mut water_operations);
         }
     }
 }

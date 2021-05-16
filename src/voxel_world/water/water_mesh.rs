@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::borrow::Cow;
 
-use super::water::{Water, WATER_QUADS};
+use super::water::{Water, WaterOperations, WaterVoxel, WATER_QUADS};
 
 pub(super) const UNUSED: f32 = 100000000.0;
 
@@ -35,13 +35,35 @@ impl Water {
         mesh
     }
 
-    pub fn update_mesh(&mut self, mut mesh: &mut Mesh) {
+    pub fn update_mesh(&mut self, mut mesh: &mut Mesh, mut water_operations: &mut WaterOperations) {
         let mut actually_added = AHashSet::new();
-        for a in self.added.iter() {
-            if !self.removed.remove(a) {
+        for a in water_operations.added.iter() {
+            if !self.voxels.contains_key(a) {
                 actually_added.insert(a.clone());
             }
         }
+
+        let mut vertices = if let VertexAttributeValues::Float32x3(vertices) = mesh
+            .attribute_mut(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION))
+            .unwrap()
+        {
+            vertices
+        } else {
+            panic!("vertices in wrong format");
+        };
+
+        for removed in water_operations.removed.iter() {
+            if let Some(newly_unused) = self.voxels.remove(removed) {
+                for n in newly_unused.indices.iter() {
+                    vertices[n[0] as usize] = [UNUSED, UNUSED, UNUSED];
+                    vertices[n[1] as usize] = [UNUSED, UNUSED, UNUSED];
+                    vertices[n[2] as usize] = [UNUSED, UNUSED, UNUSED];
+                    vertices[n[3] as usize] = [UNUSED, UNUSED, UNUSED];
+                    self.unused.push_back(n.clone());
+                }
+            }
+        }
+
         let mut top_indices: Vec<u32> = Vec::with_capacity(128);
         let mut bottom_indices: Vec<u32> = Vec::with_capacity(128);
         let mut left_indices: Vec<u32> = Vec::with_capacity(128);
@@ -59,7 +81,7 @@ impl Water {
                 panic!("vertices in wrong format");
             };
 
-            for removed in self.removed.iter() {
+            for removed in water_operations.removed.iter() {
                 if let Some(water_voxel) = self.voxels.get(removed) {
                     for is in water_voxel.indices.iter() {
                         for i in is.iter() {
@@ -73,8 +95,10 @@ impl Water {
 
             for added in actually_added.iter() {
                 let center = added.to_vec();
+                let mut all_indices = Vec::new();
                 // TOP
-                let indices = dbg!(self.unused.pop_back().unwrap());
+                let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[0] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y + HALF_VOXEL_SIZE,
@@ -100,6 +124,7 @@ impl Water {
                 }
                 // BOTTOM
                 let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[3] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y - HALF_VOXEL_SIZE,
@@ -125,6 +150,7 @@ impl Water {
                 }
                 // LEFT
                 let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[0] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y - HALF_VOXEL_SIZE,
@@ -150,6 +176,7 @@ impl Water {
                 }
                 // RIGHT
                 let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[3] as usize] = [
                     center.x + HALF_VOXEL_SIZE,
                     center.y - HALF_VOXEL_SIZE,
@@ -175,6 +202,7 @@ impl Water {
                 }
                 // FRONT
                 let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[0] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y - HALF_VOXEL_SIZE,
@@ -200,6 +228,7 @@ impl Water {
                 }
                 // BACK
                 let indices = self.unused.pop_back().unwrap();
+                all_indices.push(indices.clone());
                 vertices[indices[3] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y - HALF_VOXEL_SIZE,
@@ -223,6 +252,12 @@ impl Water {
                 for i in indices.iter() {
                     back_indices.push(*i)
                 }
+                self.voxels.insert(
+                    added.clone(),
+                    WaterVoxel {
+                        indices: all_indices,
+                    },
+                );
             }
         }
         {
@@ -236,11 +271,9 @@ impl Water {
             };
 
             for i in top_indices {
-                dbg!(i);
                 normals[i as usize] = [0.0, 1.0, 0.0];
             }
             for i in bottom_indices {
-                dbg!(i);
                 normals[i as usize] = [0.0, -1.0, 0.0];
             }
             for i in left_indices {
@@ -257,7 +290,7 @@ impl Water {
             }
         }
 
-        self.removed = AHashSet::new();
-        self.added = AHashSet::new();
+        water_operations.removed = AHashSet::new();
+        water_operations.added = AHashSet::new();
     }
 }

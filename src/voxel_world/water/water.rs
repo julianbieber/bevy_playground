@@ -7,9 +7,12 @@ pub(super) const WATER_QUADS: usize = 1024;
 
 pub struct Water {
     pub(super) voxels: AHashMap<VoxelPosition, WaterVoxel>,
+    pub(super) unused: VecDeque<[u32; 4]>,
+}
+
+pub struct WaterOperations {
     pub(super) added: AHashSet<VoxelPosition>,
     pub(super) removed: AHashSet<VoxelPosition>,
-    pub(super) unused: VecDeque<[u32; 4]>,
 }
 
 /*
@@ -33,17 +36,26 @@ impl Water {
         }
         Water {
             voxels: AHashMap::new(),
-            added: AHashSet::new(),
-            removed: AHashSet::new(),
             unused,
         }
     }
+}
 
+impl WaterOperations {
     pub fn add(&mut self, p: VoxelPosition) {
         self.added.insert(p);
+        self.removed.remove(&p);
     }
 
     pub fn remove(&mut self, p: VoxelPosition) {
         self.removed.insert(p);
+        self.added.remove(&p);
+    }
+
+    pub fn new() -> WaterOperations {
+        WaterOperations {
+            added: AHashSet::new(),
+            removed: AHashSet::new(),
+        }
     }
 }
