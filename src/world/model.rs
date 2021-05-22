@@ -3,8 +3,7 @@ use std::sync::Arc;
 use bevy::prelude::*;
 
 use crate::voxel_world::{
-    boundaries::ChunkBoundaries,
-    chunk::VoxelChunk,
+    access::VoxelAccess,
     voxel::{Voxel, VoxelPosition},
 };
 
@@ -19,8 +18,6 @@ pub struct DelayedWorldTransformations {
 
 #[derive(Clone)]
 pub struct WorldUpdateEvent {
-    /// can be optimized further by prefiltering the ChunkBoundaries for the highstorm (only selecting boundaries that contain voxels) and only chose the first chunk that contains voxels at the top layer
-    pub chunk_filter: Vec<ChunkBoundaries>,
-    pub delete: Arc<dyn Fn(&Vec<VoxelChunk>) -> Vec<VoxelPosition> + Send + Sync>,
+    pub delete: Arc<dyn Fn(&VoxelAccess) -> Vec<VoxelPosition> + Send + Sync>,
     pub replace: bool,
 }

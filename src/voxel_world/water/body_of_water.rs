@@ -205,7 +205,7 @@ impl Water {
             for added in actually_added.iter() {
                 let center = added.to_vec();
                 // TOP
-                let indices = dbg!(self.unused.pop_back().unwrap());
+                let indices = self.unused.pop_back().unwrap();
                 vertices[indices[0] as usize] = [
                     center.x - HALF_VOXEL_SIZE,
                     center.y + HALF_VOXEL_SIZE,
@@ -367,11 +367,9 @@ impl Water {
             };
 
             for i in top_indices {
-                dbg!(i);
                 normals[i as usize] = [0.0, 1.0, 0.0];
             }
             for i in bottom_indices {
-                dbg!(i);
                 normals[i as usize] = [0.0, -1.0, 0.0];
             }
             for i in left_indices {
