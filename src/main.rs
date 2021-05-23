@@ -36,7 +36,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldPlugin)
         .add_plugin(ParticlePlugin)
-        .add_plugin(WaterPlugin)
+        //.add_plugin(WaterPlugin)
         .add_plugin(AIPlugin)
         .add_plugin(MovementPlugin)
         .add_plugin(PlayerPlugin)

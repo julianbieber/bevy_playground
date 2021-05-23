@@ -447,7 +447,7 @@ impl Collider {
         }
     }
 
-    fn epa(simplex: Simplex, colliderA: Vec<Vec3>, colliderB: Vec<Vec3>) -> CollisionPoints {
+    fn epa(simplex: Simplex, collider_a: Vec<Vec3>, collider_b: Vec<Vec3>) -> CollisionPoints {
         let mut polytop: Polytop = Polytop::new(simplex.vertices.clone());
 
         let mut min_normal: Vec3 = Vec3::new(0.0, 0.0, 0.0);
@@ -465,8 +465,11 @@ impl Collider {
                 normals_min_triangle.normals[normals_min_triangle.min_triangle as usize].xyz();
             min_distance = normals_min_triangle.w(normals_min_triangle.min_triangle as usize);
 
-            let support: Vec3 =
-                Collider::support((*colliderA).to_owned(), (*colliderB).to_owned(), min_normal);
+            let support: Vec3 = Collider::support(
+                (*collider_a).to_owned(),
+                (*collider_b).to_owned(),
+                min_normal,
+            );
             let s_distance: f32 = min_normal.dot(support);
 
             if f32::abs(s_distance - min_distance) > 0.01f32 {
@@ -475,31 +478,21 @@ impl Collider {
 
             let mut unique_edges: Vec<Vec<usize>> = Vec::new();
 
-            for mut i in 0..(normals_min_triangle.normals.len()) {
-                let mut number_removed_normals = 0;
+            let mut number_removed_normals = 0;
+            for i in 0..(normals_min_triangle.normals.len()) {
+                if Collider::same_direction(
+                    Vec3::from(normals_min_triangle.normals[i - number_removed_normals]),
+                    support,
+                ) {
+                    let f: i64 = ((i - number_removed_normals) * 3) as i64;
+                    Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f, f + 1);
+                    Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f + 1, f + 2);
+                    Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f + 2, f);
 
-                if i < normals_min_triangle.normals.len() - number_removed_normals {
-                    if Collider::same_direction(
-                        Vec3::from(normals_min_triangle.normals[i]),
-                        support,
-                    ) {
-                        number_removed_normals += 1;
-                        let f: i64 = (i * 3) as i64;
-                        Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f, f + 1);
-                        Collider::add_if_unique_edge(
-                            &mut unique_edges,
-                            &polytop.faces,
-                            f + 1,
-                            f + 2,
-                        );
-                        Collider::add_if_unique_edge(&mut unique_edges, &polytop.faces, f + 2, f);
+                    polytop.remove_face(f as usize);
 
-                        polytop.remove_face(f as usize);
-
-                        normals_min_triangle.remove_normal(i);
-
-                        i -= 1;
-                    }
+                    normals_min_triangle.remove_normal(i - number_removed_normals);
+                    number_removed_normals += 1;
                 }
             }
             let mut new_faces: Vec<usize> = Vec::new();
@@ -535,7 +528,6 @@ impl Collider {
         CollisionPoints {
             normal: min_normal,
             penetration_depth: min_distance + 0.001f32,
-            has_collision: true,
         }
     }
 
@@ -613,7 +605,6 @@ impl Polytop {
 struct CollisionPoints {
     normal: Vec3,
     penetration_depth: f32,
-    has_collision: bool,
 }
 
 struct FaceNormalsMinTriangle {
