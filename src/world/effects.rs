@@ -5,11 +5,14 @@ use bevy::{app::Events, prelude::*};
 use crate::{
     movement::model::MoveEvent,
     particles::model::ParticleTypes,
-    voxel_world::{boundaries::ChunkBoundaries, chunk::VoxelChunk, voxel::VoxelPosition},
+    voxel_world::{
+        access::VoxelAccess, boundaries::ChunkBoundaries, chunk::VoxelChunk, voxel::VoxelPosition,
+    },
 };
 
 use super::{internal_model::FreeFloatingVoxel, model::WorldUpdateEvent};
 use rand::prelude::*;
+use rand::seq::SliceRandom;
 
 pub fn erosion(
     particle_emitters_query: Query<(&ParticleTypes, &Transform)>,
@@ -39,12 +42,11 @@ pub fn erosion(
                         ],
                     };
                     let boundaries_clone = boundaries.clone();
-                    let delete = Arc::new(move |chunks: &Vec<VoxelChunk>| {
+                    let delete = Arc::new(move |chunks: &VoxelAccess| {
                         select_a_highest_voxel(&boundaries_clone, chunks)
                     });
 
                     update_events.send(WorldUpdateEvent {
-                        chunk_filter: vec![boundaries],
                         delete,
                         replace: true,
                     });
@@ -56,25 +58,26 @@ pub fn erosion(
 
 fn select_a_highest_voxel(
     storm_boundaries: &ChunkBoundaries,
-    chunks: &Vec<VoxelChunk>,
+    chunks: &VoxelAccess,
 ) -> Vec<VoxelPosition> {
-    let voxels: Vec<_> = chunks
-        .iter()
-        .flat_map(|c| c.get_voxels().into_iter())
-        .filter(|v| storm_boundaries.contains(&v.position))
-        .collect();
-
-    if let Some(highest) = voxels.iter().map(|v| v.position.y).max() {
-        let highest_voxels: Vec<_> = voxels
-            .into_iter()
-            .filter(|v| v.position.y == highest)
-            .collect();
-        let mut rng = SmallRng::from_entropy();
-        let position = rng.gen_range(0..highest_voxels.len());
-        vec![highest_voxels[position].position.clone()]
-    } else {
-        vec![]
+    let mut rng = SmallRng::from_entropy();
+    let mut voxels = Vec::new();
+    for b in storm_boundaries.aligned_boundaries_in() {
+        if let Some(chunk) = chunks.get_chunk(&b) {
+            let top_layer = chunk.filter(|v| {
+                chunks
+                    .get_voxel(
+                        v.position
+                            .in_direction(crate::voxel_world::voxel::VoxelDirection::UP),
+                    )
+                    .is_none()
+            });
+            if let Some(v) = top_layer.choose(&mut rng) {
+                voxels.push(v.position.clone());
+            }
+        }
     }
+    voxels
 }
 
 pub fn move_floating_voxels(
@@ -111,7 +114,7 @@ pub fn move_floating_voxels(
                             ) * time.delta_seconds(),
                             entity: voxel_entity,
                             is_player: false,
-                        })
+                        });
                     }
                 }
             }

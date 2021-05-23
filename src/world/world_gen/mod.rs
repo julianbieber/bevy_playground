@@ -152,14 +152,11 @@ pub fn read_generation_results(
                 transform: Transform::from_translation(Vec3::ZERO),
                 ..Default::default()
             };
-            let chunk_entity = commands
-                .spawn_bundle(chunk_bundle)
-                .insert(generation.chunk)
-                .id();
-            chunk_access.add_chunk(generation.boundaries, chunk_entity);
+            let chunk_entity = commands.spawn_bundle(chunk_bundle).id();
+            chunk_access.add_chunk(generation.boundaries, chunk_entity, generation.chunk);
         } else {
-            let chunk_entity = commands.spawn_bundle((generation.chunk,)).id();
-            chunk_access.add_chunk(generation.boundaries, chunk_entity);
+            let chunk_entity = commands.spawn().id();
+            chunk_access.add_chunk(generation.boundaries, chunk_entity, generation.chunk);
         }
     }
 }

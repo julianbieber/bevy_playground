@@ -3,7 +3,11 @@ use flume::{Receiver, Sender};
 
 use crate::{
     movement::model::UnitRotation,
-    voxel_world::{access::VoxelAccess, boundaries::ChunkBoundaries, chunk::VoxelChunk},
+    voxel_world::{
+        access::VoxelAccess,
+        boundaries::ChunkBoundaries,
+        chunk::{self, VoxelChunk},
+    },
 };
 
 use super::VoxelTexture;
@@ -44,55 +48,41 @@ pub fn evaluate_delayed_transformations(
 pub fn update_world_event_reader(
     mut update_events: EventReader<WorldUpdateEvent>,
     pool: ResMut<AsyncComputeTaskPool>,
-    mut voxel_chunk_query: Query<(Entity, &mut VoxelChunk)>,
     tx: Res<Sender<WorldUpdateResult>>,
-    chunk_access: Res<VoxelAccess>,
+    mut chunk_access: ResMut<VoxelAccess>,
     player_position: Res<PlayerPosition>,
 ) {
     let mut changed = AHashSet::new();
 
-    for (entity, mut voxel_chunk) in voxel_chunk_query.iter_mut() {
+    for (boundaries, (_, voxel_chunk)) in chunk_access.iter_mut() {
         let center: Vec3 = voxel_chunk.boundary.center().to_vec();
         let lod = distance_2_lod(center.distance(player_position.position));
         if lod != voxel_chunk.lod {
             voxel_chunk.lod = lod;
-            changed.insert(entity);
+            changed.insert(boundaries.clone());
         }
     }
 
     let mut replaces = Vec::new();
 
     for event in update_events.iter() {
-        let filtered_chunks: Vec<_> = event
-            .chunk_filter
-            .iter()
-            .flat_map(|boundary| ChunkBoundaries::aligned_boundaries_in(boundary))
-            .flat_map(|b| {
-                chunk_access
-                    .get_chunk(&b, &mut voxel_chunk_query)
-                    .into_iter()
-            })
-            .collect();
-
-        let deletes = (event.delete)(&filtered_chunks);
+        let deletes = (event.delete)(&chunk_access);
         for delete in deletes {
-            if let Some(entity) = chunk_access.get_chunk_entity_containing(delete) {
-                if let Ok((_, mut chunk)) = voxel_chunk_query.get_mut(entity) {
-                    if let Some(voxel) = chunk.remove(delete) {
-                        if event.replace {
-                            replaces.push(voxel);
-                        }
-                        changed.insert(entity);
+            if let Some(chunk) = chunk_access.get_chunk_containing_mut(delete) {
+                if let Some(voxel) = chunk.remove(delete) {
+                    if event.replace {
+                        replaces.push(voxel);
                     }
+                    changed.insert(ChunkBoundaries::aligned(delete));
                 }
             }
         }
     }
 
     let mut entity_chunks = Vec::with_capacity(changed.len());
-    for e in changed {
-        if let Ok((_, chunk)) = voxel_chunk_query.get_mut(e) {
-            entity_chunks.push((e, chunk.clone()));
+    for boundaries in changed {
+        if let Some((entity, chunk)) = chunk_access.get_chunk_entity(&boundaries) {
+            entity_chunks.push((entity.clone(), chunk.clone()));
         }
     }
 

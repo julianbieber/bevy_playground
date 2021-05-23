@@ -28,6 +28,44 @@ impl VoxelChunk {
         }
     }
 
+    pub fn filter<A>(&self, f: A) -> Vec<Voxel>
+    where
+        A: Fn(&Voxel) -> bool,
+    {
+        let mut voxels = Vec::with_capacity(self.count);
+
+        for (i, sub_chunk_o) in self.voxels.iter().enumerate() {
+            let meta_z = i % 8;
+            let meta_y = (i / (CHUNK_SIZE as usize / 8)) % 8;
+            let meta_x = (i / ((CHUNK_SIZE as usize / 8) * (CHUNK_SIZE as usize / 8))) % 8;
+            if let Some(sub_chunk) = sub_chunk_o {
+                for (sub_i, voxel_type_o) in sub_chunk.iter().enumerate() {
+                    if let Some(v) = voxel_type_o {
+                        let sub_z = sub_i % 8;
+                        let sub_y = (sub_i / 8) % 8;
+                        let sub_x = (sub_i / 64) % 8;
+
+                        let x = (meta_x * (CHUNK_SIZE as usize / 8) + sub_x) as i32
+                            + self.boundary.min[0];
+                        let y = (meta_y * (CHUNK_SIZE as usize / 8) + sub_y) as i32
+                            + self.boundary.min[1];
+                        let z = (meta_z * (CHUNK_SIZE as usize / 8) + sub_z) as i32
+                            + self.boundary.min[2];
+
+                        let voxel = Voxel {
+                            position: VoxelPosition { x, y, z },
+                            typ: v.clone(),
+                        };
+                        if f(&voxel) {
+                            voxels.push(voxel);
+                        }
+                    }
+                }
+            }
+        }
+        voxels
+    }
+
     pub fn get_voxels(&self) -> Vec<Voxel> {
         let mut voxels = Vec::with_capacity(self.count);
 

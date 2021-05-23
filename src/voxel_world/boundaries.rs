@@ -1,6 +1,6 @@
 use super::voxel::VoxelPosition;
 
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub struct ChunkBoundaries {
     pub min: [i32; 3],
     pub max: [i32; 3],
@@ -52,12 +52,12 @@ impl ChunkBoundaries {
         }
     }
 
-    pub fn aligned_boundaries_in(other: &ChunkBoundaries) -> Vec<ChunkBoundaries> {
-        let other_length = other.length();
+    pub fn aligned_boundaries_in(&self) -> Vec<ChunkBoundaries> {
+        let other_length = self.length();
         let min = VoxelPosition {
-            x: other.min[0],
-            y: other.min[1],
-            z: other.min[2],
+            x: self.min[0],
+            y: self.min[1],
+            z: self.min[2],
         };
         let mut boundaries = Vec::with_capacity(
             (other_length[0] / CHUNK_SIZE * other_length[1] / CHUNK_SIZE * other_length[2]
