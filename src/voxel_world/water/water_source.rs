@@ -32,7 +32,7 @@ pub fn water_source(
     for (mut source,) in source_query.iter_mut() {
         if source.timer.tick(time.delta()).finished() {
             source.timer.reset();
-            source.timer.set_duration(Duration::from_secs(1));
+            source.timer.set_duration(Duration::from_millis(100));
             water_operations.add(source.position);
         }
     }

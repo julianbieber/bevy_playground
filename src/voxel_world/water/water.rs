@@ -1,9 +1,10 @@
 use std::collections::VecDeque;
 
 use ahash::{AHashMap, AHashSet};
+use bevy::math::bool;
 
 use crate::voxel_world::voxel::VoxelPosition;
-pub(super) const WATER_QUADS: usize = 1024;
+pub(super) const WATER_QUADS: usize = 4096 * 40;
 
 pub struct Water {
     pub(super) voxels: AHashMap<VoxelPosition, WaterVoxel>,
@@ -42,9 +43,12 @@ impl Water {
 }
 
 impl WaterOperations {
-    pub fn add(&mut self, p: VoxelPosition) {
-        self.added.insert(p);
-        self.removed.remove(&p);
+    pub fn add(&mut self, p: VoxelPosition) -> bool {
+        let inserted = self.added.insert(p);
+        if inserted {
+            self.removed.remove(&p);
+        }
+        inserted
     }
 
     pub fn remove(&mut self, p: VoxelPosition) {
