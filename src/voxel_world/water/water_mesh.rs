@@ -1,6 +1,6 @@
-use crate::voxel_world::voxel::HALF_VOXEL_SIZE;
+use crate::voxel_world::{access::VoxelAccess, voxel::{HALF_VOXEL_SIZE, VoxelDirection}};
 use ahash::AHashSet;
-use bevy::render::pipeline::PrimitiveTopology;
+use bevy::{math::Vec3, render::pipeline::PrimitiveTopology};
 use bevy::{
     prelude::Mesh,
     render::mesh::{Indices, VertexAttributeValues},
@@ -35,14 +35,7 @@ impl Water {
         mesh
     }
 
-    pub fn update_mesh(&mut self, mut mesh: &mut Mesh, mut water_operations: &mut WaterOperations) {
-        let mut actually_added = AHashSet::new();
-        for a in water_operations.added.iter() {
-            if !self.voxels.contains_key(a) {
-                actually_added.insert(a.clone());
-            }
-        }
-
+    pub fn update_mesh(&mut self, mut mesh: &mut Mesh, mut water_operations: &mut WaterOperations, voxel_access: &VoxelAccess) {
         let mut vertices = if let VertexAttributeValues::Float32x3(vertices) = mesh
             .attribute_mut(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION))
             .unwrap()
@@ -51,18 +44,9 @@ impl Water {
         } else {
             panic!("vertices in wrong format");
         };
-
-        for removed in water_operations.removed.iter() {
-            if let Some(newly_unused) = self.voxels.remove(removed) {
-                for n in newly_unused.indices.iter() {
-                    vertices[n[0] as usize] = [UNUSED, UNUSED, UNUSED];
-                    vertices[n[1] as usize] = [UNUSED, UNUSED, UNUSED];
-                    vertices[n[2] as usize] = [UNUSED, UNUSED, UNUSED];
-                    vertices[n[3] as usize] = [UNUSED, UNUSED, UNUSED];
-                    self.unused.push_back(n.clone());
-                }
-            }
-        }
+        
+        let mut actually_added = AHashSet::new();
+      
 
         let mut top_indices: Vec<u32> = Vec::with_capacity(128);
         let mut bottom_indices: Vec<u32> = Vec::with_capacity(128);
@@ -72,14 +56,6 @@ impl Water {
         let mut back_indices: Vec<u32> = Vec::with_capacity(128);
 
         {
-            let mut vertices = if let VertexAttributeValues::Float32x3(vertices) = mesh
-                .attribute_mut(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION))
-                .unwrap()
-            {
-                vertices
-            } else {
-                panic!("vertices in wrong format");
-            };
 
             for removed in water_operations.removed.iter() {
                 if let Some(water_voxel) = self.voxels.get(removed) {
@@ -93,164 +69,105 @@ impl Water {
                 }
             }
 
+            let directions = [
+                VoxelDirection::UP,
+                VoxelDirection::DOWN,
+                VoxelDirection::LEFT,
+                VoxelDirection::RIGHT,
+                VoxelDirection::FRONT,
+                VoxelDirection::BACK,
+            ];
+            for changed in water_operations.removed.iter() {
+                for d in directions.iter() {
+                    let d = changed.in_direction(d.clone());
+                    if let Some(water_voxel) = self.voxels.remove(&d){
+                        for n in water_voxel.indices.iter() {
+                            vertices[n[0] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[1] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[2] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[3] as usize] = [UNUSED, UNUSED, UNUSED];
+                            self.unused.push_back(n.clone());
+                        }
+                        actually_added.insert(d);
+                    }
+                }
+            }
+
+            for changed in water_operations.added.iter() {
+                for d in directions.iter() {
+                    let d = changed.in_direction(d.clone());
+                    if let Some(water_voxel) = self.voxels.remove(&d){
+                        for n in water_voxel.indices.iter() {
+                            vertices[n[0] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[1] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[2] as usize] = [UNUSED, UNUSED, UNUSED];
+                            vertices[n[3] as usize] = [UNUSED, UNUSED, UNUSED];
+                            self.unused.push_back(n.clone());
+                        }
+                        actually_added.insert(d);
+                    }
+                }
+            }
+
+
             for added in actually_added.iter() {
                 let center = added.to_vec();
                 let mut all_indices = Vec::new();
                 // TOP
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[0] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[3] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    top_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::UP)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::UP)).is_none() {
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_top_vertices(vertices, &indices, center);
+                    for i in indices.iter() {
+                        top_indices.push(*i)
+                    }
                 }
+                
                 // BOTTOM
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[3] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[0] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    bottom_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::DOWN)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::DOWN)).is_none(){
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_bottom_vertices(vertices, &indices, center);
+                    for i in indices.iter() {
+                        bottom_indices.push(*i)
+                    }
                 }
                 // LEFT
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[0] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[3] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    left_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::LEFT)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::LEFT)).is_none() {
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_left_vertices(vertices, &indices, center);
+                    for i in indices.iter() {
+                        left_indices.push(*i)
+                    }
                 }
                 // RIGHT
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[3] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[0] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    right_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::RIGHT)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::RIGHT)).is_none() {
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_right_vertices(vertices, &indices, center);
+
+                    for i in indices.iter() {
+                        right_indices.push(*i)
+                    }
                 }
                 // FRONT
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[0] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[3] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z - HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    front_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::FRONT)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::FRONT)).is_none() {
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_front_vertices(vertices, &indices, center);
+                    for i in indices.iter() {
+                        front_indices.push(*i)
+                    }
                 }
                 // BACK
-                let indices = self.unused.pop_back().unwrap();
-                all_indices.push(indices.clone());
-                vertices[indices[3] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[2] as usize] = [
-                    center.x - HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[1] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y + HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                vertices[indices[0] as usize] = [
-                    center.x + HALF_VOXEL_SIZE,
-                    center.y - HALF_VOXEL_SIZE,
-                    center.z + HALF_VOXEL_SIZE,
-                ];
-                for i in indices.iter() {
-                    back_indices.push(*i)
+                if self.voxels.get(&added.in_direction(crate::voxel_world::voxel::VoxelDirection::BACK)).is_none() && voxel_access.get_voxel(added.in_direction(crate::voxel_world::voxel::VoxelDirection::BACK)).is_none() {
+                    let indices = self.unused.pop_back().unwrap();
+                    all_indices.push(indices.clone());
+                    set_back_vertices(vertices, &indices, center);
+                    for i in indices.iter() {
+                        back_indices.push(*i)
+                    }
                 }
                 self.voxels.insert(
                     added.clone(),
@@ -292,5 +209,144 @@ impl Water {
 
         water_operations.removed = AHashSet::new();
         water_operations.added = AHashSet::new();
+        println!("{} | {}", self.voxels.len(), self.unused.len());
     }
+}
+
+fn set_top_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[0] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[3] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+}
+
+fn set_bottom_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[3] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[0] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+}
+
+fn set_left_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[0] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[3] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+}
+
+fn set_right_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[3] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[0] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+}
+
+fn set_front_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[0] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[3] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z - HALF_VOXEL_SIZE,
+    ];
+}
+
+fn set_back_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: Vec3) {
+    vertices[indices[3] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[2] as usize] = [
+        center.x - HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[1] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y + HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
+    vertices[indices[0] as usize] = [
+        center.x + HALF_VOXEL_SIZE,
+        center.y - HALF_VOXEL_SIZE,
+        center.z + HALF_VOXEL_SIZE,
+    ];
 }

@@ -14,9 +14,12 @@ use self::{
     },
     water::WaterOperations,
 };
-use bevy::prelude::*;
+use bevy::{core::FixedTimestep, prelude::*};
 
 pub struct WaterPlugin;
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+struct FixedUpdateStage;
+
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut AppBuilder) {
@@ -25,8 +28,16 @@ impl Plugin for WaterPlugin {
             .add_startup_system(setup_water_object.system())
             .add_system(update_material_time.system())
             .add_system(apply_water_raise.system())
-            .add_system(internal_water_physics.system())
             .add_system(update_water_mesh.system())
+            .add_stage_after(
+                CoreStage::Update,
+                FixedUpdateStage,
+                SystemStage::parallel()
+                    .with_run_criteria(
+                        FixedTimestep::step(0.1),
+                    )
+                    .with_system(internal_water_physics.system()),
+            )
             .add_system(water_source.system());
     }
 }

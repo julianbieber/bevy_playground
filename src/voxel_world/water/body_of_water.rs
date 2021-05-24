@@ -103,11 +103,7 @@ pub fn internal_water_physics(
             // fall down
             let down = position.in_direction(VoxelDirection::DOWN);
             let potential_new_position = [
-                down,
-                down.in_direction(VoxelDirection::LEFT),
-                down.in_direction(VoxelDirection::RIGHT),
-                down.in_direction(VoxelDirection::FRONT),
-                down.in_direction(VoxelDirection::BACK),
+                down
             ];
 
             for new in potential_new_position.iter() {
@@ -127,13 +123,11 @@ pub fn internal_water_physics(
                 (VoxelDirection::BACK, VoxelDirection::FRONT),
             ];
 
+            let under_water = water.voxels.get(&position.in_direction(VoxelDirection::UP)).is_some();
             for (from, to) in pressure_checks.iter() {
                 let same_level = position.in_direction(from.clone());
                 let destination = position.in_direction(to.clone());
-                if voxel_access
-                    .get_voxel(position.in_direction(VoxelDirection::DOWN))
-                    .is_none()
-                    && water.voxels.get(&same_level).is_some()
+                if (under_water || water.voxels.get(&same_level).is_some())
                     && water.voxels.get(&destination).is_none()
                     && voxel_access.get_voxel(destination.clone()).is_none()
                     && water_operations.add(destination)
@@ -150,10 +144,11 @@ pub fn update_water_mesh(
     mut water_query: Query<(&mut Water, &Handle<Mesh>)>,
     mut water_operations: ResMut<WaterOperations>,
     mut meshes: ResMut<Assets<Mesh>>,
+    voxel_access: Res<VoxelAccess>,
 ) {
     for (mut water, handle_current_mesh) in water_query.iter_mut() {
         if let Some(mut current_mesh) = meshes.get_mut(handle_current_mesh) {
-            water.update_mesh(&mut current_mesh, &mut water_operations);
+            water.update_mesh(&mut current_mesh, &mut water_operations, &voxel_access);
         }
     }
 }

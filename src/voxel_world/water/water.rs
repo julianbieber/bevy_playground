@@ -52,8 +52,9 @@ impl WaterOperations {
     }
 
     pub fn remove(&mut self, p: VoxelPosition) {
-        self.removed.insert(p);
-        self.added.remove(&p);
+        if self.removed.insert(p) {
+            self.added.remove(&p);
+        }
     }
 
     pub fn new() -> WaterOperations {
