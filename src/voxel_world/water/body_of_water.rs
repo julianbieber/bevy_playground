@@ -100,6 +100,7 @@ pub fn internal_water_physics(
 ) {
     for (water,) in water_query.iter() {
         for (position, _) in water.voxels.iter() {
+            // fall down
             let down = position.in_direction(VoxelDirection::DOWN);
             let potential_new_position = [
                 down,
@@ -113,6 +114,29 @@ pub fn internal_water_physics(
                 if water.voxels.get(&new).is_none()
                     && voxel_access.get_voxel(new.clone()).is_none()
                     && water_operations.add(new.clone())
+                {
+                    water_operations.remove(position.clone());
+                    break;
+                }
+            }
+
+            let pressure_checks = [
+                (VoxelDirection::LEFT, VoxelDirection::RIGHT),
+                (VoxelDirection::FRONT, VoxelDirection::BACK),
+                (VoxelDirection::RIGHT, VoxelDirection::LEFT),
+                (VoxelDirection::BACK, VoxelDirection::FRONT),
+            ];
+
+            for (from, to) in pressure_checks.iter() {
+                let same_level = position.in_direction(from.clone());
+                let destination = position.in_direction(to.clone());
+                if voxel_access
+                    .get_voxel(position.in_direction(VoxelDirection::DOWN))
+                    .is_none()
+                    && water.voxels.get(&same_level).is_some()
+                    && water.voxels.get(&destination).is_none()
+                    && voxel_access.get_voxel(destination.clone()).is_none()
+                    && water_operations.add(destination)
                 {
                     water_operations.remove(position.clone());
                     break;
