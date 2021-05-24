@@ -12,7 +12,10 @@ use bevy::{
 };
 
 use crate::voxel_world::{
-    access::VoxelAccess, chunk::VoxelChunk, voxel::VoxelPosition, water::water_source::WaterSource,
+    access::VoxelAccess,
+    chunk::VoxelChunk,
+    voxel::{VoxelDirection, VoxelPosition},
+    water::water_source::WaterSource,
 };
 
 use super::{
@@ -97,10 +100,23 @@ pub fn internal_water_physics(
 ) {
     for (water,) in water_query.iter() {
         for (position, _) in water.voxels.iter() {
-            let down = position.in_direction(crate::voxel_world::voxel::VoxelDirection::DOWN);
-            if water.voxels.get(&down).is_none() && voxel_access.get_voxel(down).is_none() {
-                water_operations.add(down);
-                water_operations.remove(position.clone());
+            let down = position.in_direction(VoxelDirection::DOWN);
+            let potential_new_position = [
+                down,
+                down.in_direction(VoxelDirection::LEFT),
+                down.in_direction(VoxelDirection::RIGHT),
+                down.in_direction(VoxelDirection::FRONT),
+                down.in_direction(VoxelDirection::BACK),
+            ];
+
+            for new in potential_new_position.iter() {
+                if water.voxels.get(&new).is_none()
+                    && voxel_access.get_voxel(new.clone()).is_none()
+                    && water_operations.add(new.clone())
+                {
+                    water_operations.remove(position.clone());
+                    break;
+                }
             }
         }
     }
