@@ -18,6 +18,8 @@ flume = "0.10.1"
 itertools = "0.10.0"
 noise = "0.7.0"
 mimalloc = "0.1.25"
+strum = "0.20"
+strum_macros = "0.20"
 
 [profile.release]
 debug = true

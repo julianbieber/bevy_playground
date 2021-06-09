@@ -18,10 +18,7 @@ use crate::voxel_world::{
     water::water_source::WaterSource,
 };
 
-use super::{
-    water::{Water, WaterOperations},
-    water_shaders::*,
-};
+use super::{water::Water, water_shaders::*};
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
@@ -90,46 +87,28 @@ pub fn setup_water_object(
         .insert(water)
         .insert(material);
 
-    commands.spawn().insert(WaterSource::new());
+    commands
+        .spawn()
+        .insert(WaterSource::new(VoxelPosition { x: 0, y: 40, z: 0 }));
 }
 
 pub fn internal_water_physics(
-    water_query: Query<(&Water,)>,
-    mut water_operations: ResMut<WaterOperations>,
+    mut water_query: Query<(&mut Water,)>,
     voxel_access: Res<VoxelAccess>,
 ) {
-    for (water,) in water_query.iter() {
-        for (position, _) in water.voxels.iter() {
-            let down = position.in_direction(VoxelDirection::DOWN);
-            let potential_new_position = [
-                down,
-                down.in_direction(VoxelDirection::LEFT),
-                down.in_direction(VoxelDirection::RIGHT),
-                down.in_direction(VoxelDirection::FRONT),
-                down.in_direction(VoxelDirection::BACK),
-            ];
-
-            for new in potential_new_position.iter() {
-                if water.voxels.get(&new).is_none()
-                    && voxel_access.get_voxel(new.clone()).is_none()
-                    && water_operations.add(new.clone())
-                {
-                    water_operations.remove(position.clone());
-                    break;
-                }
-            }
-        }
+    for (mut water,) in water_query.iter_mut() {
+        water.flow(&voxel_access)
     }
 }
 
 pub fn update_water_mesh(
     mut water_query: Query<(&mut Water, &Handle<Mesh>)>,
-    mut water_operations: ResMut<WaterOperations>,
     mut meshes: ResMut<Assets<Mesh>>,
+    voxel_access: Res<VoxelAccess>,
 ) {
     for (mut water, handle_current_mesh) in water_query.iter_mut() {
         if let Some(mut current_mesh) = meshes.get_mut(handle_current_mesh) {
-            water.update_mesh(&mut current_mesh, &mut water_operations);
+            water.update_mesh(&mut current_mesh, &voxel_access);
         }
     }
 }

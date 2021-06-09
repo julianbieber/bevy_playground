@@ -1,9 +1,10 @@
 use bevy::prelude::*;
+use strum_macros::EnumIter;
 
 pub const HALF_VOXEL_SIZE: f32 = 0.5f32;
 pub const VOXEL_SIZE: f32 = HALF_VOXEL_SIZE * 2.0f32;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter)]
 pub enum VoxelDirection {
     UP,
     DOWN,

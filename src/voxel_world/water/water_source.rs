@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{ops::AddAssign, time::Duration};
 
 use bevy::{
     core::{Time, Timer},
@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::voxel_world::{access::VoxelAccess, voxel::VoxelPosition};
 
-use super::water::WaterOperations;
+use super::water::Water;
 
 pub struct WaterSource {
     position: VoxelPosition,
@@ -15,9 +15,9 @@ pub struct WaterSource {
 }
 
 impl WaterSource {
-    pub fn new() -> WaterSource {
+    pub fn new(position: VoxelPosition) -> WaterSource {
         WaterSource {
-            position: VoxelPosition { x: 0, y: 40, z: 0 },
+            position,
             timer: Timer::from_seconds(20.0, true),
         }
     }
@@ -25,15 +25,21 @@ impl WaterSource {
 
 pub fn water_source(
     mut source_query: Query<(&mut WaterSource,)>,
+    mut water_query: Query<(&mut Water,)>,
     _voxel_access: Res<VoxelAccess>,
-    mut water_operations: ResMut<WaterOperations>,
     time: Res<Time>,
 ) {
     for (mut source,) in source_query.iter_mut() {
         if source.timer.tick(time.delta()).finished() {
             source.timer.reset();
             source.timer.set_duration(Duration::from_millis(100));
-            water_operations.add(source.position);
+            for (mut water,) in water_query.iter_mut() {
+                water
+                    .changed
+                    .entry(source.position)
+                    .or_insert(0.0)
+                    .add_assign(0.5);
+            }
         }
     }
 }
