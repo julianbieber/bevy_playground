@@ -174,6 +174,9 @@ impl Water {
             if v.fill > 0.9 {
                 v.fill = 1.0;
             }
+            if v.fill < 0.0 {
+                v.fill = 0.0;
+            }
         }
 
         //  TODO fix overfill and underfill
