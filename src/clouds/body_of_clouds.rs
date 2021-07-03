@@ -1,9 +1,8 @@
-use bevy::prelude::shape::{Box, Cube};
+use bevy::prelude::shape::Cube;
 use bevy::render::mesh::Indices;
-use bevy::render::pipeline::InputStepMode::Instance;
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::render::texture::{Extent3d, TextureDimension, TextureFormat};
-use bevy::render::{color::Color, shader::ShaderDefs, texture::Texture};
+use bevy::render::{shader::ShaderDefs, texture::Texture};
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -16,8 +15,8 @@ use bevy::{
     },
 };
 use cgmath::num_traits::Float;
+use itertools::iproduct;
 use rand::prelude::*;
-use std::time::Instant;
 
 #[derive(RenderResources, Default, TypeUuid, ShaderDefs)]
 #[uuid = "69e20afc-b1c7-11eb-8529-0242ac130003"]
@@ -30,13 +29,13 @@ const VERTEX_SHADER: &str = include_str!("cloud.vert");
 
 const FRAGMENT_SHADER: &str = include_str!("cloud.frag");
 
-const texture_size: usize = 128;
+const TEXTURE_SIZE: usize = 128;
 fn create_dots() -> Vec<Vec3> {
     let mut rng = rand::thread_rng();
     let mut dots: Vec<Vec3> = Vec::new();
-    for i in (0..10).into_iter() {
-        let start = (texture_size as f32 * 0.1) as i32;
-        let end = (texture_size - (texture_size as f32 * 0.1) as usize) as i32;
+    for _ in (0..10).into_iter() {
+        let start = (TEXTURE_SIZE as f32 * 0.1) as i32;
+        let end = (TEXTURE_SIZE - (TEXTURE_SIZE as f32 * 0.1) as usize) as i32;
         let x: i32 = rng.gen_range(start..end);
         let y: i32 = rng.gen_range(start..end);
         let z: i32 = rng.gen_range(start..end);
@@ -49,7 +48,7 @@ fn create_dots() -> Vec<Vec3> {
 fn minimal_distance_to_dots(dot: Vec3, dots: &Vec<Vec3>) -> f32 {
     let mut min = f32::infinity();
     for d in dots.iter() {
-        let distance = d.distance(dot) / ((3.0f32 * (texture_size as f32)).sqrt());
+        let distance = d.distance(dot) / ((3.0f32 * (TEXTURE_SIZE as f32)).sqrt());
         if distance < min {
             min = distance;
         }
@@ -60,7 +59,7 @@ fn minimal_distance_to_dots(dot: Vec3, dots: &Vec<Vec3>) -> f32 {
 fn create_cloud_texture() -> Texture {
     let mut rgba_data = Vec::with_capacity(
         //"F": Floating-point. Thus, GL_RGBA32F is a floating-point format where each component is a 32-bit IEEE floating-point value.
-        texture_size * texture_size * texture_size * TextureFormat::Rgba32Float.pixel_size(),
+        TEXTURE_SIZE * TEXTURE_SIZE * TEXTURE_SIZE * TextureFormat::Rgba32Float.pixel_size(),
     );
     let mut c = 0;
     let dots = create_dots();
@@ -69,9 +68,9 @@ fn create_cloud_texture() -> Texture {
     let dots_b = create_dots();
     //calculate minimal distance between actual point and generated dots
     for (x, y, z) in iproduct!(
-        (0..texture_size).into_iter(),
-        (0..texture_size).into_iter(),
-        (0..texture_size).into_iter()
+        (0..TEXTURE_SIZE).into_iter(),
+        (0..TEXTURE_SIZE).into_iter(),
+        (0..TEXTURE_SIZE).into_iter()
     ) {
         let d = Vec3::new(x as f32, y as f32, z as f32);
         //numbers between 0 and 255
@@ -85,15 +84,15 @@ fn create_cloud_texture() -> Texture {
         rgba_data.extend_from_slice(&((b) as u8).to_ne_bytes());
         rgba_data.extend_from_slice(&((alpha) as u8).to_ne_bytes());
         c += 1;
-        if c % (texture_size * texture_size * texture_size / 100) == 0 {
+        if c % (TEXTURE_SIZE * TEXTURE_SIZE * TEXTURE_SIZE / 100) == 0 {
             dbg!(c);
         }
     }
     Texture::new(
         Extent3d {
-            width: texture_size as u32,
-            height: texture_size as u32,
-            depth_or_array_layers: texture_size as u32,
+            width: TEXTURE_SIZE as u32,
+            height: TEXTURE_SIZE as u32,
+            depth_or_array_layers: TEXTURE_SIZE as u32,
         },
         TextureDimension::D3,
         rgba_data,

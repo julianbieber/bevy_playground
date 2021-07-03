@@ -1,28 +1,24 @@
+pub mod access;
+pub mod boundaries;
+pub mod chunk;
+pub mod chunk_mesh;
+pub mod collision;
 mod effects;
 mod evaluation;
-mod internal_model;
+pub mod generator;
+mod lod;
+mod mesh;
 pub mod model;
+pub mod voxel;
+pub mod water;
 mod world_gen;
 
 use ahash::AHashMap;
+use bevy::prelude::Plugin;
 use bevy::prelude::*;
-
-use crate::voxel_world::{boundaries::ChunkBoundaries, generator::VoxelWorld};
-use crate::{
-    physics::collider::{Collider, ColliderShapes},
-    voxel_world::chunk::VoxelChunk,
-};
-use flume::unbounded;
-use rand::prelude::*;
-
-use self::{
-    effects::{erosion, move_floating_voxels},
-    evaluation::{
-        evaluate_delayed_transformations, update_world_event_reader, update_world_from_channel,
-    },
-    model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
-    world_gen::{read_generation_results, setup_world_gen, start_generation},
-};
+use bevy_collision::collider::{Collider, ColliderShapes};
+use boundaries::ChunkBoundaries;
+use chunk::VoxelChunk;
 
 pub struct VoxelTexture {
     pub material: Handle<StandardMaterial>,
@@ -31,6 +27,21 @@ pub struct VoxelTexture {
 pub struct AdditionalVoxels {
     voxels: AHashMap<ChunkBoundaries, VoxelChunk>,
 }
+pub struct FreeFloatingVoxel;
+
+use flume::unbounded;
+use generator::VoxelWorld;
+use rand::prelude::*;
+
+use crate::{
+    effects::{erosion, move_floating_voxels},
+    evaluation::{
+        evaluate_delayed_transformations, update_world_event_reader, update_world_from_channel,
+    },
+    model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
+    world_gen::{read_generation_results, setup_world_gen, start_generation},
+};
+
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {

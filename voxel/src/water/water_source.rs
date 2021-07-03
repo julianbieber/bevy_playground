@@ -2,10 +2,10 @@ use std::{ops::AddAssign, time::Duration};
 
 use bevy::{
     core::{Time, Timer},
-    prelude::{Query, Res, ResMut},
+    prelude::{Query, Res},
 };
 
-use crate::voxel_world::{access::VoxelAccess, voxel::VoxelPosition};
+use crate::{access::VoxelAccess, voxel::VoxelPosition};
 
 use super::water::Water;
 

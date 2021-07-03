@@ -1,11 +1,10 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use common::{ParticleTypes, PlayerMarker};
 use rand::prelude::*;
 
-use crate::{
-    delayed_despawn::DelayedDespawns, particles::model::ParticleTypes, player::PlayerMarker,
-};
+use crate::delayed_despawn::DelayedDespawns;
 
 pub struct Energy {
     pub amount: f32,

@@ -5,7 +5,7 @@ use std::{
 
 use ahash::{AHashMap, AHashSet};
 
-use crate::voxel_world::{
+use crate::{
     access::VoxelAccess,
     voxel::{VoxelDirection, VoxelPosition},
 };

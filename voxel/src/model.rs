@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bevy::prelude::*;
 
-use crate::voxel_world::{
+use crate::{
     access::VoxelAccess,
     voxel::{Voxel, VoxelPosition},
 };

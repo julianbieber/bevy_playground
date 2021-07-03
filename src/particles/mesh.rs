@@ -2,9 +2,10 @@ use bevy::{prelude::*, render::mesh::VertexAttributeValues};
 
 use bevy::render::mesh::Indices;
 use bevy::render::pipeline::PrimitiveTopology;
+use common::ParticleTypes;
 use rand::prelude::*;
 
-use crate::particles::model::{ParticleDescription, ParticleTypes};
+use crate::particles::model::ParticleDescription;
 use crate::particles::primitives::{
     cube_indices, cube_vertices, triangle_indices, triangle_vertices,
 };

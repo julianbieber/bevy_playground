@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 
-use crate::{
-    physics::collider::{Collider, ColliderShapes},
-    voxel_world::{access::VoxelAccess, chunk::VoxelChunk, voxel::VoxelPosition},
-};
+use crate::{access::VoxelAccess, voxel::VoxelPosition};
+use bevy_collision::collider::{Collider, ColliderShapes};
 
 use super::super::voxel::{world_2_voxel_space, VoxelBox};
 use super::cuboid::collision_depth_cubiod;

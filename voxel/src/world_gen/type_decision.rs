@@ -1,8 +1,9 @@
 use noise::{Perlin, Seedable};
 use rand::prelude::SmallRng;
 
-use crate::voxel_world::voxel::VoxelTypes;
 use rand::seq::SliceRandom;
+
+use crate::voxel::VoxelTypes;
 
 use super::noise_sampler::NoiseSampler;
 

@@ -1,16 +1,11 @@
 mod input;
 pub mod model;
 
-use crate::movement::model::{Movable, UnitRotation};
-use crate::physics::collider::{Collider, ColliderShapes};
 use crate::player::input::publish_player_movements;
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
-
-pub struct PlayerMarker;
-pub struct PlayerPosition {
-    pub position: Vec3,
-}
+use bevy_collision::collider::{Collider, ColliderShapes};
+use common::{Movable, PlayerMarker, PlayerPosition, UnitRotation};
 
 pub struct PlayerPlugin;
 

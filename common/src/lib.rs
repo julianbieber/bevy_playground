@@ -15,3 +15,14 @@ pub struct MoveEvent {
     pub entity: Entity,
     pub is_player: bool,
 }
+
+pub struct PlayerMarker;
+pub struct PlayerPosition {
+    pub position: Vec3,
+}
+
+#[derive(Clone)]
+pub enum ParticleTypes {
+    Explosion { radius: f32 },
+    HighStorm { depth: f32 },
+}

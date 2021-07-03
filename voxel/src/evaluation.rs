@@ -1,22 +1,14 @@
 use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
+use common::{PlayerPosition, UnitRotation};
 use flume::{Receiver, Sender};
 
-use crate::{
-    movement::model::UnitRotation,
-    voxel_world::{
-        access::VoxelAccess,
-        boundaries::ChunkBoundaries,
-        chunk::{self, VoxelChunk},
-    },
-};
+use crate::{access::VoxelAccess, boundaries::ChunkBoundaries, lod::distance_2_lod};
 
 use super::VoxelTexture;
-use super::{
-    internal_model::FreeFloatingVoxel,
+use crate::{
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
+    FreeFloatingVoxel,
 };
-use crate::player::PlayerPosition;
-use crate::voxel_world::distance_2_lod;
 use ahash::AHashSet;
 use bevy::render::mesh::Indices;
 

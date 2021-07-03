@@ -1,5 +1,5 @@
-use crate::voxel_world::voxel::{Voxel, VoxelDirection, VoxelPosition};
-use crate::voxel_world::{access::VoxelAccess, voxel::HALF_VOXEL_SIZE};
+use crate::voxel::{VoxelDirection, VoxelPosition};
+use crate::{access::VoxelAccess, voxel::HALF_VOXEL_SIZE};
 use bevy::{math::Vec3, render::pipeline::PrimitiveTopology};
 use bevy::{
     prelude::Mesh,
@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::borrow::Cow;
 
-use super::water::{Water, WaterVoxel, WATER_QUADS};
+use super::water::{Water, WATER_QUADS};
 
 pub(super) const UNUSED: f32 = 100000000.0;
 
@@ -37,9 +37,9 @@ impl Water {
         mesh
     }
 
-    pub fn update_mesh(&mut self, mut mesh: &mut Mesh, voxel_access: &VoxelAccess) {
+    pub fn update_mesh(&mut self, mesh: &mut Mesh, voxel_access: &VoxelAccess) {
         let needs_remesh = self.apply_changes();
-        let mut vertices = if let VertexAttributeValues::Float32x3(vertices) = mesh
+        let vertices = if let VertexAttributeValues::Float32x3(vertices) = mesh
             .attribute_mut(Cow::Borrowed(Mesh::ATTRIBUTE_POSITION))
             .unwrap()
         {
@@ -161,7 +161,7 @@ impl Water {
             }
         }
         {
-            let mut normals = if let VertexAttributeValues::Float32x3(vertices) = mesh
+            let normals = if let VertexAttributeValues::Float32x3(vertices) = mesh
                 .attribute_mut(Cow::Borrowed(Mesh::ATTRIBUTE_NORMAL))
                 .unwrap()
             {
@@ -191,7 +191,7 @@ impl Water {
         }
 
         {
-            let mut fill_state = if let VertexAttributeValues::Float32(vertices) =
+            let fill_state = if let VertexAttributeValues::Float32(vertices) =
                 mesh.attribute_mut("Water_Fill").unwrap()
             {
                 vertices
