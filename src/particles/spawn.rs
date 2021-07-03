@@ -1,11 +1,10 @@
 use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
+use common::{MoveEvent, ParticleTypes};
 
+use crate::particles::mesh::create_particle_mesh;
 use crate::particles::model::ParticleDescription;
-use crate::{movement::model::MoveEvent, particles::mesh::create_particle_mesh};
 use flume::Sender;
 use std::time::Duration;
-
-use super::model::ParticleTypes;
 
 pub struct ExplosionSpawnCoolDown {
     pub timer: Timer,

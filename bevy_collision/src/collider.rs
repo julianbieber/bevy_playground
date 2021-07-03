@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use cgmath::num_traits::Float;
 
 use bevy::math::Vec4Swizzles;
+use itertools::iproduct;
 use std::collections::HashMap;
 use std::ops::AddAssign;
 
@@ -465,11 +466,8 @@ impl Collider {
                 normals_min_triangle.normals[normals_min_triangle.min_triangle as usize].xyz();
             min_distance = normals_min_triangle.w(normals_min_triangle.min_triangle as usize);
 
-            let support: Vec3 = Collider::support(
-                (*collider_a).to_owned(),
-                (*collider_b).to_owned(),
-                min_normal,
-            );
+            let support: Vec3 =
+                Collider::support(collider_a.clone(), collider_b.clone(), min_normal);
             let s_distance: f32 = min_normal.dot(support);
 
             if f32::abs(s_distance - min_distance) > 0.01f32 {

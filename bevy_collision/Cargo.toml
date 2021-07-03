@@ -1,15 +1,10 @@
 [package]
-name = "bevy_game"
+name = "bevy_collision"
 version = "0.1.0"
 authors = ["Julian Bieber <julian.bieber.1992@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[workspace]
-members = [
-    "voxel","bevy_collision", "common"
-]
 
 [dependencies]
 bevy = {git = "https://github.com/bevyengine/bevy.git", version = "0.5.0", branch = "main"}
@@ -25,16 +20,8 @@ noise = "0.7.0"
 mimalloc = "0.1.25"
 strum = "0.21.0"
 strum_macros = "0.21.1"
-voxel = {path = "voxel"}
-bevy_collision = {path = "bevy_collision"}
-common = { path = "common"}
 
 [dev-dependencies]
-criterion = "0.3.4"
-
-[[bench]]
-name = "water"
-harness = false
 
 [profile.release]
 debug = true

@@ -3,23 +3,21 @@ mod noise_sampler;
 mod type_decision;
 
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use common::PlayerPosition;
 use flume::{unbounded, Receiver, Sender};
 use rand::{prelude::SmallRng, SeedableRng};
 
 use crate::{
-    player::PlayerPosition,
-    voxel_world::{
-        access::VoxelAccess,
-        boundaries::ChunkBoundaries,
-        chunk::VoxelChunk,
-        voxel::{Voxel, VoxelPosition},
-    },
+    access::VoxelAccess,
+    boundaries::ChunkBoundaries,
+    chunk::VoxelChunk,
+    lod::distance_2_lod,
+    voxel::{Voxel, VoxelPosition},
 };
 
 use self::{height::HeightGen, type_decision::VoxelTypeDecision};
 
 use super::{AdditionalVoxels, VoxelTexture};
-use crate::voxel_world::distance_2_lod;
 
 pub struct GeneratedChunks {
     generated: Vec<ChunkBoundaries>,

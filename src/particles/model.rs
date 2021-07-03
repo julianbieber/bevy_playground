@@ -1,12 +1,7 @@
 use bevy::prelude::*;
+use common::ParticleTypes;
 
 use std::time::Duration;
-
-#[derive(Clone)]
-pub enum ParticleTypes {
-    Explosion { radius: f32 },
-    HighStorm { depth: f32 },
-}
 
 #[derive(Clone)]
 pub struct ParticleDescription {

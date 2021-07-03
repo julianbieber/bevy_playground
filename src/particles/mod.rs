@@ -7,14 +7,15 @@ mod spawn;
 use std::time::Duration;
 
 use bevy::{prelude::*, render::pipeline::RenderPipeline, tasks::AsyncComputeTaskPool};
+use common::{ParticleTypes, UnitRotation};
 
+use crate::delayed_despawn::DelayedDespawns;
 use crate::particles::mesh::create_particle_mesh;
-use crate::particles::model::{ParticleDescription, ParticleTypes};
+use crate::particles::model::ParticleDescription;
 use crate::particles::render::{
     setup_particles, update_particle_direction, ParticleDirectionMaterial, ParticlePipeline,
 };
 use crate::particles::spawn::{spawn_regular_explosions_system, ExplosionSpawnCoolDown};
-use crate::{delayed_despawn::DelayedDespawns, movement::model::UnitRotation};
 use bevy::render::pipeline::PipelineDescriptor;
 use flume::{unbounded, Receiver, Sender};
 

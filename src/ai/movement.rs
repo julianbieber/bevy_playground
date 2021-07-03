@@ -1,23 +1,19 @@
 use std::sync::Arc;
 
+use crate::delayed_despawn::DelayedDespawns;
+use crate::particles::model::ParticleDescription;
+use crate::particles::DelayedParticleSpawns;
 use crate::player::model::ReceivesInput;
 use crate::{
     ai::model::{NPCBehaviours, NPC},
     unit_effects::{DelayedEffects, Effect, Effects},
 };
-use crate::{delayed_despawn::DelayedDespawns, voxel_world::voxel::VoxelPosition};
-use crate::{
-    movement::model::{MoveEvent, UnitRotation},
-    world::model::{DelayedWorldTransformations, WorldUpdateEvent},
-};
-use crate::{
-    particles::model::ParticleDescription, voxel_world::boundaries::ChunkBoundaries,
-    voxel_world::chunk::VoxelChunk,
-};
-use crate::{particles::DelayedParticleSpawns, voxel_world::access::VoxelAccess};
 use bevy::utils::Duration;
 use bevy::{app::Events, prelude::*};
+use common::{MoveEvent, UnitRotation};
 use rand::prelude::*;
+use voxel::model::{DelayedWorldTransformations, WorldUpdateEvent};
+use voxel::{access::VoxelAccess, voxel::VoxelPosition};
 
 pub fn npc_movement_system(
     npcs_query: Query<(Entity, &NPC, &Transform, &UnitRotation)>,

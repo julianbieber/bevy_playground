@@ -1,16 +1,14 @@
 use std::sync::Arc;
 
 use bevy::{app::Events, prelude::*};
+use common::MoveEvent;
+use common::ParticleTypes;
 
-use crate::{
-    movement::model::MoveEvent,
-    particles::model::ParticleTypes,
-    voxel_world::{
-        access::VoxelAccess, boundaries::ChunkBoundaries, chunk::VoxelChunk, voxel::VoxelPosition,
-    },
-};
+use crate::voxel::VoxelDirection;
+use crate::FreeFloatingVoxel;
+use crate::{access::VoxelAccess, boundaries::ChunkBoundaries, voxel::VoxelPosition};
 
-use super::{internal_model::FreeFloatingVoxel, model::WorldUpdateEvent};
+use super::model::WorldUpdateEvent;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 
@@ -66,10 +64,7 @@ fn select_a_highest_voxel(
         if let Some(chunk) = chunks.get_chunk(&b) {
             let top_layer = chunk.filter(|v| {
                 chunks
-                    .get_voxel(
-                        v.position
-                            .in_direction(crate::voxel_world::voxel::VoxelDirection::UP),
-                    )
+                    .get_voxel(v.position.in_direction(VoxelDirection::UP))
                     .is_none()
             });
             if let Some(v) = top_layer.choose(&mut rng) {

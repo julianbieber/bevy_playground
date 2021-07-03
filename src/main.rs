@@ -3,30 +3,24 @@ mod clouds;
 mod delayed_despawn;
 mod movement;
 mod particles;
-mod physics;
 mod pickups;
 mod player;
 mod unit_effects;
-mod voxel_world;
-mod world;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use pickups::EnergyPlugin;
 use unit_effects::DelayedUnitEffectsPlugin;
+use voxel::water::WaterPlugin;
 
 use crate::ai::AIPlugin;
 use crate::clouds::CloudPlugin;
 use crate::delayed_despawn::DelayedDespawnsPlugin;
 use crate::movement::MovementPlugin;
 use crate::particles::ParticlePlugin;
-use crate::physics::collider::collision_update;
 use crate::player::PlayerPlugin;
-use crate::voxel_world::water::WaterPlugin;
-use voxel_world::{access::VoxelAccess, collision::systems::terrain_collision_system};
-use world::WorldPlugin;
-#[macro_use]
-extern crate itertools;
+use bevy_collision::collider::collision_update;
+use voxel::{access::VoxelAccess, collision::systems::terrain_collision_system, WorldPlugin};
 
 use mimalloc::MiMalloc;
 #[global_allocator]
@@ -38,7 +32,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldPlugin)
         .add_plugin(ParticlePlugin)
-        //.add_plugin(WaterPlugin)
+        .add_plugin(WaterPlugin)
         .add_plugin(AIPlugin)
         .add_plugin(MovementPlugin)
         .add_plugin(PlayerPlugin)

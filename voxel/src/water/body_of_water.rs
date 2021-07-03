@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
@@ -11,12 +9,7 @@ use bevy::{
     },
 };
 
-use crate::voxel_world::{
-    access::VoxelAccess,
-    chunk::VoxelChunk,
-    voxel::{VoxelDirection, VoxelPosition},
-    water::water_source::WaterSource,
-};
+use crate::{access::VoxelAccess, voxel::VoxelPosition, water::water_source::WaterSource};
 
 use super::{water::Water, water_shaders::*};
 

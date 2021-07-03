@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use cgmath::Matrix4;
 use collision::{algorithm::minkowski::GJK3, primitive::Cuboid, CollisionStrategy};
 
-use crate::voxel_world::{access::VoxelAccess, voxel::VoxelPosition};
+use crate::{access::VoxelAccess, voxel::VoxelPosition};
 
-use super::super::voxel::{world_2_voxel_space, HALF_VOXEL_SIZE};
+use crate::voxel::{world_2_voxel_space, HALF_VOXEL_SIZE};
 
 pub fn collision_depth_cubiod(
     voxel_access: &VoxelAccess,

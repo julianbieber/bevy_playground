@@ -1,7 +1,7 @@
-use crate::movement::model::{MoveEvent, UnitRotation};
 use crate::player::model::ReceivesInput;
 use bevy::prelude::*;
 use bevy::{app::Events, input::mouse::MouseMotion};
+use common::{MoveEvent, UnitRotation};
 
 const ROTATION_SPEED_X: f32 = 0.3f32;
 const ROTATION_SPEED_Y: f32 = 0.3f32;

@@ -1,4 +1,4 @@
-use crate::voxel_world::voxel::{Voxel, VoxelPosition};
+use crate::voxel::{Voxel, VoxelPosition};
 
 use super::{
     boundaries::{ChunkBoundaries, CHUNK_SIZE},
@@ -173,7 +173,9 @@ impl VoxelChunk {
 
 #[cfg(test)]
 mod tests {
-    use crate::voxel_world::{
+    use itertools::iproduct;
+
+    use crate::{
         boundaries::ChunkBoundaries, voxel::Voxel, voxel::VoxelPosition, voxel::VoxelTypes,
     };
 

@@ -2,8 +2,7 @@ use std::time::Duration;
 
 use crate::ai::model::*;
 use bevy::prelude::*;
-
-use crate::movement::model::{Movable, UnitRotation};
+use common::{Movable, UnitRotation};
 use rand::prelude::*;
 
 pub struct SpawnCoolDown {
