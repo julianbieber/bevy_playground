@@ -18,30 +18,29 @@ pub fn erosion(
 ) {
     for (particle_type, transform) in particle_emitters_query.iter() {
         match particle_type {
-            ParticleTypes::Explosion { radius: _ } => {}
-            ParticleTypes::HighStorm { depth } => {
+            ParticleTypes::Explosion { .. } => {}
+            ParticleTypes::HighStorm { x, y, z } => {
                 let mut rng = SmallRng::from_entropy();
                 if rng.gen_range(0.0..1.0) < 0.01 {
                     let highstorm_center = transform.translation.clone();
                     let highstorm_center_voxel = VoxelPosition::from_vec3(&highstorm_center);
-
-                    let d = depth.clone();
-                    let d_voxel = VoxelPosition::voxel_distance(d);
+                    let highstorm_voxel_lendths = VoxelPosition::from_vec3(&Vec3::new(*x, *y, *z));
                     let boundaries = ChunkBoundaries {
                         min: [
-                            highstorm_center_voxel.x - 10,
-                            highstorm_center_voxel.y - 100,
-                            highstorm_center_voxel.z - d_voxel / 2,
+                            highstorm_center_voxel.x - highstorm_voxel_lendths.x,
+                            highstorm_center_voxel.y - highstorm_voxel_lendths.y,
+                            highstorm_center_voxel.z - highstorm_voxel_lendths.z,
                         ],
                         max: [
-                            highstorm_center_voxel.x + 10,
-                            highstorm_center_voxel.y + 100,
-                            highstorm_center_voxel.z + d_voxel / 2,
+                            highstorm_center_voxel.x + highstorm_voxel_lendths.x,
+                            highstorm_center_voxel.y + highstorm_voxel_lendths.y,
+                            highstorm_center_voxel.z + highstorm_voxel_lendths.z,
                         ],
                     };
                     let boundaries_clone = boundaries.clone();
+                    let pt = particle_type.clone();
                     let delete = Arc::new(move |chunks: &VoxelAccess| {
-                        select_a_highest_voxel(&boundaries_clone, chunks)
+                        select_a_highest_voxel(&boundaries_clone, pt, highstorm_center, chunks)
                     });
 
                     update_events.send(WorldUpdateEvent {
@@ -56,6 +55,8 @@ pub fn erosion(
 
 fn select_a_highest_voxel(
     storm_boundaries: &ChunkBoundaries,
+    storm: ParticleTypes,
+    storm_center: Vec3,
     chunks: &VoxelAccess,
 ) -> Vec<VoxelPosition> {
     let mut rng = SmallRng::from_entropy();
@@ -63,9 +64,10 @@ fn select_a_highest_voxel(
     for b in storm_boundaries.aligned_boundaries_in() {
         if let Some(chunk) = chunks.get_chunk(&b) {
             let top_layer = chunk.filter(|v| {
-                chunks
-                    .get_voxel(v.position.in_direction(VoxelDirection::UP))
-                    .is_none()
+                storm.within(storm_center, v.position.to_vec())
+                    && chunks
+                        .get_voxel(v.position.in_direction(VoxelDirection::UP))
+                        .is_none()
             });
             if let Some(v) = top_layer.choose(&mut rng) {
                 voxels.push(v.position.clone());
@@ -85,17 +87,11 @@ pub fn move_floating_voxels(
     for (particle_type, transform) in storm_query.iter() {
         match particle_type {
             ParticleTypes::Explosion { .. } => {}
-            ParticleTypes::HighStorm { depth } => {
+            ParticleTypes::HighStorm { .. } => {
                 let highstorm_center = transform.translation;
                 for (voxel_entity, _, voxel_transform) in voxel_query.iter() {
                     let translation = voxel_transform.translation;
-                    if translation.x > highstorm_center.x - depth
-                        && translation.x < highstorm_center.x + depth
-                        && translation.y > highstorm_center.y
-                        && translation.y < highstorm_center.y + 60.0
-                        && translation.z > highstorm_center.z - 200.0
-                        && translation.z < highstorm_center.z + 200.0
-                    {
+                    if particle_type.within(highstorm_center, translation) {
                         movement_events.send(MoveEvent {
                             rotation_offset: Vec3::new(
                                 rng.gen_range(-0.1..0.1),

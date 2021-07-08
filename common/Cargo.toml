@@ -10,6 +10,3 @@ edition = "2018"
 bevy = {git = "https://github.com/bevyengine/bevy.git", version = "0.5.0", branch = "main"}
 
 [dev-dependencies]
-
-[profile.release]
-debug = true

@@ -69,7 +69,7 @@ pub fn start_generation(
                     let additional = additional_voxels
                         .voxels
                         .get(&cloned_boundary)
-                        .map(|c| c.get_voxels())
+                        .map(|c| c.clone())
                         .unwrap_or(vec![]);
                     let cloned_voxel_type_decision = voxel_type_decision.clone();
                     let cloned_height_gen = height_gen.clone();

@@ -18,20 +18,12 @@ use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
 use boundaries::ChunkBoundaries;
-use chunk::VoxelChunk;
-
-pub struct VoxelTexture {
-    pub material: Handle<StandardMaterial>,
-}
-
-pub struct AdditionalVoxels {
-    voxels: AHashMap<ChunkBoundaries, VoxelChunk>,
-}
-pub struct FreeFloatingVoxel;
 
 use flume::unbounded;
 use generator::VoxelWorld;
 use rand::prelude::*;
+
+use crate::voxel::Voxel;
 
 use crate::{
     effects::{erosion, move_floating_voxels},
@@ -41,6 +33,16 @@ use crate::{
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
     world_gen::{read_generation_results, setup_world_gen, start_generation},
 };
+
+pub struct VoxelTexture {
+    pub material: Handle<StandardMaterial>,
+}
+
+pub struct AdditionalVoxels {
+    voxels: AHashMap<ChunkBoundaries, Vec<Voxel>>,
+}
+
+pub struct FreeFloatingVoxel;
 
 pub struct WorldPlugin;
 
@@ -92,11 +94,10 @@ fn world_setup(
     for pillar in w.pillars {
         for voxel in pillar.voxels() {
             let matching_boundary = ChunkBoundaries::aligned(voxel.position);
-            let m = matching_boundary.clone();
             chunk_map
                 .entry(matching_boundary)
-                .or_insert(VoxelChunk::empty(m))
-                .set(voxel);
+                .or_insert(vec![])
+                .push(voxel);
         }
     }
     commands.insert_resource(AdditionalVoxels { voxels: chunk_map });

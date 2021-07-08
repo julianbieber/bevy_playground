@@ -5,9 +5,9 @@ use super::{
     voxel::VoxelTypes,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct VoxelChunk {
-    voxels: Vec<Option<Vec<Option<VoxelTypes>>>>,
+    voxels: Vec<Option<VoxelTypes>>,
     pub count: usize,
     pub lod: i32,
     pub boundary: ChunkBoundaries,
@@ -16,12 +16,7 @@ pub struct VoxelChunk {
 impl VoxelChunk {
     pub fn empty(boundary: ChunkBoundaries) -> VoxelChunk {
         VoxelChunk {
-            voxels: vec![
-                None;
-                (CHUNK_SIZE as usize / 8)
-                    * (CHUNK_SIZE as usize / 8)
-                    * (CHUNK_SIZE as usize / 8)
-            ],
+            voxels: vec![],
             count: 0,
             lod: 1,
             boundary,
@@ -34,32 +29,14 @@ impl VoxelChunk {
     {
         let mut voxels = Vec::with_capacity(self.count);
 
-        for (i, sub_chunk_o) in self.voxels.iter().enumerate() {
-            let meta_z = i % 8;
-            let meta_y = (i / (CHUNK_SIZE as usize / 8)) % 8;
-            let meta_x = (i / ((CHUNK_SIZE as usize / 8) * (CHUNK_SIZE as usize / 8))) % 8;
-            if let Some(sub_chunk) = sub_chunk_o {
-                for (sub_i, voxel_type_o) in sub_chunk.iter().enumerate() {
-                    if let Some(v) = voxel_type_o {
-                        let sub_z = sub_i % 8;
-                        let sub_y = (sub_i / 8) % 8;
-                        let sub_x = (sub_i / 64) % 8;
-
-                        let x = (meta_x * (CHUNK_SIZE as usize / 8) + sub_x) as i32
-                            + self.boundary.min[0];
-                        let y = (meta_y * (CHUNK_SIZE as usize / 8) + sub_y) as i32
-                            + self.boundary.min[1];
-                        let z = (meta_z * (CHUNK_SIZE as usize / 8) + sub_z) as i32
-                            + self.boundary.min[2];
-
-                        let voxel = Voxel {
-                            position: VoxelPosition { x, y, z },
-                            typ: v.clone(),
-                        };
-                        if f(&voxel) {
-                            voxels.push(voxel);
-                        }
-                    }
+        for (i, voxel_type_o) in self.voxels.iter().enumerate() {
+            if let Some(v) = voxel_type_o {
+                let voxel = Voxel {
+                    position: self.index_to_coord(i),
+                    typ: v.clone(),
+                };
+                if f(&voxel) {
+                    voxels.push(voxel);
                 }
             }
         }
@@ -69,104 +46,88 @@ impl VoxelChunk {
     pub fn get_voxels(&self) -> Vec<Voxel> {
         let mut voxels = Vec::with_capacity(self.count);
 
-        for (i, sub_chunk_o) in self.voxels.iter().enumerate() {
-            let meta_z = i % 8;
-            let meta_y = (i / (CHUNK_SIZE as usize / 8)) % 8;
-            let meta_x = (i / ((CHUNK_SIZE as usize / 8) * (CHUNK_SIZE as usize / 8))) % 8;
-            if let Some(sub_chunk) = sub_chunk_o {
-                for (sub_i, voxel_type_o) in sub_chunk.iter().enumerate() {
-                    if let Some(v) = voxel_type_o {
-                        let sub_z = sub_i % 8;
-                        let sub_y = (sub_i / 8) % 8;
-                        let sub_x = (sub_i / 64) % 8;
-
-                        let x = (meta_x * (CHUNK_SIZE as usize / 8) + sub_x) as i32
-                            + self.boundary.min[0];
-                        let y = (meta_y * (CHUNK_SIZE as usize / 8) + sub_y) as i32
-                            + self.boundary.min[1];
-                        let z = (meta_z * (CHUNK_SIZE as usize / 8) + sub_z) as i32
-                            + self.boundary.min[2];
-
-                        voxels.push(Voxel {
-                            position: VoxelPosition { x, y, z },
-                            typ: v.clone(),
-                        })
-                    }
-                }
+        for (i, voxel_type_o) in self.voxels.iter().enumerate() {
+            if let Some(v) = voxel_type_o {
+                let voxel = Voxel {
+                    position: self.index_to_coord(i),
+                    typ: v.clone(),
+                };
+                voxels.push(voxel);
             }
         }
         voxels
     }
-    const META_FACTOR: usize = CHUNK_SIZE as usize / 8;
 
-    fn get_vector_position(&self, p: &VoxelPosition) -> (usize, usize) {
-        let local_x = (p.x - self.boundary.min[0]) as usize;
-        let local_y = (p.y - self.boundary.min[1]) as usize;
-        let local_z = (p.z - self.boundary.min[2]) as usize;
-
-        let meta_i = local_z / 8
-            + local_y / 8 * VoxelChunk::META_FACTOR
-            + local_x / 8 * VoxelChunk::META_FACTOR * VoxelChunk::META_FACTOR;
-        let sub_i = local_z % 8 + (local_y % 8) * 8 + (local_x % 8) * 64;
-
-        (meta_i, sub_i)
+    fn index_to_coord(&self, i: usize) -> VoxelPosition {
+        let z = i as i32 / (CHUNK_SIZE * CHUNK_SIZE);
+        let y = (i as i32 / CHUNK_SIZE) % CHUNK_SIZE;
+        let x = i as i32 % CHUNK_SIZE;
+        VoxelPosition {
+            x: x + self.boundary.min[0],
+            y: y + self.boundary.min[2],
+            z: z + self.boundary.min[2],
+        }
     }
 
-    fn get_meta_vector_position(&self, p: &VoxelPosition) -> usize {
-        let local_x = (p.x - self.boundary.min[0]) as usize;
-        let local_y = (p.y - self.boundary.min[1]) as usize;
-        let local_z = (p.z - self.boundary.min[2]) as usize;
-
-        local_z / 8
-            + local_y / 8 * VoxelChunk::META_FACTOR
-            + local_x / 8 * VoxelChunk::META_FACTOR * VoxelChunk::META_FACTOR
-    }
-
-    fn get_sub_vector_position(&self, p: &VoxelPosition) -> usize {
-        let local_x = (p.x - self.boundary.min[0]) as usize;
-        let local_y = (p.y - self.boundary.min[1]) as usize;
-        let local_z = (p.z - self.boundary.min[2]) as usize;
-
-        local_z % 8 + (local_y % 8) * 8 + (local_x % 8) * 64
+    fn get_vector_position(&self, p: &VoxelPosition) -> usize {
+        let x = p.x - self.boundary.min[0];
+        let y = p.y - self.boundary.min[1];
+        let z = p.z - self.boundary.min[2];
+        (z * CHUNK_SIZE * CHUNK_SIZE + y * CHUNK_SIZE + x) as usize
     }
 
     pub fn set(&mut self, voxel: Voxel) {
-        let (meta_i, sub_i) = self.get_vector_position(&voxel.position);
-        if let Some(sub_chunk) = &mut self.voxels[meta_i] {
-            if sub_chunk[sub_i].is_none() {
+        if !self.boundary.contains(&voxel.position) {
+            panic!(
+                "Tried to set voxel for {:?}. ChunkBoundaries: {:?}",
+                voxel.position, self.boundary
+            );
+        }
+
+        let i = self.get_vector_position(&voxel.position);
+        if self.count == 0 {
+            self.voxels = vec![None; (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) as usize];
+            self.count = 1;
+            self.voxels[i] = Some(voxel.typ);
+        } else {
+            if self.voxels[i].is_none() {
                 self.count += 1;
             }
-            sub_chunk[sub_i] = Some(voxel.typ);
-        } else {
-            let mut sub_chunk: Vec<Option<VoxelTypes>> = vec![None; 8 * 8 * 8];
-            sub_chunk[sub_i] = Some(voxel.typ);
-            self.voxels[meta_i] = Some(sub_chunk);
-            self.count += 1;
+            self.voxels[i] = Some(voxel.typ);
         }
     }
 
     pub fn remove(&mut self, position: VoxelPosition) -> Option<Voxel> {
-        let (meta_i, sub_i) = self.get_vector_position(&position);
-        if let Some(sub_chunk) = &mut self.voxels[meta_i] {
-            if let Some(typ) = sub_chunk[sub_i] {
-                sub_chunk[sub_i] = None;
+        if self.count == 0 || !self.boundary.contains(&position) {
+            None
+        } else {
+            let i = self.get_vector_position(&position);
+            if let Some(typ) = self.voxels[i] {
+                self.voxels[i] = None;
                 self.count -= 1;
                 Some(Voxel { position, typ })
             } else {
                 None
             }
-        } else {
-            None
         }
     }
 
     pub fn get(&self, position: &VoxelPosition) -> Option<VoxelTypes> {
-        let meta_i = self.get_meta_vector_position(position);
-        if let Some(Some(sub_chunk)) = self.voxels.get(meta_i) {
-            let sub_i = self.get_sub_vector_position(position);
-            sub_chunk[sub_i]
-        } else {
+        if !self.boundary.contains(position) {
+            panic!(
+                "Tried to get voxel for {:?}. ChunkBoundaries: {:?}",
+                position, self.boundary
+            );
+        }
+        if self.count == 0 {
             None
+        } else {
+            let i = self.get_vector_position(&position);
+            if let Some(typ) = self.voxels[i] {
+                Some(typ)
+            } else {
+                None
+            }
         }
     }
 }
@@ -262,5 +223,23 @@ mod tests {
 
             assert!(all_voxles.iter().find(|v| v.position == p).is_some());
         }
+    }
+
+    #[test]
+    fn boundary_over_position_and_contains_consistency() {
+        let position = VoxelPosition {
+            x: -45,
+            y: -120,
+            z: -93,
+        };
+
+        let alingned = ChunkBoundaries::aligned(position);
+
+        let matching_boundary = ChunkBoundaries {
+            min: [-64, -128, -128],
+            max: [0, -64, -64],
+        };
+
+        assert_eq!(alingned, matching_boundary);
     }
 }
