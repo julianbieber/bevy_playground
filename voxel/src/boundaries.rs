@@ -68,7 +68,11 @@ impl ChunkBoundaries {
         for x in (min.x..min.x + other_length[0]).step_by(CHUNK_SIZE as usize) {
             for y in (min.y..min.y + other_length[1]).step_by(CHUNK_SIZE as usize) {
                 for z in (min.z..min.z + other_length[2]).step_by(CHUNK_SIZE as usize) {
-                    boundaries.push(ChunkBoundaries::aligned(VoxelPosition { x, y, z }));
+                    boundaries.push(ChunkBoundaries::aligned(VoxelPosition {
+                        x: x - 1,
+                        y: y - 1,
+                        z: z - 1,
+                    }));
                 }
             }
         }

@@ -54,7 +54,11 @@ fn regularily_spawn_energy(
             for (storm_transform, particle_type) in storm_query.iter() {
                 match particle_type {
                     ParticleTypes::Explosion { .. } => {}
-                    ParticleTypes::HighStorm { depth } => {
+                    ParticleTypes::HighStorm {
+                        x: h_x,
+                        y: h_y,
+                        z: h_z,
+                    } => {
                         let sphere = meshes.add(Mesh::from(shape::Icosphere {
                             radius: 1.0,
                             subdivisions: 5,
@@ -69,11 +73,11 @@ fn regularily_spawn_energy(
                                 material: material,
                                 transform: Transform::from_translation(Vec3::new(
                                     rng.gen_range(
-                                        storm_transform.translation.x - depth
-                                            ..storm_transform.translation.x + depth,
+                                        storm_transform.translation.x - h_x
+                                            ..storm_transform.translation.x + h_x,
                                     ),
-                                    rng.gen_range(0.0f32..100.0f32),
-                                    rng.gen_range(-100.0f32..100.0f32),
+                                    rng.gen_range(-h_y..*h_y),
+                                    rng.gen_range(-h_z..*h_z),
                                 )),
                                 ..Default::default()
                             })

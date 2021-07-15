@@ -21,8 +21,26 @@ pub struct PlayerPosition {
     pub position: Vec3,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum ParticleTypes {
     Explosion { radius: f32 },
-    HighStorm { depth: f32 },
+    HighStorm { x: f32, y: f32, z: f32 },
+}
+
+impl ParticleTypes {
+    pub fn within(&self, translation: Vec3, other: Vec3) -> bool {
+        match self {
+            ParticleTypes::Explosion { radius } => {
+                translation.distance_squared(other) < radius * radius
+            }
+            ParticleTypes::HighStorm { x, y, z } => {
+                other.x < translation.x + x
+                    && other.x > translation.x - x
+                    && other.y < translation.y + y
+                    && other.y > translation.y - y
+                    && other.z < translation.z + z
+                    && other.z > translation.z - z
+            }
+        }
+    }
 }

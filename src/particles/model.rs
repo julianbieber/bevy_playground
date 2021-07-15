@@ -33,7 +33,11 @@ impl ParticleDescription {
         depth: f32,
     ) -> ParticleDescription {
         ParticleDescription {
-            typ: ParticleTypes::HighStorm { depth },
+            typ: ParticleTypes::HighStorm {
+                x: depth,
+                y: 100.0,
+                z: 500.0,
+            },
             duration,
             particles,
             position,

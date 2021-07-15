@@ -38,14 +38,18 @@ pub fn create_particle_mesh(particles: &ParticleDescription) -> Mesh {
             }
             (positions, indices, particle_directions)
         }
-        ParticleTypes::HighStorm { depth } => {
+        ParticleTypes::HighStorm {
+            x: h_x,
+            y: h_y,
+            z: h_z,
+        } => {
             let mut vertices = Vec::with_capacity(3 * particles.particles as usize);
             let mut indices = Vec::with_capacity(3 * particles.particles as usize);
             let mut particle_directions = Vec::with_capacity(3 * particles.particles as usize);
             for i in 0..particles.particles {
-                let x: f32 = rng.gen_range(-depth..depth);
-                let y: f32 = rng.gen_range(0.0..60.0);
-                let z: f32 = rng.gen_range(-200.0..200.0);
+                let x: f32 = rng.gen_range(-h_x..h_x);
+                let y: f32 = rng.gen_range(-h_y..h_y);
+                let z: f32 = rng.gen_range(-h_z..h_z);
                 let triangle_vertices = triangle_vertices(
                     0.1,
                     Vec3::new(x, y, z),

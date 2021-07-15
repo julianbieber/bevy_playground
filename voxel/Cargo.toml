@@ -24,6 +24,3 @@ bevy_collision = {path = "../bevy_collision"}
 common = {path = "../common"}
 
 [dev-dependencies]
-
-[profile.release]
-debug = true
