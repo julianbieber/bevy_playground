@@ -1,7 +1,8 @@
 use noise::{Perlin, Seedable};
 use rand::prelude::SmallRng;
+use rand::Rng;
 
-use rand::seq::SliceRandom;
+use smallvec::*;
 
 use crate::voxel::VoxelTypes;
 
@@ -9,14 +10,14 @@ use super::noise_sampler::NoiseSampler;
 
 #[derive(Clone, Debug)]
 pub struct VoxelTypeDecision {
-    type_boundaries: Vec<VoxelTypeBoundary>,
+    type_boundaries: SmallVec<[VoxelTypeBoundary; 8]>,
     temperature_sampler: NoiseSampler,
 }
 
 impl VoxelTypeDecision {
     pub fn default() -> VoxelTypeDecision {
         VoxelTypeDecision {
-            type_boundaries: vec![
+            type_boundaries: smallvec![
                 VoxelTypeBoundary::moss(),
                 VoxelTypeBoundary::dark_rock1(),
                 VoxelTypeBoundary::grey_rock1(),
@@ -43,22 +44,21 @@ impl VoxelTypeDecision {
         if y > -10 {
             temperature -= y as f64 / 1.5;
         }
-        let valid: Vec<_> = self
-            .type_boundaries
-            .iter()
-            .filter(|b| {
-                y >= b.min_y
-                    && y <= b.max_y
-                    && ground == b.only_ground
-                    && temperature >= b.min_termperature
-                    && temperature <= b.max_temperature
-            })
-            .collect();
-        valid.choose(rng).unwrap().typ.clone()
+        let mut valid: SmallVec<[&VoxelTypeBoundary; 8]> = SmallVec::new();
+        valid.extend(self.type_boundaries.iter().filter(|b| {
+            y >= b.min_y
+                && y <= b.max_y
+                && ground == b.only_ground
+                && temperature >= b.min_termperature
+                && temperature <= b.max_temperature
+        }));
+
+        let position = rng.gen_range(0..valid.len());
+        valid[position].typ.clone()
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 struct VoxelTypeBoundary {
     min_y: i32,
     max_y: i32,

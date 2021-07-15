@@ -3916,6 +3916,7 @@ dependencies = [
  "noise",
  "png",
  "rand 0.8.3",
+ "smallvec 1.6.1",
  "strum",
  "strum_macros",
 ]
