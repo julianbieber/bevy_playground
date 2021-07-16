@@ -20,6 +20,7 @@ noise = "0.7.0"
 mimalloc = "0.1.25"
 strum = "0.21.0"
 strum_macros = "0.21.1"
+smallvec = "1.6.1"
 bevy_collision = {path = "../bevy_collision"}
 common = {path = "../common"}
 
