@@ -1,14 +1,12 @@
+use crate::voxel::HALF_VOXEL_SIZE;
 use crate::voxel::{VoxelDirection, VoxelPosition};
-use crate::{access::VoxelAccess, voxel::HALF_VOXEL_SIZE};
 use bevy::{math::Vec3, render::pipeline::PrimitiveTopology};
 use bevy::{
     prelude::Mesh,
     render::mesh::{Indices, VertexAttributeValues},
 };
 use std::borrow::Cow;
-
-use super::water::{Water, WATER_QUADS};
-
+/*
 pub(super) const UNUSED: f32 = 100000000.0;
 
 pub(super) const VERTEX_BUFFER_SIZE: usize = 4 * WATER_QUADS;
@@ -438,3 +436,4 @@ fn set_back_vertices(vertices: &mut Vec<[f32; 3]>, indices: &[u32; 4], center: V
         center.z + HALF_VOXEL_SIZE,
     ];
 }
+*/

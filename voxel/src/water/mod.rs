@@ -1,5 +1,4 @@
 mod body_of_water;
-mod water;
 mod water_mesh;
 mod water_shaders;
 mod water_source;

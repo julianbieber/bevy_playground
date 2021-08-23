@@ -2,14 +2,11 @@ use std::sync::Arc;
 
 use bevy::prelude::*;
 
-use crate::{
-    access::VoxelAccess,
-    voxel::{Voxel, VoxelPosition},
-};
+use crate::{voxel::VoxelPosition, world_sector::WorldSector};
 
 pub struct WorldUpdateResult {
     pub entity_2_mesh: Vec<(Entity, Mesh)>,
-    pub voxels_to_replace: Vec<Voxel>,
+    pub voxels_to_replace: Vec<VoxelPosition>,
 }
 
 pub struct DelayedWorldTransformations {
@@ -18,6 +15,6 @@ pub struct DelayedWorldTransformations {
 
 #[derive(Clone)]
 pub struct WorldUpdateEvent {
-    pub delete: Arc<dyn Fn(&VoxelAccess) -> Vec<VoxelPosition> + Send + Sync>,
+    pub delete: Arc<dyn Fn(&WorldSector<1, 1>) -> Vec<VoxelPosition> + Send + Sync>,
     pub replace: bool,
 }

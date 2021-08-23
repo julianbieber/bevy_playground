@@ -9,9 +9,9 @@ use bevy::{
     },
 };
 
-use crate::{access::VoxelAccess, voxel::VoxelPosition, water::water_source::WaterSource};
+use crate::{voxel::VoxelPosition, water::water_source::WaterSource};
 
-use super::{water::Water, water_shaders::*};
+use super::water_shaders::*;
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
@@ -58,7 +58,7 @@ pub fn setup_water_object(
         .add_node_edge("water_material", base::node::MAIN_PASS)
         .unwrap();
 
-    let water = Water::new();
+    /*let water = Water::new();
     let mesh = meshes.add(water.initial_mesh());
 
     let material = materials.add(WaterMaterial { time: 0.0f32 });
@@ -82,26 +82,25 @@ pub fn setup_water_object(
 
     commands
         .spawn()
-        .insert(WaterSource::new(VoxelPosition { x: 0, y: 40, z: 0 }));
+        .insert(WaterSource::new(VoxelPosition { x: 0, y: 40, z: 0 }));*/
 }
 
-pub fn internal_water_physics(
-    mut water_query: Query<(&mut Water,)>,
-    voxel_access: Res<VoxelAccess>,
+pub fn internal_water_physics(//mut water_query: Query<(&mut Water,)>,
+    //voxel_access: Res<VoxelAccess>,
 ) {
-    for (mut water,) in water_query.iter_mut() {
-        water.flow(&voxel_access)
-    }
+    //for (mut water,) in water_query.iter_mut() {
+    //water.flow(&voxel_access)
+    //}
 }
 
 pub fn update_water_mesh(
-    mut water_query: Query<(&mut Water, &Handle<Mesh>)>,
+    //mut water_query: Query<(&mut Water, &Handle<Mesh>)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    voxel_access: Res<VoxelAccess>,
+    //voxel_access: Res<VoxelAccess>,
 ) {
-    for (mut water, handle_current_mesh) in water_query.iter_mut() {
+    /*for (mut water, handle_current_mesh) in water_query.iter_mut() {
         if let Some(mut current_mesh) = meshes.get_mut(handle_current_mesh) {
             water.update_mesh(&mut current_mesh, &voxel_access);
         }
-    }
+    }*/
 }

@@ -1,4 +1,6 @@
-use super::voxel::{Voxel, VoxelTypes};
+use crate::voxel::{Voxel, VoxelPosition};
+
+use super::voxel::VoxelTypes;
 
 use lerp::Lerp;
 use rand::prelude::*;
@@ -59,7 +61,9 @@ impl PillarGenerator {
                     let distance_sq = (self.position.0 - x) * (self.position.0 - x)
                         + (self.position.1 - z) * (self.position.1 - z);
                     if distance_sq <= radius_sq {
-                        let voxel = Voxel::new(x, layer, z, self.voxel_type(&mut rng, layer));
+                        let voxel = Voxel::LandVoxel {
+                            typ: self.voxel_type(&mut rng, layer),
+                        };
                         world.push(voxel);
                     }
                 }

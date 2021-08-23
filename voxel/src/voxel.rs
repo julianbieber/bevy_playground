@@ -1,3 +1,5 @@
+use std::ops::{Add, Div, Mul, Sub};
+
 use bevy::prelude::*;
 use strum_macros::EnumIter;
 
@@ -45,6 +47,54 @@ pub struct VoxelPosition {
     pub z: i32,
 }
 
+impl Add for VoxelPosition {
+    type Output = VoxelPosition;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        VoxelPosition {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl Sub for VoxelPosition {
+    type Output = VoxelPosition;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        VoxelPosition {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl Div<i32> for VoxelPosition {
+    type Output = VoxelPosition;
+
+    fn div(self, rhs: i32) -> Self::Output {
+        VoxelPosition {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
+    }
+}
+
+impl Mul<i32> for VoxelPosition {
+    type Output = VoxelPosition;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        VoxelPosition {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct VoxelSurrounding {
     pub top: VoxelPosition,
@@ -86,6 +136,10 @@ impl VoxelPosition {
 
     pub fn new(x: i32, y: i32, z: i32) -> VoxelPosition {
         VoxelPosition { x, y, z }
+    }
+
+    pub fn diagonal(a: i32) -> VoxelPosition {
+        VoxelPosition { x: a, y: a, z: a }
     }
 
     pub fn voxel_distance(d: f32) -> i32 {
@@ -197,58 +251,6 @@ pub fn world_2_voxel_space(s: f32) -> i32 {
     (s / VOXEL_SIZE).ceil() as i32
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Voxel {
-    pub position: VoxelPosition,
-    pub typ: VoxelTypes,
-}
-
-impl Voxel {
-    pub fn new(x: i32, y: i32, z: i32, typ: VoxelTypes) -> Voxel {
-        Voxel {
-            position: VoxelPosition { x, y, z },
-            typ,
-        }
-    }
-
-    pub fn vertices(&self) -> Vec<Vec3> {
-        let mut vertices = Vec::new();
-        vertices.reserve(8);
-        let world_position = self.position.to_vec();
-        for x in [
-            world_position.x - HALF_VOXEL_SIZE,
-            world_position.x + HALF_VOXEL_SIZE,
-        ]
-        .iter()
-        {
-            for y in [
-                world_position.y - HALF_VOXEL_SIZE,
-                world_position.y + HALF_VOXEL_SIZE,
-            ]
-            .iter()
-            {
-                for z in [
-                    world_position.z - HALF_VOXEL_SIZE,
-                    world_position.z + HALF_VOXEL_SIZE,
-                ]
-                .iter()
-                {
-                    vertices.push(Vec3::new(x.clone(), y.clone(), z.clone()));
-                }
-            }
-        }
-        vertices
-    }
-
-    pub fn normals() -> Vec<Vec3> {
-        vec![
-            Vec3::new(1.0, 0.0, 0.0),
-            Vec3::new(0.0, 1.0, 0.0),
-            Vec3::new(0.0, 0.0, 1.0),
-        ]
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Copy, Hash)]
 pub enum VoxelTypes {
     Moss,
@@ -259,4 +261,11 @@ pub enum VoxelTypes {
     DarkRock2,
     GroundRock1,
     Snow,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Voxel {
+    LandVoxel { typ: VoxelTypes },
+    WaterVoxel { fill: f32, used_indices: Vec<usize> },
+    Nothing,
 }

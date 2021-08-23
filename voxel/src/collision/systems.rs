@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 
-use crate::{access::VoxelAccess, voxel::VoxelPosition};
+use crate::voxel::VoxelPosition;
 use bevy_collision::collider::{Collider, ColliderShapes};
 
 use super::super::voxel::{world_2_voxel_space, VoxelBox};
 use super::cuboid::collision_depth_cubiod;
 
 pub fn terrain_collision_system(
-    voxel_access: Res<VoxelAccess>,
+    //voxel_access: Res<VoxelAccess>,
     mut movable_colliders_query: Query<(&mut Transform, &Collider)>,
 ) {
-    for (mut transform, collider) in movable_colliders_query.iter_mut() {
+    /*for (mut transform, collider) in movable_colliders_query.iter_mut() {
         let mut impulse = Vec3::ZERO;
         let transform_matrix = transform.compute_matrix();
         let transformed_center = transform_matrix.transform_point3(collider.local_position);
@@ -33,10 +33,10 @@ pub fn terrain_collision_system(
             ),
         };
         transform.translation += impulse;
-    }
+    }*/
 }
 
-fn collision_depth_sphere(voxel_access: &VoxelAccess, center: Vec3, radius: f32) -> Vec3 {
+/*fn collision_depth_sphere(voxel_access: &VoxelAccess, center: Vec3, radius: f32) -> Vec3 {
     let mut overlapping_move = Vec3::ZERO;
     for potential_x in
         world_2_voxel_space(center.x - radius) - 1..world_2_voxel_space(center.x + radius) + 1
@@ -102,4 +102,4 @@ fn collision_depth_sphere(voxel_access: &VoxelAccess, center: Vec3, radius: f32)
     }
 
     overlapping_move
-}
+}*/

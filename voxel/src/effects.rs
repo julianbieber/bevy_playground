@@ -4,14 +4,15 @@ use bevy::{app::Events, prelude::*};
 use common::MoveEvent;
 use common::ParticleTypes;
 
+use crate::boundaries::CHUNK_SIZE;
 use crate::voxel::VoxelDirection;
 use crate::FreeFloatingVoxel;
-use crate::{access::VoxelAccess, boundaries::ChunkBoundaries, voxel::VoxelPosition};
+use crate::{boundaries::ChunkBoundaries, voxel::VoxelPosition};
 
 use super::model::WorldUpdateEvent;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-
+/*
 pub fn erosion(
     particle_emitters_query: Query<(&ParticleTypes, &Transform)>,
     mut update_events: ResMut<Events<WorldUpdateEvent>>,
@@ -25,18 +26,7 @@ pub fn erosion(
                     let highstorm_center = transform.translation.clone();
                     let highstorm_center_voxel = VoxelPosition::from_vec3(&highstorm_center);
                     let highstorm_voxel_lendths = VoxelPosition::from_vec3(&Vec3::new(*x, *y, *z));
-                    let boundaries = ChunkBoundaries {
-                        min: [
-                            highstorm_center_voxel.x - highstorm_voxel_lendths.x,
-                            highstorm_center_voxel.y - highstorm_voxel_lendths.y,
-                            highstorm_center_voxel.z - highstorm_voxel_lendths.z,
-                        ],
-                        max: [
-                            highstorm_center_voxel.x + highstorm_voxel_lendths.x,
-                            highstorm_center_voxel.y + highstorm_voxel_lendths.y,
-                            highstorm_center_voxel.z + highstorm_voxel_lendths.z,
-                        ],
-                    };
+                    let boundaries = ChunkBoundaries::from_points(highstorm_center_voxel- highstorm_voxel_lendths,highstorm_center_voxel + highstorm_voxel_lendths );
                     let boundaries_clone = boundaries.clone();
                     let pt = particle_type.clone();
                     let delete = Arc::new(move |chunks: &VoxelAccess| {
@@ -54,7 +44,7 @@ pub fn erosion(
 }
 
 fn select_a_highest_voxel(
-    storm_boundaries: &ChunkBoundaries,
+    storm_boundaries: &ChunkBoundaries<CHUNK_SIZE>,
     storm: ParticleTypes,
     storm_center: Vec3,
     chunks: &VoxelAccess,
@@ -112,3 +102,4 @@ pub fn move_floating_voxels(
         }
     }
 }
+*/

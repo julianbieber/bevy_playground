@@ -1,7 +1,7 @@
 use std::ops::AddAssign;
 
+use super::voxel::VoxelFace;
 use super::voxel::{VoxelDirection, VoxelPosition};
-use super::{chunk::VoxelChunk, voxel::VoxelFace};
 use crate::voxel::{VoxelTypes, HALF_VOXEL_SIZE};
 use bevy::prelude::Vec3;
 use itertools::iproduct;
@@ -23,20 +23,20 @@ pub fn distance_2_lod(distance: f32) -> i32 {
         64
     }
 }
-
+/*
 pub fn combine_voxels(chunk: &VoxelChunk) -> Vec<VoxelFace> {
     if chunk.count == 0 {
         return Vec::new();
     }
     let mut faces = Vec::with_capacity((chunk.count / chunk.lod as usize) * 6);
     for (base_x, base_y, base_z) in iproduct!(
-        (chunk.boundary.min[0]..chunk.boundary.max[0])
+        (chunk.boundary.min.x..chunk.boundary.max.x)
             .step_by(chunk.lod as usize)
             .into_iter(),
-        (chunk.boundary.min[1]..chunk.boundary.max[1])
+        (chunk.boundary.min.y..chunk.boundary.max.y)
             .step_by(chunk.lod as usize)
             .into_iter(),
-        (chunk.boundary.min[2]..chunk.boundary.max[2])
+        (chunk.boundary.min.z..chunk.boundary.max.z)
             .step_by(chunk.lod as usize)
             .into_iter()
     ) {
@@ -51,7 +51,7 @@ pub fn combine_voxels(chunk: &VoxelChunk) -> Vec<VoxelFace> {
 }
 
 fn top_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_y + chunk.lod < chunk.boundary.max[1] {
+    if base_y + chunk.lod < chunk.boundary.max.y {
         for (x, z) in iproduct!(
             (base_x..base_x + chunk.lod).into_iter(),
             (base_z..base_z + chunk.lod).into_iter()
@@ -114,7 +114,7 @@ fn top_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option
 }
 
 fn bottom_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_y - 1 >= chunk.boundary.min[1] {
+    if base_y - 1 >= chunk.boundary.min.y {
         for (x, z) in iproduct!(
             (base_x..base_x + chunk.lod).into_iter(),
             (base_z..base_z + chunk.lod).into_iter()
@@ -177,7 +177,7 @@ fn bottom_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Opt
 }
 
 fn left_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_x - 1 >= chunk.boundary.min[0] {
+    if base_x - 1 >= chunk.boundary.min.x {
         for (y, z) in iproduct!(
             (base_y..base_y + chunk.lod).into_iter(),
             (base_z..base_z + chunk.lod).into_iter()
@@ -240,7 +240,7 @@ fn left_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Optio
 }
 
 fn right_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_x + chunk.lod < chunk.boundary.max[0] {
+    if base_x + chunk.lod < chunk.boundary.max.x {
         for (y, z) in iproduct!(
             (base_y..base_y + chunk.lod).into_iter(),
             (base_z..base_z + chunk.lod).into_iter()
@@ -303,7 +303,7 @@ fn right_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Opti
 }
 
 fn front_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_z - 1 >= chunk.boundary.min[2] {
+    if base_z - 1 >= chunk.boundary.min.z {
         for (x, y) in iproduct!(
             (base_x..base_x + chunk.lod).into_iter(),
             (base_y..base_y + chunk.lod).into_iter()
@@ -366,7 +366,7 @@ fn front_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Opti
 }
 
 fn back_face(base_x: i32, base_y: i32, base_z: i32, chunk: &VoxelChunk) -> Option<VoxelFace> {
-    if base_z + chunk.lod < chunk.boundary.max[2] {
+    if base_z + chunk.lod < chunk.boundary.max.z {
         for (x, y) in iproduct!(
             (base_x..base_x + chunk.lod).into_iter(),
             (base_y..base_y + chunk.lod).into_iter()
@@ -449,3 +449,4 @@ fn construct_face(
 
     VoxelFace::from_voxels(center, typ, direction, lod)
 }
+*/

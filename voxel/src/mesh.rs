@@ -4,10 +4,10 @@ use bevy::{
 };
 use std::borrow::Cow;
 
-use super::voxel::{Voxel, VoxelTypes, HALF_VOXEL_SIZE};
-
-impl From<&Voxel> for Mesh {
-    fn from(voxel: &Voxel) -> Self {
+use super::voxel::{VoxelTypes, HALF_VOXEL_SIZE};
+/*
+impl From<&LandVoxel> for Mesh {
+    fn from(voxel: &LandVoxel) -> Self {
         let mut vertices: Vec<[f32; 3]> = Vec::new();
         let mut normals: Vec<[f32; 3]> = Vec::new();
         let mut uvs: Vec<[f32; 2]> = Vec::new();
@@ -314,4 +314,4 @@ fn voxel_vertices(
             [u_min, v_max],
         ),
     ]
-}
+}*/

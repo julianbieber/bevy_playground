@@ -11,7 +11,9 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use pickups::EnergyPlugin;
 use unit_effects::DelayedUnitEffectsPlugin;
+use voxel::voxel::VoxelPosition;
 use voxel::water::WaterPlugin;
+use voxel::world_sector::WorldSector;
 
 use crate::ai::AIPlugin;
 use crate::clouds::CloudPlugin;
@@ -20,7 +22,7 @@ use crate::movement::MovementPlugin;
 use crate::particles::ParticlePlugin;
 use crate::player::PlayerPlugin;
 use bevy_collision::collider::collision_update;
-use voxel::{access::VoxelAccess, collision::systems::terrain_collision_system, WorldPlugin};
+use voxel::{collision::systems::terrain_collision_system, WorldPlugin};
 
 use mimalloc::MiMalloc;
 #[global_allocator]
@@ -45,7 +47,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
-        .insert_resource(VoxelAccess::new())
+        .insert_resource(WorldSector::<1, 1>::new(VoxelPosition::new(0, 0, 0)))
         .add_system(terrain_collision_system.system())
         .add_system(collision_update.system())
         .run();

@@ -2,7 +2,7 @@ use bevy::{app::Events, prelude::*, tasks::AsyncComputeTaskPool};
 use common::{PlayerPosition, UnitRotation};
 use flume::{Receiver, Sender};
 
-use crate::{access::VoxelAccess, boundaries::ChunkBoundaries, lod::distance_2_lod};
+use crate::{boundaries::ChunkBoundaries, lod::distance_2_lod};
 
 use super::VoxelTexture;
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
 };
 use ahash::AHashSet;
 use bevy::render::mesh::Indices;
-
+/*
 pub fn evaluate_delayed_transformations(
     mut effects_res: ResMut<DelayedWorldTransformations>,
     time: Res<Time>,
@@ -134,3 +134,4 @@ pub fn update_world_from_channel(
         }
     }
 }
+*/

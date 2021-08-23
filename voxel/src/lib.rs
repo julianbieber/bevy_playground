@@ -1,7 +1,7 @@
-pub mod access;
+#[macro_use]
+extern crate smallvec;
+
 pub mod boundaries;
-pub mod chunk;
-pub mod chunk_mesh;
 pub mod collision;
 mod effects;
 mod evaluation;
@@ -9,37 +9,31 @@ pub mod generator;
 mod lod;
 mod mesh;
 pub mod model;
+pub mod prelude;
 pub mod voxel;
 pub mod water;
+pub mod water_simulation;
 mod world_gen;
+pub mod world_sector;
 
 use ahash::AHashMap;
 use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
-use boundaries::ChunkBoundaries;
-
-use flume::unbounded;
-use generator::VoxelWorld;
-use rand::prelude::*;
+use boundaries::{ChunkBoundaries, CHUNK_SIZE};
 
 use crate::voxel::Voxel;
-
-use crate::{
-    effects::{erosion, move_floating_voxels},
-    evaluation::{
-        evaluate_delayed_transformations, update_world_event_reader, update_world_from_channel,
-    },
-    model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
-    world_gen::{read_generation_results, setup_world_gen, start_generation},
-};
+use flume::unbounded;
+use generator::VoxelWorld;
+use model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult};
+use rand::prelude::*;
 
 pub struct VoxelTexture {
     pub material: Handle<StandardMaterial>,
 }
 
 pub struct AdditionalVoxels {
-    voxels: AHashMap<ChunkBoundaries, Vec<Voxel>>,
+    voxels: AHashMap<ChunkBoundaries<CHUNK_SIZE>, Vec<Voxel>>,
 }
 
 pub struct FreeFloatingVoxel;
@@ -53,17 +47,18 @@ impl Plugin for WorldPlugin {
             .insert_resource(rx)
             .insert_resource(DelayedWorldTransformations {
                 transformations: Vec::new(),
-            })
-            .add_event::<WorldUpdateEvent>()
-            .add_system(update_world_from_channel.system())
-            .add_system(update_world_event_reader.system())
-            .add_system(erosion.system())
-            .add_system(evaluate_delayed_transformations.system())
-            .add_system(move_floating_voxels.system())
-            .add_startup_system(world_setup.system())
-            .add_startup_system(setup_world_gen.system())
-            .add_system(start_generation.system())
-            .add_system(read_generation_results.system());
+            });
+        /*.add_event::<WorldUpdateEvent>()
+        .add_system(update_world_from_channel.system())
+        .add_system(update_world_event_reader.system())
+        .add_system(erosion.system())
+        .add_system(evaluate_delayed_transformations.system())
+        .add_system(move_floating_voxels.system())
+        .add_startup_system(world_setup.system())
+        .add_startup_system(setup_world_gen.system())
+        .add_system(start_generation.system())
+        .add_system(read_generation_results.system());
+        */
     }
 }
 
@@ -91,7 +86,7 @@ fn world_setup(
 
     let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
     let mut chunk_map = AHashMap::new();
-    for pillar in w.pillars {
+    /*for pillar in w.pillars {
         for voxel in pillar.voxels() {
             let matching_boundary = ChunkBoundaries::aligned(voxel.position);
             chunk_map
@@ -99,7 +94,7 @@ fn world_setup(
                 .or_insert(vec![])
                 .push(voxel);
         }
-    }
+    }*/
     commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
 
     commands.spawn_bundle(PointLightBundle {

@@ -2,19 +2,19 @@ use bevy::prelude::*;
 use cgmath::Matrix4;
 use collision::{algorithm::minkowski::GJK3, primitive::Cuboid, CollisionStrategy};
 
-use crate::{access::VoxelAccess, voxel::VoxelPosition};
+use crate::voxel::VoxelPosition;
 
 use crate::voxel::{world_2_voxel_space, HALF_VOXEL_SIZE};
 
 pub fn collision_depth_cubiod(
-    voxel_access: &VoxelAccess,
+    //voxel_access: &VoxelAccess,
     center: Vec3,
     transform: Mat4,
     half_x: f32,
     half_y: f32,
     half_z: f32,
 ) -> Vec3 {
-    let transformed_center = transform.transform_point3(center);
+    /*let transformed_center = transform.transform_point3(center);
     let mut movement = Vec3::ZERO;
     let mut max_distance = 0.0f32;
 
@@ -50,7 +50,8 @@ pub fn collision_depth_cubiod(
             }
         }
     }
-    movement * -1.0f32
+    movement * -1.0f32*/
+    Vec3::ZERO
 }
 
 fn collision(
