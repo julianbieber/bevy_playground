@@ -24,7 +24,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
         let mut updates_this_frame = 0;
         for chunk_index in 0..self.chunks.len() {
             let chunk = &mut self.chunks[chunk_index];
-            if !chunk.water.is_empty() {
+            if !chunk.voxels.is_empty() {
                 if chunk.update_age > self.max_update_age - 10 {
                     updates_this_frame += 1;
                     chunk.update_age = 0;
@@ -107,10 +107,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                                     fill.add_assign(amount);
                                 }
                                 d => {
-                                    *d = Voxel::WaterVoxel {
-                                        fill: amount,
-                                        used_indices: vec![],
-                                    };
+                                    *d = Voxel::WaterVoxel { fill: amount };
                                 }
                             }
                         }

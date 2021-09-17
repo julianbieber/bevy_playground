@@ -4,7 +4,6 @@ use flume::{Receiver, Sender};
 
 use crate::{boundaries::ChunkBoundaries, lod::distance_2_lod};
 
-use super::VoxelTexture;
 use crate::{
     model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult},
     FreeFloatingVoxel,

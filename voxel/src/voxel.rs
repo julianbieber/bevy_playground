@@ -263,9 +263,9 @@ pub enum VoxelTypes {
     Snow,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Voxel {
     LandVoxel { typ: VoxelTypes },
-    WaterVoxel { fill: f32, used_indices: Vec<usize> },
+    WaterVoxel { fill: f32 },
     Nothing,
 }

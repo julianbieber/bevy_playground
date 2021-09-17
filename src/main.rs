@@ -47,7 +47,6 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_startup_system(window_setup.system())
         .add_system(bevy::input::system::exit_on_esc_system.system())
-        .insert_resource(WorldSector::<1, 1>::new(VoxelPosition::new(0, 0, 0)))
         .add_system(terrain_collision_system.system())
         .add_system(collision_update.system())
         .run();

@@ -2,146 +2,39 @@ mod height;
 mod noise_sampler;
 mod type_decision;
 
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
-use common::PlayerPosition;
-use flume::{unbounded, Receiver, Sender};
-use rand::{prelude::SmallRng, SeedableRng};
+use std::ops::Range;
+
+use rand::prelude::*;
+
+use crate::voxel::VoxelTypes;
 
 use self::{height::HeightGen, type_decision::VoxelTypeDecision};
 
-use super::{AdditionalVoxels, VoxelTexture};
-
-pub struct GeneratedChunks {
-    //generated: Vec<ChunkBoundaries<CHUNK_SIZE>>,
-}
-
-const CHUNKS_IN_EACH_DIRECTION: i32 = 6;
-
-pub struct GenerationResult {
-    //boundaries: ChunkBoundaries<CHUNK_SIZE>,
-    mesh: Mesh,
-}
-
-pub fn setup_world_gen(mut commands: Commands) {
-    let (sender, receiver) = unbounded::<GenerationResult>();
-    commands.insert_resource(VoxelTypeDecision::default());
-    commands.insert_resource(HeightGen::new());
-    commands.insert_resource(GeneratedChunks {
-        //generated: Vec::new(),
-    });
-    commands.insert_resource(sender);
-    commands.insert_resource(receiver);
-}
-
-pub fn start_generation(
-    sender: Res<Sender<GenerationResult>>,
-    pool: Res<AsyncComputeTaskPool>,
-    mut generated_chunks: ResMut<GeneratedChunks>,
-    player_position: Res<PlayerPosition>,
-    voxel_type_decision: Res<VoxelTypeDecision>,
-    height_gen: Res<HeightGen>,
-) {
-    /*let player_chunk =
-        ChunkBoundaries::aligned(VoxelPosition::from_vec3(&player_position.position));
-
-    for x in -CHUNKS_IN_EACH_DIRECTION..CHUNKS_IN_EACH_DIRECTION + 1 {
-        for y in -1..4 + 1 {
-            for z in -CHUNKS_IN_EACH_DIRECTION..CHUNKS_IN_EACH_DIRECTION + 1 {
-                let boundaries = player_chunk.in_direction(VoxelPosition::new(x, y, z));
-                if let None = generated_chunks
-                    .generated
-                    .iter()
-                    .find(|c| **c == boundaries)
-                {
-                    let cloned_boundary = boundaries.clone();
-                    generated_chunks.generated.push(boundaries);
-                    let cloned_sender = sender.clone();
-                    let cloned_voxel_type_decision = voxel_type_decision.clone();
-                    let cloned_height_gen = height_gen.clone();
-                    let lod = distance_2_lod(
-                        player_position
-                            .position
-                            .distance(cloned_boundary.center().to_vec()),
-                    );
-                    pool.spawn(async move {
-                        generate_chunk(
-                            cloned_boundary,
-                            cloned_voxel_type_decision,
-                            cloned_height_gen,
-                            cloned_sender,
-                            lod,
-                        );
-                    })
-                    .detach()
-                }
-            }
-        }
-    }*/
-}
-
-fn generate_chunk(
-    //boundaries: ChunkBoundaries<CHUNK_SIZE>,
-    voxel_type_decision: VoxelTypeDecision,
+pub struct Generator {
     height_gen: HeightGen,
-    sender: Sender<GenerationResult>,
-    lod: i32,
-) {
-    /*
-    let mut rng = SmallRng::from_entropy();
-    let mut chunk = VoxelChunk::empty(boundaries.clone());
-    chunk.lod = lod;
-    for x_i in boundaries.min.x..boundaries.max.x {
-        for z_i in boundaries.min.z..boundaries.max.z {
-            let total_y = height_gen.get_height_factor(x_i, z_i);
-            let max_y = boundaries.max.y.min(total_y);
-            if boundaries.min.y <= max_y {
-                for y in boundaries.min.y..max_y {
-                    let p = VoxelPosition { x: x_i, y, z: z_i };
-                    chunk.set(LandVoxel {
-                        position: p,
-                        typ: voxel_type_decision.get_type(&mut rng, x_i, y, z_i, y >= total_y - 1),
-                    });
-                }
-            }
-        }
-    }
-    for v in additional {
-        chunk.set(v);
-    }
-    let mesh = Mesh::from(&chunk);
-
-    let result = GenerationResult {
-        boundaries,
-        chunk,
-        mesh,
-    };
-    let _ = sender.send(result);
-    */
+    type_decision: VoxelTypeDecision,
 }
 
-pub fn read_generation_results(
-    mut commands: Commands,
-    receiver: Res<Receiver<GenerationResult>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    //mut chunk_access: ResMut<VoxelAccess>,
-    material: Res<VoxelTexture>,
-) {
-    /*
-    for generation in receiver.try_iter() {
-        if generation.chunk.count > 0 {
-            let chunk_mesh = meshes.add(generation.mesh);
-            let chunk_bundle = PbrBundle {
-                mesh: chunk_mesh,
-                material: material.material.clone(),
-                transform: Transform::from_translation(Vec3::ZERO),
-                ..Default::default()
-            };
-            let chunk_entity = commands.spawn_bundle(chunk_bundle).id();
-            chunk_access.add_chunk(generation.boundaries, chunk_entity, generation.chunk);
-        } else {
-            let chunk_entity = commands.spawn().id();
-            chunk_access.add_chunk(generation.boundaries, chunk_entity, generation.chunk);
+impl Generator {
+    pub fn new() -> Generator {
+        Generator {
+            height_gen: HeightGen::new(),
+            type_decision: VoxelTypeDecision::default(),
         }
     }
-    */
+
+    pub fn generate_chunk(&self, x: i32, y_range: Range<i32>, z: i32) -> Vec<VoxelTypes> {
+        let total_y = self.height_gen.get_height_factor(x, z);
+        let mut voxels = Vec::new();
+        let mut rng = SmallRng::from_entropy();
+        for y in y_range {
+            if y < total_y {
+                voxels.push(
+                    self.type_decision
+                        .get_type(&mut rng, x, y, z, y >= total_y - 1),
+                );
+            }
+        }
+        voxels
+    }
 }

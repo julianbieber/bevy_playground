@@ -1,4 +1,6 @@
+use crate::generator;
 use crate::voxel::{Voxel, VoxelDirection};
+use crate::world_gen::Generator;
 use crate::{boundaries::ChunkBoundaries, voxel::VoxelPosition};
 
 const LOADED_WATER_CHUNKS: i32 = 8;
@@ -12,6 +14,7 @@ pub type DefaultWorldSector = WorldSector<LOADED_WATER_CHUNKS, WATER_CHUNK_SIZE>
 pub struct WorldSector<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> {
     pub(super) chunks: Vec<WorldChunk<CHUNK_SIZE>>,
     pub(super) max_update_age: i32,
+    generator: Generator,
 }
 
 impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WorldSector<CHUNKS_LOADED, CHUNK_SIZE> {
@@ -21,6 +24,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WorldSector<CHUNKS_LOADED,
         let mut chunks = WorldSector {
             chunks: Vec::new(),
             max_update_age: 0,
+            generator: Generator::new(),
         };
         chunks.init(min);
         chunks
@@ -31,6 +35,33 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WorldSector<CHUNKS_LOADED,
         for i in 0..CHUNKS_LOADED.pow(3) as usize {
             self.chunks
                 .push(WorldChunk::empty(self.min_coordinates_from_index(i) + min));
+        }
+        for x in min.x..min.x + (CHUNKS_LOADED * CHUNK_SIZE) {
+            for z in min.z..min.z + (CHUNKS_LOADED * CHUNK_SIZE) {
+                let ground = VoxelPosition::new(x, min.y, z);
+                let ground_min = ChunkBoundaries::<CHUNK_SIZE>::aligned(ground).min;
+                let mut ground_chunk_index = self.index_from_min(ground_min);
+                let mut y_i = self.chunks[ground_chunk_index].index(ground);
+                let ys = self.generator.generate_chunk(
+                    x,
+                    min.y..min.y + (CHUNKS_LOADED * CHUNK_SIZE),
+                    z,
+                );
+                for typ in ys {
+                    *self.chunks[ground_chunk_index].get_mut_index(y_i) = Voxel::LandVoxel { typ };
+
+                    if let Some(updated) =
+                        self.index_in_directorion(VoxelDirection::UP, ground_chunk_index, y_i)
+                    {
+                        ground_chunk_index = updated.0;
+                        y_i = updated.1;
+                    }
+                }
+            }
+        }
+
+        for chunk in self.chunks.iter_mut() {
+            chunk.reduceStorage();
         }
     }
 
@@ -165,35 +196,44 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WorldSector<CHUNKS_LOADED,
 }
 
 pub(super) struct WorldChunk<const SIZE: i32> {
-    pub(super) water: Vec<Voxel>,
+    pub(super) voxels: Vec<Voxel>,
     pub(super) boundaries: ChunkBoundaries<SIZE>,
-    pub(super) empty: Voxel,
+    pub(super) default: Voxel,
     pub(super) update_age: i32,
 }
 
 impl<const SIZE: i32> WorldChunk<SIZE> {
     fn empty(min: VoxelPosition) -> WorldChunk<SIZE> {
         WorldChunk {
-            water: vec![],
+            voxels: vec![],
             boundaries: ChunkBoundaries::<SIZE>::aligned(min),
-            empty: Voxel::Nothing, // needed to return a ref to the voxel in the get_* methods (as far as I know)
+            default: Voxel::Nothing, // needed to return a ref to the voxel in the get_* methods (as far as I know)
             update_age: 0,
         }
     }
 
+    pub fn reduceStorage(&mut self) {
+        if self.voxels.len() == SIZE as usize {
+            self.voxels = vec![];
+            self.default = Voxel::LandVoxel {
+                typ: crate::voxel::VoxelTypes::Moss,
+            } // TODO chose representation based on exisiting
+        }
+    }
+
     pub(super) fn get_index(&self, i: usize) -> &Voxel {
-        if self.water.is_empty() {
-            &self.empty
+        if self.voxels.is_empty() {
+            &self.default
         } else {
-            &self.water[i]
+            &self.voxels[i]
         }
     }
 
     pub(super) fn get_mut_index(&mut self, i: usize) -> &mut Voxel {
-        if self.water.is_empty() {
-            self.water = vec![Voxel::Nothing; SIZE.pow(3) as usize]
+        if self.voxels.is_empty() {
+            self.voxels = vec![self.default; SIZE.pow(3) as usize]
         }
-        &mut self.water[i]
+        &mut self.voxels[i]
     }
 
     pub(super) fn index(&self, position: VoxelPosition) -> usize {
@@ -201,11 +241,18 @@ impl<const SIZE: i32> WorldChunk<SIZE> {
         (offsetted.z * SIZE * SIZE + offsetted.y * SIZE + offsetted.x) as usize
     }
 
+    pub(super) fn index_to_coord(&self, i: usize) -> VoxelPosition {
+        let z = i as i32 / (SIZE * SIZE);
+        let y = (i as i32 / SIZE) % SIZE;
+        let x = i as i32 % SIZE;
+        VoxelPosition { x, y, z } + self.boundaries.min
+    }
+
     pub fn water_count(&self) -> usize {
-        if self.water.len() == 0 {
+        if self.voxels.len() == 0 {
             0
         } else {
-            self.water
+            self.voxels
                 .iter()
                 .map(|v| match v {
                     Voxel::LandVoxel { .. } => 0,

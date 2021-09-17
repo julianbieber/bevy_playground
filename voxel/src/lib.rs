@@ -8,6 +8,7 @@ mod evaluation;
 pub mod generator;
 mod lod;
 mod mesh;
+mod meshing;
 pub mod model;
 pub mod prelude;
 pub mod voxel;
@@ -28,10 +29,6 @@ use generator::VoxelWorld;
 use model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult};
 use rand::prelude::*;
 
-pub struct VoxelTexture {
-    pub material: Handle<StandardMaterial>,
-}
-
 pub struct AdditionalVoxels {
     voxels: AHashMap<ChunkBoundaries<CHUNK_SIZE>, Vec<Voxel>>,
 }
@@ -47,7 +44,9 @@ impl Plugin for WorldPlugin {
             .insert_resource(rx)
             .insert_resource(DelayedWorldTransformations {
                 transformations: Vec::new(),
-            });
+            })
+            .add_startup_system(meshing::initialize_system.system())
+            .add_startup_system(world_setup.system());
         /*.add_event::<WorldUpdateEvent>()
         .add_system(update_world_from_channel.system())
         .add_system(update_world_event_reader.system())
@@ -66,37 +65,7 @@ fn world_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
 ) {
-    let chunk_texture = asset_server.load("world_texture_color.png");
-    let chunk_roughness = asset_server.load("world_texture_roughnes.png");
-    let chunk_normal = asset_server.load("world_texture_normal.png");
-
-    let chunk_material = materials.add(StandardMaterial {
-        base_color_texture: Some(chunk_texture),
-        metallic_roughness_texture: Some(chunk_roughness),
-        metallic: 0.2,
-        roughness: 1.0,
-        normal_map: Some(chunk_normal),
-        ..Default::default()
-    });
-    commands.insert_resource(VoxelTexture {
-        material: chunk_material,
-    });
-
-    let w = VoxelWorld::generate(150, 150, SmallRng::from_entropy());
-    let mut chunk_map = AHashMap::new();
-    /*for pillar in w.pillars {
-        for voxel in pillar.voxels() {
-            let matching_boundary = ChunkBoundaries::aligned(voxel.position);
-            chunk_map
-                .entry(matching_boundary)
-                .or_insert(vec![])
-                .push(voxel);
-        }
-    }*/
-    commands.insert_resource(AdditionalVoxels { voxels: chunk_map });
-
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 100.0, 0.0)),
         point_light: PointLight {
