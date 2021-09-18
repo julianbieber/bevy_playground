@@ -11,8 +11,7 @@ fn water_bench(c: &mut Criterion) {
                 sector.insert(
                     VoxelPosition { x, y, z },
                     Voxel::WaterVoxel {
-                        fill: 0.5,
-                        used_indices: vec![],
+                        fill: 0.5
                     },
                 );
             }

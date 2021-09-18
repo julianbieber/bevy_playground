@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use crate::generator;
 use crate::voxel::{Voxel, VoxelDirection};
 use crate::world_gen::Generator;
@@ -36,6 +38,10 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WorldSector<CHUNKS_LOADED,
             self.chunks
                 .push(WorldChunk::empty(self.min_coordinates_from_index(i) + min));
         }
+    }
+
+    pub fn generate_world(&mut self) {
+        let min = self.chunks[0].boundaries.min;
         for x in min.x..min.x + (CHUNKS_LOADED * CHUNK_SIZE) {
             for z in min.z..min.z + (CHUNKS_LOADED * CHUNK_SIZE) {
                 let ground = VoxelPosition::new(x, min.y, z);

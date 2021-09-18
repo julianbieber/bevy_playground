@@ -1,5 +1,6 @@
 use std::ops::{AddAssign, SubAssign};
 
+use ahash::AHashSet;
 use smallvec::SmallVec;
 
 use crate::{
@@ -8,19 +9,20 @@ use crate::{
 };
 
 pub trait WaterSimulation<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> {
-    fn flow_water(&mut self);
+    fn flow_water(&mut self) -> AHashSet<usize>;
 }
 
 impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOADED, CHUNK_SIZE>
     for WorldSector<CHUNKS_LOADED, CHUNK_SIZE>
 {
-    fn flow_water(&mut self) {
+    fn flow_water(&mut self) -> AHashSet<usize> {
         let directions = [
             VoxelDirection::BACK,
             VoxelDirection::FRONT,
             VoxelDirection::LEFT,
             VoxelDirection::RIGHT,
         ];
+        let mut changes = AHashSet::new();
         let mut updates_this_frame = 0;
         for chunk_index in 0..self.chunks.len() {
             let chunk = &mut self.chunks[chunk_index];
@@ -92,8 +94,11 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                             }
                             Voxel::Nothing => SmallVec::new(),
                         };
-
+                        if !water_destinations.is_empty() {
+                            changes.insert(chunk_index << 32 & voxel_index);
+                        }
                         for ((c, v), amount) in water_destinations {
+                            changes.insert(c << 32 & v);
                             match self.chunks[chunk_index].get_mut_index(voxel_index) {
                                 Voxel::LandVoxel { .. } => (),
                                 Voxel::WaterVoxel { fill, .. } => {
@@ -124,5 +129,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                 break;
             }
         }
+
+        changes
     }
 }

@@ -33,7 +33,8 @@ pub fn initialize_system(
         material: chunk_material.clone(),
     });
 
-    let world_sector = WorldSector::<64, 8>::new([0, 0, 0].into());
+    let mut world_sector = WorldSector::<64, 8>::new([0, 0, 0].into());
+    world_sector.generate_world();
 
     for mesh in world_sector.initial_terrain_meshes() {
         let chunk_mesh = meshes.add(mesh);
