@@ -5,7 +5,7 @@ use bevy::{
     render::{mesh::Indices, pipeline::PrimitiveTopology},
 };
 
-use crate::{voxel::VoxelDirection, world_sector::WorldSector};
+use crate::{voxel::VoxelDirection,voxel::{Voxel}, world_sector::WorldSector};
 
 use super::{
     consts::VERTICES_PER_MESH,
@@ -40,18 +40,15 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> Meshing<CHUNKS_LOADED, CHU
         for (chunk_i, chunk) in self.chunks.iter().enumerate() {
             for (voxel_i, voxel) in chunk.voxels.iter().enumerate() {
                 match voxel {
-                    crate::voxel::Voxel::LandVoxel { typ } => {
-                        for d in directions {
-                            let render_face = if let Some((c_i, v_i)) =
-                                self.index_in_directorion(d, chunk_i, voxel_i)
-                            {
-                                let other = &self.chunks[c_i];
-                                other.voxels.is_empty()
-                                    || match other.voxels[v_i] {
-                                        crate::voxel::Voxel::LandVoxel { .. } => false,
-                                        crate::voxel::Voxel::WaterVoxel { .. } => true,
-                                        crate::voxel::Voxel::Nothing => true,
-                                    }
+                    Voxel::LandVoxel { typ } => {
+                        let surrounding = self.get_surrounding(chunk_i, voxel_i, directions);
+                        for (d, v_o) in surrounding {
+                            let render_face = if let Some(v) = v_o {
+                                match v {
+                                    crate::voxel::Voxel::LandVoxel { .. } => false,
+                                    crate::voxel::Voxel::WaterVoxel { .. } => true,
+                                    crate::voxel::Voxel::Nothing => true,
+                                }
                             } else {
                                 false
                             };
@@ -102,8 +99,8 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> Meshing<CHUNKS_LOADED, CHU
                             }
                         }
                     }
-                    crate::voxel::Voxel::WaterVoxel { .. } => (),
-                    crate::voxel::Voxel::Nothing => (),
+                    Voxel::WaterVoxel { .. } => (),
+                    Voxel::Nothing => (),
                 };
             }
         }

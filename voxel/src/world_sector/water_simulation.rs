@@ -38,7 +38,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                             Voxel::LandVoxel { .. } => SmallVec::new(),
                             Voxel::WaterVoxel { fill, .. } => {
                                 let down_flow = if let Some((below_c, below_v)) = self
-                                    .index_in_directorion(
+                                    .index_in_direction(
                                         VoxelDirection::DOWN,
                                         chunk_index,
                                         voxel_index,
@@ -65,7 +65,7 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                                         directions
                                             .iter()
                                             .flat_map(|d| {
-                                                if let Some((c, v)) = self.index_in_directorion(
+                                                if let Some((c, v)) = self.index_in_direction(
                                                     *d,
                                                     chunk_index,
                                                     voxel_index,

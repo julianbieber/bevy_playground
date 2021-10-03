@@ -5,6 +5,7 @@ mod type_decision;
 use std::ops::Range;
 
 use rand::prelude::*;
+use smallvec::SmallVec;
 
 use crate::voxel::VoxelTypes;
 
@@ -23,9 +24,14 @@ impl Generator {
         }
     }
 
-    pub fn generate_chunk(&self, x: i32, y_range: Range<i32>, z: i32) -> Vec<VoxelTypes> {
+    pub fn generate_chunk<const I: usize>(
+        &self,
+        x: i32,
+        y_range: Range<i32>,
+        z: i32,
+    ) -> SmallVec<[VoxelTypes; I]> {
         let total_y = self.height_gen.get_height_factor(x, z);
-        let mut voxels = Vec::new();
+        let mut voxels = SmallVec::new();
         let mut rng = SmallRng::from_entropy();
         for y in y_range {
             if y < total_y {

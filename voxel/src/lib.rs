@@ -13,7 +13,6 @@ pub mod model;
 pub mod prelude;
 pub mod voxel;
 pub mod water;
-pub mod water_simulation;
 mod world_gen;
 pub mod world_sector;
 
@@ -22,6 +21,7 @@ use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
 use boundaries::{ChunkBoundaries, CHUNK_SIZE};
+use world_sector::{DefaultWorldSector, WorldSector};
 
 use crate::voxel::Voxel;
 use flume::unbounded;
@@ -40,8 +40,15 @@ pub struct WorldPlugin;
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut AppBuilder) {
         let (tx, rx) = unbounded::<WorldUpdateResult>();
+
+        let mut world_sector = {
+            let mut w = DefaultWorldSector::new([0, 0, 0].into());
+            w.insert_terrain();
+            w
+        };
         app.insert_resource(tx)
             .insert_resource(rx)
+            .insert_resource(world_sector)
             .insert_resource(DelayedWorldTransformations {
                 transformations: Vec::new(),
             })

@@ -1,19 +1,17 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use voxel::water_simulation::WaterSimulation;
-use voxel::{voxel::Voxel, voxel::VoxelPosition, world_sector::WorldSector};
+use voxel::{
+    voxel::Voxel,
+    voxel::VoxelPosition,
+    world_sector::{water_simulation::WaterSimulation, DefaultWorldSector},
+};
 
 fn water_bench(c: &mut Criterion) {
-    let mut sector = WorldSector::<32, 8>::new(VoxelPosition::new(0, 0, 0));
+    let mut sector = DefaultWorldSector::new(VoxelPosition::new(0, 0, 0));
 
     for x in -50..50 {
         for y in -50..50 {
             for z in -50..50 {
-                sector.insert(
-                    VoxelPosition { x, y, z },
-                    Voxel::WaterVoxel {
-                        fill: 0.5
-                    },
-                );
+                sector.insert(VoxelPosition { x, y, z }, Voxel::WaterVoxel { fill: 0.5 });
             }
         }
     }
@@ -27,5 +25,17 @@ fn water_bench(c: &mut Criterion) {
     dbg!(sector.water_count());
 }
 
-criterion_group!(benches, water_bench);
+fn world_initializatzion(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sector init");
+    group.sample_size(10);
+    group.bench_function("sector init", |b| {
+        b.iter(|| {
+            let mut sector = DefaultWorldSector::new(VoxelPosition::new(0, 0, 0));
+            sector.insert_terrain();
+        });
+    });
+    group.finish();
+}
+
+criterion_group!(benches, water_bench, world_initializatzion);
 criterion_main!(benches);

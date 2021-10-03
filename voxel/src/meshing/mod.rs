@@ -1,11 +1,12 @@
 pub mod consts;
-pub mod operations;
+mod terrain_mesh;
 mod util;
+mod water_mesh;
 
 use bevy::prelude::*;
 
-use crate::world_sector::WorldSector;
-use operations::Meshing;
+use crate::DefaultWorldSector;
+use terrain_mesh::Meshing;
 
 pub struct VoxelTexture {
     pub material: Handle<StandardMaterial>,
@@ -16,6 +17,7 @@ pub fn initialize_system(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    world_sector: Res<DefaultWorldSector>,
 ) {
     let chunk_texture = asset_server.load("world_texture_color.png");
     let chunk_roughness = asset_server.load("world_texture_roughnes.png");
@@ -33,9 +35,6 @@ pub fn initialize_system(
         material: chunk_material.clone(),
     });
 
-    let mut world_sector = WorldSector::<64, 8>::new([0, 0, 0].into());
-    world_sector.generate_world();
-
     for mesh in world_sector.initial_terrain_meshes() {
         let chunk_mesh = meshes.add(mesh);
         let chunk_bundle = PbrBundle {
@@ -46,5 +45,4 @@ pub fn initialize_system(
         };
         commands.spawn_bundle(chunk_bundle);
     }
-    commands.insert_resource(world_sector);
 }
