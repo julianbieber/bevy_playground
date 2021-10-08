@@ -1,5 +1,6 @@
 mod index_magic;
 pub mod water_simulation;
+mod generic_chunk;
 
 use crate::voxel::{Voxel, VoxelDirection};
 use crate::world_gen::Generator;
