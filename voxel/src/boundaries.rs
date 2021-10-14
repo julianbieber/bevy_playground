@@ -1,5 +1,3 @@
-use bevy::prelude::shape::Icosphere;
-
 use super::voxel::VoxelPosition;
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
@@ -21,10 +19,10 @@ impl<const SIZE: i32> ChunkBoundaries<SIZE> {
         }
     }
 
-    pub fn from_points(min: VoxelPosition, max: VoxelPosition) -> ChunkBoundaries<SIZE> {
+    pub fn from_min(min: VoxelPosition) -> ChunkBoundaries<SIZE> {
         ChunkBoundaries {
-            min: VoxelPosition::new(min.x, min.y, min.z),
-            max: VoxelPosition::new(max.x, max.y, max.z),
+            min,
+            max: min + VoxelPosition::diagonal(SIZE),
         }
     }
 
@@ -147,9 +145,8 @@ mod test {
 
         let alingned = ChunkBoundaries::aligned(position);
 
-        let matching_boundary = ChunkBoundaries::<CHUNK_SIZE>::from_points(
-            VoxelPosition::new(-64, -128, -128),
-            VoxelPosition::new(0, -64, -64),
+        let matching_boundary = ChunkBoundaries::<CHUNK_SIZE>::from_min(
+            VoxelPosition::new(-64, -128, -128)
         );
 
         assert_eq!(alingned, matching_boundary);

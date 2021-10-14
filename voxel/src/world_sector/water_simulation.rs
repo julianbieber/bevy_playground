@@ -5,18 +5,21 @@ use smallvec::SmallVec;
 
 use crate::{
     voxel::{Voxel, VoxelDirection},
-    world_sector::WorldSector,
+    DefaultWorldSector
 };
 
-pub trait WaterSimulation<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> {
+pub trait WaterSimulation {
     fn flow_water(&mut self) -> AHashSet<usize>;
 }
 
-impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOADED, CHUNK_SIZE>
-    for WorldSector<CHUNKS_LOADED, CHUNK_SIZE>
+/// Represents how much water should flow to the specified index, the maximum length is 4, when water should flow to every direction on the xz plane.
+type FlowAmount = SmallVec<[((usize, usize), f32); 4]>;
+
+impl WaterSimulation
+    for DefaultWorldSector
 {
     fn flow_water(&mut self) -> AHashSet<usize> {
-        let directions = [
+      /*  let directions = [
             VoxelDirection::BACK,
             VoxelDirection::FRONT,
             VoxelDirection::LEFT,
@@ -24,42 +27,20 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
         ];
         let mut changes = AHashSet::new();
         let mut updates_this_frame = 0;
-        for chunk_index in 0..self.chunks.len() {
-            let chunk = &mut self.chunks[chunk_index];
-            if !chunk.voxels.is_empty() {
-                if chunk.update_age > self.max_update_age - 10 {
+        for chunk_index in 0..self.data.len() {
+            let chunk = &mut self.data[chunk_index];
+            if !chunk.data.is_empty() {
+                if chunk.meta_data.1 > self.meta_data.0 - 10 {
                     updates_this_frame += 1;
-                    chunk.update_age = 0;
-                    for voxel_index in 0..CHUNK_SIZE.pow(3) as usize {
-                        let water_destinations: SmallVec<[((usize, usize), f32); 4]> = match self
-                            .chunks[chunk_index]
+                    chunk.meta_data.1 = 0;
+                    for voxel_index in 0..chunk.data.len() {
+                        let water_destinations: FlowAmount = match self
+                            .data[chunk_index]
                             .get_index(voxel_index)
                         {
                             Voxel::LandVoxel { .. } => SmallVec::new(),
                             Voxel::WaterVoxel { fill, .. } => {
-                                let down_flow = if let Some((below_c, below_v)) = self
-                                    .index_in_direction(
-                                        VoxelDirection::DOWN,
-                                        chunk_index,
-                                        voxel_index,
-                                    ) {
-                                    match self.chunks[below_c].get_index(below_v) {
-                                        Voxel::LandVoxel { .. } => SmallVec::new(),
-                                        Voxel::WaterVoxel {
-                                            fill: below_fill, ..
-                                        } => {
-                                            let down_flow_amount = (1.0 - below_fill).min(*fill);
-                                            if down_flow_amount > 0.001 {
-                                                smallvec![((below_c, below_v), down_flow_amount)]
-                                            } else {
-                                                SmallVec::new()
-                                            }
-                                        }
-                                        Voxel::Nothing => smallvec![((below_c, below_v), *fill)],
-                                    }
-                                } else {
-                                    SmallVec::new()
-                                };
+                                let down_flow = self.get_down_flow(*fill, chunk_index, voxel_index);
                                 if down_flow.is_empty() {
                                     let surrounding: SmallVec<[((usize, usize), f32); 4]> =
                                         directions
@@ -99,14 +80,14 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
                         }
                         for ((c, v), amount) in water_destinations {
                             changes.insert(c << 32 & v);
-                            match self.chunks[chunk_index].get_mut_index(voxel_index) {
+                            match self.data[chunk_index].get_mut_index(voxel_index) {
                                 Voxel::LandVoxel { .. } => (),
                                 Voxel::WaterVoxel { fill, .. } => {
                                     fill.sub_assign(amount);
                                 }
                                 Voxel::Nothing => (),
                             }
-                            match self.chunks[c].get_mut_index(v) {
+                            match self.data[c].get_mut_index(v) {
                                 Voxel::LandVoxel { .. } => (),
                                 Voxel::WaterVoxel { fill, .. } => {
                                     fill.add_assign(amount);
@@ -130,6 +111,36 @@ impl<const CHUNKS_LOADED: i32, const CHUNK_SIZE: i32> WaterSimulation<CHUNKS_LOA
             }
         }
 
-        changes
+        changes*/
+        AHashSet::new()
     }
+
+    /*fn get_down_flow(&self, fill:f32, chunk: usize, voxel: usize) -> FlowAmount {
+        let c = &self.data[chunk];
+        let (down_voxel, same_chunk) = c.get_neighbor_index(voxel, VoxelDirection::DOWN);
+        let (v, down_chunk_index) = if same_chunk {
+            (c.get_index(down_voxel), chunk)
+        } else {
+            let (down_chunk, same_chunk) = self.get_neighbor_index(chunk, VoxelDirection::DOWN);
+            if same_chunk {
+                return FlowAmount::new();
+            }
+            (self.data[down_chunk].get_index(down_voxel), down_chunk)
+        };
+        
+        match v {
+            Voxel::LandVoxel { .. } => SmallVec::new(),
+            Voxel::WaterVoxel {
+                fill: below_fill, ..
+            } => {
+                let down_flow_amount = (1.0 - below_fill).min(fill);
+                if down_flow_amount > 0.001 {
+                    smallvec![((down_chunk_index, down_voxel), down_flow_amount)]
+                } else {
+                    SmallVec::new()
+                }
+            }
+            Voxel::Nothing => smallvec![((down_chunk_index, down_voxel), fill)],
+        }
+    }*/
 }

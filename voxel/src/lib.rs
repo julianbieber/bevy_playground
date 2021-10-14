@@ -21,13 +21,11 @@ use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
 use boundaries::{ChunkBoundaries, CHUNK_SIZE};
-use world_sector::{DefaultWorldSector, WorldSector};
+use world_sector::{DefaultWorldSector};
 
 use crate::voxel::Voxel;
 use flume::unbounded;
-use generator::VoxelWorld;
-use model::{DelayedWorldTransformations, WorldUpdateEvent, WorldUpdateResult};
-use rand::prelude::*;
+use model::{DelayedWorldTransformations, WorldUpdateResult};
 
 pub struct AdditionalVoxels {
     voxels: AHashMap<ChunkBoundaries<CHUNK_SIZE>, Vec<Voxel>>,
