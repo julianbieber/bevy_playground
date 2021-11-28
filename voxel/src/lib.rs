@@ -21,7 +21,6 @@ use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
 use boundaries::{ChunkBoundaries, CHUNK_SIZE};
-use world_sector::{DefaultWorldSector};
 
 use crate::voxel::Voxel;
 use flume::unbounded;
@@ -39,14 +38,8 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut AppBuilder) {
         let (tx, rx) = unbounded::<WorldUpdateResult>();
 
-        let mut world_sector = {
-            let mut w = DefaultWorldSector::new([0, 0, 0].into());
-            w.insert_terrain();
-            w
-        };
         app.insert_resource(tx)
             .insert_resource(rx)
-            .insert_resource(world_sector)
             .insert_resource(DelayedWorldTransformations {
                 transformations: Vec::new(),
             })

@@ -13,7 +13,6 @@ use pickups::EnergyPlugin;
 use unit_effects::DelayedUnitEffectsPlugin;
 use voxel::voxel::VoxelPosition;
 use voxel::water::WaterPlugin;
-use voxel::world_sector::WorldSector;
 
 use crate::ai::AIPlugin;
 use crate::clouds::CloudPlugin;

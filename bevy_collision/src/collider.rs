@@ -678,7 +678,7 @@ pub fn collision_update(mut query: Query<(Entity, &Collider, &mut Transform)>) {
         }
         other_colliders.remove(0);
     }
-    
+
     for (entity, _collider, mut collider_transform) in query.iter_mut() {
         if impulses.contains_key(&entity.id()) {
             collider_transform.translation =

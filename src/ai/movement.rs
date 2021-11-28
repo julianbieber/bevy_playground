@@ -14,7 +14,6 @@ use common::{MoveEvent, UnitRotation};
 use rand::prelude::*;
 use voxel::model::{DelayedWorldTransformations, WorldUpdateEvent};
 use voxel::voxel::VoxelPosition;
-use voxel::world_sector::WorldSector;
 
 pub fn npc_movement_system(
     npcs_query: Query<(Entity, &NPC, &Transform, &UnitRotation)>,
@@ -85,9 +84,7 @@ pub fn update_behaviour_system(
                             .push((Timer::from_seconds(2.1, false), entity));
                         let center = npc_transform.translation.clone();
 
-                        let delete = Arc::new(move |_: &WorldSector<1, 1>| {
-                            VoxelPosition::sphere(&center, 10.0)
-                        });
+                        let delete = Arc::new(move |_: &i32| VoxelPosition::sphere(&center, 10.0));
                         world_transformations.transformations.push((
                             Timer::from_seconds(2.1, false),
                             WorldUpdateEvent {

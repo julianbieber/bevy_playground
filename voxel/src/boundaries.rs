@@ -145,9 +145,8 @@ mod test {
 
         let alingned = ChunkBoundaries::aligned(position);
 
-        let matching_boundary = ChunkBoundaries::<CHUNK_SIZE>::from_min(
-            VoxelPosition::new(-64, -128, -128)
-        );
+        let matching_boundary =
+            ChunkBoundaries::<CHUNK_SIZE>::from_min(VoxelPosition::new(-64, -128, -128));
 
         assert_eq!(alingned, matching_boundary);
     }
