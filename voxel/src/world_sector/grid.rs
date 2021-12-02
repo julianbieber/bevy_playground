@@ -31,7 +31,7 @@ struct L2Grid {
 
 #[derive(Default)]
 struct L1Grid {
-    pub data: [[RefCell<VoxelPillar>; L1DIMENSION]; L1DIMENSION],
+    pub data: [[VoxelPillar; L1DIMENSION]; L1DIMENSION],
     pub min: [i32; 2],
 }
 
@@ -67,70 +67,187 @@ impl L3Grid {
     ///   1
     /// 0 X 2
     ///   3
-    pub fn iterate<F>(&self, mut f: F)
+    pub fn iterate<F>(&self, f: F)
     where
         F: FnMut(
-            Ref<VoxelPillar>,
-            Option<Ref<VoxelPillar>>,
-            Option<Ref<VoxelPillar>>,
-            Option<Ref<VoxelPillar>>,
-            Option<Ref<VoxelPillar>>,
+            &VoxelPillar,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
+        ),
+    {
+        unsafe {
+            self.iterate_unchecked(f)
+        }
+    }
+    
+    unsafe fn iterate_unchecked<F>(&self, mut f: F)
+    where
+        F: FnMut(
+            &VoxelPillar,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
+            Option<&VoxelPillar>,
         ),
     {
         for (x3, z3) in iproduct!(0..L3DIMENSION, 0..L3DIMENSION) {
-            let l2 = &self.data[x3][z3];
+            let l2 = &self.data.get_unchecked(x3).get_unchecked(z3);
             for (x2, z2) in iproduct!(0..L2DIMENSION, 0..L2DIMENSION) {
-                let l1 = &l2.data[x2][z2];
+                let l1 = &l2.data.get_unchecked(x2).get_unchecked(z2);
                 for (x1, z1) in iproduct!(0..L1DIMENSION, 0..L1DIMENSION) {
-                    let center = l1.data[x1][z1].borrow();
+                    let center = &l1.data.get_unchecked(x1).get_unchecked(z1);
                     f(
                         center,
-                        left_or_down(x3, x2, x1)
-                            .map(|(sx3, sx2, sx1)| self.data[sx3][z3].data[sx2][z2].data[sx1][z1].borrow()),
-                        right_or_up(z3, z2, z1)
-                            .map(|(sz3, sz2, sz1)| self.data[x3][sz3].data[x2][sz2].data[x1][sz1].borrow()),
-                        right_or_up(x3, x2, x1)
-                            .map(|(sx3, sx2, sx1)| self.data[sx3][z3].data[sx2][z2].data[sx1][z1].borrow()),
-                        left_or_down(z3, z2, z1)
-                            .map(|(sz3, sz2, sz1)| self.data[x3][sz3].data[x2][sz2].data[x1][sz1].borrow()),
+                        left_or_down(x3, x2, x1).map(|(sx3, sx2, sx1)| {
+                            self
+                                .data
+                                .get_unchecked(sx3)
+                                .get_unchecked(z3)
+                                .data
+                                .get_unchecked(sx2)
+                                .get_unchecked(z2)
+                                .data
+                                .get_unchecked(sx1)
+                                .get_unchecked(z1)
+                        }),
+                        right_or_up(z3, z2, z1).map(|(sz3, sz2, sz1)| {
+                            self
+                                .data
+                                .get_unchecked(x3)
+                                .get_unchecked(sz3)
+                                .data
+                                .get_unchecked(x2)
+                                .get_unchecked(sz2)
+                                .data
+                                .get_unchecked(x1)
+                                .get_unchecked(sz1)
+                        }),
+                        right_or_up(x3, x2, x1).map(|(sx3, sx2, sx1)| {
+                            self
+                                .data
+                                .get_unchecked(sx3)
+                                .get_unchecked(z3)
+                                .data
+                                .get_unchecked(sx2)
+                                .get_unchecked(z2)
+                                .data
+                                .get_unchecked(sx1)
+                                .get_unchecked(z1)
+                        }),
+                        left_or_down(z3, z2, z1).map(|(sz3, sz2, sz1)| {
+                            self
+                                .data
+                                .get_unchecked(x3)
+                                .get_unchecked(sz3)
+                                .data
+                                .get_unchecked(x2)
+                                .get_unchecked(sz2)
+                                .data
+                                .get_unchecked(x1)
+                                .get_unchecked(sz1)
+                        }),
                     );
                 }
             }
         }
     }
 
-    pub fn iterate_mut<F>(&mut self, mut f: F)
+    pub fn iterate_mut<F>(&mut self, f: F)
     where
         F: FnMut(
-            RefMut<VoxelPillar>,
-            Option<RefMut<VoxelPillar>>,
-            Option<RefMut<VoxelPillar>>,
-            Option<RefMut<VoxelPillar>>,
-            Option<RefMut<VoxelPillar>>,
+            &mut VoxelPillar,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
+        ),
+    {
+        unsafe{
+            self.iterate_mut_unchecked(f);
+        }
+    }
+
+    unsafe fn iterate_mut_unchecked<F>(&mut self, mut f: F)
+    where
+        F: FnMut(
+            &mut VoxelPillar,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
+            Option<&mut VoxelPillar>,
         ),
     {
         for (x3, z3) in iproduct!(0..L3DIMENSION, 0..L3DIMENSION) {
-            let l2 = &self.data[x3][z3];
             for (x2, z2) in iproduct!(0..L2DIMENSION, 0..L2DIMENSION) {
-                let l1 = &l2.data[x2][z2];
                 for (x1, z1) in iproduct!(0..L1DIMENSION, 0..L1DIMENSION) {
-                    let center = l1.data[x1][z1].borrow_mut();
-
-                    l1.data.split_at_mut(mid)
+                    //let center = l1.data[x1][z1].borrow_mut();
+                    let center = self
+                        .data
+                        .get_unchecked_mut(x3)
+                        .get_unchecked_mut(z3)
+                        .data
+                        .get_unchecked_mut(x2)
+                        .get_unchecked_mut(z2)
+                        .data
+                        .get_unchecked_mut(x1)
+                        .as_mut_ptr()
+                        .add(z1);
 
                     f(
-                        center,
+                        &mut *center,
                         left_or_down(x3, x2, x1).map(|(sx3, sx2, sx1)| {
-                            self.data[sx3][z3].data[sx2][z2].data[sx1][z1].borrow_mut()
+                            &mut *self
+                                .data
+                                .get_unchecked_mut(sx3)
+                                .get_unchecked_mut(z3)
+                                .data
+                                .get_unchecked_mut(sx2)
+                                .get_unchecked_mut(z2)
+                                .data
+                                .get_unchecked_mut(sx1)
+                                .as_mut_ptr()
+                                .add(z1)
                         }),
                         right_or_up(z3, z2, z1).map(|(sz3, sz2, sz1)| {
-                            self.data[x3][sz3].data[x2][sz2].data[x1][sz1].borrow_mut()
+                            &mut *self
+                                .data
+                                .get_unchecked_mut(x3)
+                                .get_unchecked_mut(sz3)
+                                .data
+                                .get_unchecked_mut(x2)
+                                .get_unchecked_mut(sz2)
+                                .data
+                                .get_unchecked_mut(x1)
+                                .as_mut_ptr()
+                                .add(sz1)
                         }),
                         right_or_up(x3, x2, x1).map(|(sx3, sx2, sx1)| {
-                            self.data[sx3][z3].data[sx2][z2].data[sx1][z1].borrow_mut()
+                            &mut *self
+                                .data
+                                .get_unchecked_mut(sx3)
+                                .get_unchecked_mut(z3)
+                                .data
+                                .get_unchecked_mut(sx2)
+                                .get_unchecked_mut(z2)
+                                .data
+                                .get_unchecked_mut(sx1)
+                                .as_mut_ptr()
+                                .add(z1)
                         }),
                         left_or_down(z3, z2, z1).map(|(sz3, sz2, sz1)| {
-                            self.data[x3][sz3].data[x2][sz2].data[x1][sz1].borrow_mut()
+                            &mut *self
+                                .data
+                                .get_unchecked_mut(x3)
+                                .get_unchecked_mut(sz3)
+                                .data
+                                .get_unchecked_mut(x2)
+                                .get_unchecked_mut(sz2)
+                                .data
+                                .get_unchecked_mut(x1)
+                                .as_mut_ptr()
+                                .add(sz1)
                         }),
                     );
                 }

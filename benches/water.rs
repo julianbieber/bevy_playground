@@ -1,5 +1,3 @@
-use std::cell::{RefCell, RefMut};
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use voxel::world_sector::grid::{GridWorld, SimpleVec};
 use voxel::world_sector::pillar::VoxelPillar;
@@ -84,7 +82,7 @@ fn iterate_through_world(c: &mut Criterion) {
 
     c.bench_function("iterate through world", |b| {
         b.iter(|| {
-            world.iterate(|c, _, _, _, _| {});
+            unsafe{world.iterate(|c, _, _, _, _| {})};
         })
     });
 }
@@ -100,7 +98,7 @@ fn iterate_though_world_mut(c: &mut Criterion) {
     let mut world = GridWorld::empty([0, 0]);
 
     c.bench_function("iterate though world mut", |b| {
-        b.iter(|| world.iterate_mut(noop_mut))
+        b.iter(|| unsafe { world.iterate_mut(noop_mut) })
     });
 }
 
@@ -114,11 +112,11 @@ fn noop(
 }
 
 fn noop_mut(
-    _: RefMut<VoxelPillar>,
-    _: Option<RefMut<VoxelPillar>>,
-    _: Option<RefMut<VoxelPillar>>,
-    _: Option<RefMut<VoxelPillar>>,
-    _: Option<RefMut<VoxelPillar>>,
+    _: &mut VoxelPillar,
+    _: Option<&mut VoxelPillar>,
+    _: Option<&mut VoxelPillar>,
+    _: Option<&mut VoxelPillar>,
+    _: Option<&mut VoxelPillar>,
 ) {
 }
 
