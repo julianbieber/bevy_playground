@@ -78,11 +78,12 @@ fn neighbor_index_calculation_back(c: &mut Criterion) {
 }
 
 fn iterate_through_world(c: &mut Criterion) {
+    println!("start");
     let world = GridWorld::empty([0, 0]);
-
+    println!("end");
     c.bench_function("iterate through world", |b| {
         b.iter(|| {
-            unsafe{world.iterate(|c, _, _, _, _| {})};
+            world.iterate(1, 1, |c, _, _, _, _| {});
         })
     });
 }
@@ -98,7 +99,7 @@ fn iterate_though_world_mut(c: &mut Criterion) {
     let mut world = GridWorld::empty([0, 0]);
 
     c.bench_function("iterate though world mut", |b| {
-        b.iter(|| unsafe { world.iterate_mut(noop_mut) })
+        b.iter(||  world.iterate_mut(1, 1, noop_mut) )
     });
 }
 

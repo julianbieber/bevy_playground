@@ -5,7 +5,7 @@ use crate::voxel::Voxel;
 use super::{grid::GridWorld, pillar::VoxelPillar};
 
 pub fn update_water(world_sector: &mut GridWorld) {
-    world_sector.iterate_mut(update_single_water_block);
+    world_sector.iterate_mut(1, 1, update_single_water_block);
 }
 
 fn update_single_water_block(
