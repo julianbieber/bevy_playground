@@ -77,11 +77,9 @@ impl L3Grid {
             Option<&VoxelPillar>,
         ),
     {
-        unsafe {
-            self.iterate_unchecked(x3, z3, f)
-        }
+        unsafe { self.iterate_unchecked(x3, z3, f) }
     }
-    
+
     unsafe fn iterate_unchecked<F>(&self, x3: usize, z3: usize, mut f: F)
     where
         F: FnMut(
@@ -100,8 +98,7 @@ impl L3Grid {
                 f(
                     center,
                     left_or_down(x3, x2, x1).map(|(sx3, sx2, sx1)| {
-                        self
-                            .data
+                        self.data
                             .get_unchecked(sx3)
                             .get_unchecked(z3)
                             .data
@@ -112,8 +109,7 @@ impl L3Grid {
                             .get_unchecked(z1)
                     }),
                     right_or_up(z3, z2, z1).map(|(sz3, sz2, sz1)| {
-                        self
-                            .data
+                        self.data
                             .get_unchecked(x3)
                             .get_unchecked(sz3)
                             .data
@@ -124,8 +120,7 @@ impl L3Grid {
                             .get_unchecked(sz1)
                     }),
                     right_or_up(x3, x2, x1).map(|(sx3, sx2, sx1)| {
-                        self
-                            .data
+                        self.data
                             .get_unchecked(sx3)
                             .get_unchecked(z3)
                             .data
@@ -136,8 +131,7 @@ impl L3Grid {
                             .get_unchecked(z1)
                     }),
                     left_or_down(z3, z2, z1).map(|(sz3, sz2, sz1)| {
-                        self
-                            .data
+                        self.data
                             .get_unchecked(x3)
                             .get_unchecked(sz3)
                             .data
@@ -162,7 +156,7 @@ impl L3Grid {
             Option<&mut VoxelPillar>,
         ),
     {
-        unsafe{
+        unsafe {
             self.iterate_mut_unchecked(x3, z3, f);
         }
     }

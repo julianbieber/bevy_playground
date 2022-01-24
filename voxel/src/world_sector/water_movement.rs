@@ -1,8 +1,10 @@
-use std::cell::{RefCell, RefMut};
+use smallvec::SmallVec;
 
-use crate::voxel::Voxel;
-
-use super::{grid::GridWorld, pillar::VoxelPillar};
+use super::{
+    grid::GridWorld,
+    pillar::{VoxelDescription, VoxelPillar},
+};
+use crate::voxel::VoxelRange;
 
 pub fn update_water(world_sector: &mut GridWorld) {
     world_sector.iterate_mut(1, 1, update_single_water_block);
@@ -15,14 +17,164 @@ fn update_single_water_block(
     right: Option<&mut VoxelPillar>,
     down: Option<&mut VoxelPillar>,
 ) {
-    for center_index in 1..center.voxel_heights.len() {
-        let lower_index = center_index - 1;
+    let mut center_changed = false;
+    let mut left_changed = false;
+    let mut up_changed = false;
+    let mut right_changed = false;
+    let mut down_changed = false;
+    for current_index in 1..center.voxel_heights.len() {
+        let lower_index = current_index - 1;
 
-        let lower_type = center.voxel_heights[lower_index].upper_voxel;
-        let my_type = center.voxel_heights[center_index].lower_voxel;
+        let lower = center.voxel_heights[lower_index].clone();
+        let current = &mut center.voxel_heights[current_index];
+        match current.voxel {
+            VoxelRange::WaterVoxel { .. } => {
+                if lower.max < current.min - 1 {
+                    current.min -= 1;
+                    current.max -= 1;
+                } else {
+                }
+            }
+            _ => (),
+        };
+    }
 
-        
+    if center_changed {
+        center.merge();
+    }
+}
 
+fn flow_into(center: &mut VoxelDescription, side: &mut VoxelPillar, max_flow: f32) {
+    let mut reached_min = false;
+    let mut previous_max = center.min;
+    let mut inserts: SmallVec<[usize; 8]> = SmallVec::new();
+    windows_mut_each(&mut side.voxel_heights, |slice| match slice {
+        [lower, higher] => {
+            if lower.is_next_to(&center) {
+            } else if true {
+            }
+        } /* center between lower and higher */
+        _ => panic!("can not happen"),
+    });
+}
 
+fn windows_mut_each<T>(v: &mut [T], mut f: impl FnMut(&mut [T])) {
+    let mut start = 0;
+    let mut end = 1;
+    while end <= v.len() {
+        f(&mut v[start..start + 1]);
+        start += 1;
+        end += 1;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::world_sector::pillar::{VoxelDescription, VoxelPillar};
+
+    use super::flow_into;
+
+    #[test]
+    fn flow_into_gap() {
+        let mut src = VoxelDescription::water(2, 0.5);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(0, 2), VoxelDescription::solid(4, 5)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[1], VoxelDescription::water(3, 0.2));
+        assert_eq!(src, VoxelDescription::water(2, 0.3));
+    }
+
+    #[test]
+    fn flow_into_lower_water() {
+        let mut src = VoxelDescription::water(2, 0.5);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::water(2, 0.1)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[0], VoxelDescription::water(2, 0.3));
+        assert_eq!(src, VoxelDescription::water(2, 0.3));
+    }
+
+    #[test]
+    fn not_flow_into_solid() {
+        let mut src = VoxelDescription::water(2, 0.5);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(2, 3)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[0], VoxelDescription::solid(2, 3));
+        assert_eq!(src, VoxelDescription::water(2, 0.5));
+    }
+
+    #[test]
+    fn flow_above() {
+        let mut src = VoxelDescription::water(2, 0.4);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(1, 2)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[1], VoxelDescription::water(2, 0.2));
+        assert_eq!(src, VoxelDescription::water(2, 0.2));
+    }
+
+    #[test]
+    fn flow_below() {
+        let mut src = VoxelDescription::water(2, 0.4);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(3, 4)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[0], VoxelDescription::water(2, 0.2));
+        assert_eq!(src, VoxelDescription::water(2, 0.2));
+    }
+
+    #[test]
+    fn flow_into_empty() {
+        let mut src = VoxelDescription::water(2, 0.4);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[0], VoxelDescription::water(2, 0.2));
+        assert_eq!(src, VoxelDescription::water(2, 0.2));
+    }
+
+    #[test]
+    fn flow_with_overlap() {
+        let mut src = VoxelDescription::water(2, 1.4);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(2, 3)],
+        };
+
+        flow_into(&mut src, &mut dst, 0.2);
+
+        assert_eq!(dst.voxel_heights[1], VoxelDescription::water(3, 0.2));
+        assert_eq!(src, VoxelDescription::water(2, 1.2));
+    }
+
+    #[test]
+    fn flow_into_overlapped_gap() {
+        let mut src = VoxelDescription::water(1, 2.5);
+        let mut dst = VoxelPillar {
+            voxel_heights: vec![VoxelDescription::solid(0, 2), VoxelDescription::solid(4, 5)],
+        };
+
+        flow_into(&mut src, &mut dst, 1.0);
+
+        assert_eq!(dst.voxel_heights[1], VoxelDescription::water(3, 1.0));
+        assert_eq!(src, VoxelDescription::water(1, 1.5));
     }
 }

@@ -5,7 +5,6 @@ pub mod boundaries;
 pub mod collision;
 mod effects;
 mod evaluation;
-pub mod generator;
 mod lod;
 mod mesh;
 mod meshing;
@@ -16,19 +15,13 @@ pub mod water;
 mod world_gen;
 pub mod world_sector;
 
-use ahash::AHashMap;
 use bevy::prelude::Plugin;
 use bevy::prelude::*;
 use bevy_collision::collider::{Collider, ColliderShapes};
 use boundaries::{ChunkBoundaries, CHUNK_SIZE};
 
-use crate::voxel::Voxel;
 use flume::unbounded;
 use model::{DelayedWorldTransformations, WorldUpdateResult};
-
-pub struct AdditionalVoxels {
-    voxels: AHashMap<ChunkBoundaries<CHUNK_SIZE>, Vec<Voxel>>,
-}
 
 pub struct FreeFloatingVoxel;
 

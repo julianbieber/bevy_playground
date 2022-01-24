@@ -264,8 +264,7 @@ pub enum VoxelTypes {
 }
 
 #[derive(Clone, Debug, PartialEq, Copy)]
-pub enum Voxel {
-    LandVoxel { typ: VoxelTypes },
-    WaterVoxel { fill: f32 },
-    Nothing,
+pub enum VoxelRange {
+    LandVoxel {},
+    WaterVoxel { upper_fill: u8 },
 }
