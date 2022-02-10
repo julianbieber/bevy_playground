@@ -1,6 +1,6 @@
 use crate::voxel::VoxelRange;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct VoxelPillar {
     pub voxel_heights: Vec<VoxelDescription>,
 }
@@ -34,9 +34,9 @@ pub struct VoxelDescription {
 }
 
 impl VoxelDescription {
-    pub fn water(min: i32, amount: f32) -> Self {
-        let full_height = amount.ceil() as i32;
-        let highest_fraction = (amount.fract() * 128.0) as u8;
+    pub fn water(min: i32, amount: i32) -> Self {
+        let full_height = next_128(amount) / 128;
+        let highest_fraction = (amount % 128) as u8;
         VoxelDescription {
             min,
             max: min + full_height - 1,
@@ -70,9 +70,9 @@ impl VoxelDescription {
                 VoxelRange::WaterVoxel { upper_fill: fill_2 },
             ) => {
                 if self.max == other.min - 1 {
-                    let sum = *fill_1 + fill_2;
+                    let sum = (*fill_1 + fill_2) as i32;
                     self.max = other.max - ((sum < 128) as i32);
-                    (*fill_1) = sum - (((sum > 128) as u8) << 7);
+                    (*fill_1) = sum as u8 - (((sum > 128) as u8) << 7);
                     true
                 } else {
                     false
@@ -97,7 +97,7 @@ impl VoxelDescription {
         match &mut (self.voxel) {
             VoxelRange::LandVoxel {} => amount,
             VoxelRange::WaterVoxel { ref mut upper_fill } => {
-                let actual_amount = (255 - ((*upper_fill) as i32 + amount as i32).min(255)) as u8;
+                let actual_amount = amount.min(128 - *upper_fill);
                 *upper_fill += actual_amount;
                 amount - actual_amount
             }
@@ -108,6 +108,12 @@ impl VoxelDescription {
 #[inline(always)]
 fn between(a: i32, vd: &VoxelDescription) -> bool {
     a >= vd.min && a <= vd.max
+}
+
+#[inline(always)]
+fn next_128(n: i32) -> i32 {
+    let remainder = n % 128;
+    n + (128 * (remainder != 0) as i32 - remainder)
 }
 
 #[cfg(test)]
@@ -121,91 +127,93 @@ mod test {
         // voxels of the same type (Land, water, Nothing) should match even if the inner values are different
         let mut pillar = VoxelPillar {
             voxel_heights: vec![
-                VoxelDescription::water(0, 1.0),
-                VoxelDescription::water(1, 0.6),
+                VoxelDescription::water(0, 128),
+                VoxelDescription::water(1, 32),
             ],
         };
 
-        dbg!(&pillar.voxel_heights);
-
         pillar.merge();
 
-        assert_eq!(pillar.voxel_heights, vec![VoxelDescription::water(0, 1.6)]);
+        assert_eq!(
+            pillar.voxel_heights,
+            vec![VoxelDescription::water(0, 128 + 32)]
+        );
     }
 
     #[test]
     fn merge_water_with_overflow() {
         let mut pillar = VoxelPillar {
             voxel_heights: vec![
-                VoxelDescription::water(0, 1.4),
-                VoxelDescription::water(2, 1.7),
+                VoxelDescription::water(0, 180),
+                VoxelDescription::water(2, 217),
             ],
         };
-
         pillar.merge();
 
-        assert_eq!(pillar.voxel_heights, vec![VoxelDescription::water(0, 3.1)]);
+        assert_eq!(
+            pillar.voxel_heights,
+            vec![VoxelDescription::water(0, 180 + 217)]
+        );
     }
 
     #[test]
     fn merge_water_combined() {
         let mut pillar = VoxelPillar {
             voxel_heights: vec![
-                VoxelDescription::water(0, 1.4),
-                VoxelDescription::water(2, 0.2),
+                VoxelDescription::water(0, 160),
+                VoxelDescription::water(2, 10),
             ],
         };
 
         pillar.merge();
 
-        assert_eq!(pillar.voxel_heights, vec![VoxelDescription::water(0, 1.6)]);
+        assert_eq!(pillar.voxel_heights, vec![VoxelDescription::water(0, 170)]);
     }
 
     #[test]
     fn initialize_water() {
         assert_eq!(
-            VoxelDescription::water(0, 1.0),
+            VoxelDescription::water(0, 128),
             VoxelDescription {
                 min: 0,
                 max: 0,
                 voxel: VoxelRange::WaterVoxel { upper_fill: 128 }
             }
         );
-
         assert_eq!(
-            VoxelDescription::water(0, 1.1),
+            VoxelDescription::water(0, 138),
             VoxelDescription {
                 min: 0,
                 max: 1,
-                voxel: VoxelRange::WaterVoxel { upper_fill: 12 }
+                voxel: VoxelRange::WaterVoxel { upper_fill: 10 }
             }
         );
 
         assert_eq!(
-            VoxelDescription::water(0, 0.1),
+            VoxelDescription::water(0, 10),
             VoxelDescription {
                 min: 0,
                 max: 0,
-                voxel: VoxelRange::WaterVoxel { upper_fill: 12 }
+                voxel: VoxelRange::WaterVoxel { upper_fill: 10 }
             }
         );
     }
 
     #[test]
     fn insert_water_do_not_overflow() {
-        let mut voxel = VoxelDescription::water(0, 1.0);
-        assert_eq!(voxel.insert(255), 255);
+        let mut voxel = VoxelDescription::water(0, 128);
+        assert_eq!(voxel.insert(128), 128);
     }
 
     #[test]
     fn insert_water() {
-        let mut voxel = VoxelDescription::water(0, 0.5);
+        let mut voxel = VoxelDescription::water(0, 64);
         assert_eq!(voxel.insert(10), 0);
     }
 
     #[test]
     fn insert_water_slight_overflow() {
-        let mut voxel = VoxelDescription::water(0, 0.5);
-        assert_eq!(voxel.insert(165), 37);
+        let mut voxel = VoxelDescription::water(0, 64);
+        assert_eq!(voxel.insert(65), 1);
     }
 }

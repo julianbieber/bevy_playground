@@ -88,7 +88,7 @@ fn combine_water(c: &mut Criterion) {
             let mut pillar = VoxelPillar {
                 voxel_heights: (0..4)
                     .into_iter()
-                    .map(|i| VoxelDescription::water(i, 0.1))
+                    .map(|i| VoxelDescription::water(i, 10))
                     .collect(),
             };
 
