@@ -48,6 +48,11 @@ fn flow_into(center: &mut VoxelDescription, side: &mut VoxelPillar, max_flow: u8
     let mut reached_min = false;
     let mut previous_max = center.min;
     let mut inserts: SmallVec<[usize; 8]> = SmallVec::new();
+    /*
+    for every step on the side
+        check if the side step is next to the source
+
+    */
     windows_mut_each(&mut side.voxel_heights, |slice| match slice {
         [lower, higher] => {
             if lower.is_next_to(&center) {
