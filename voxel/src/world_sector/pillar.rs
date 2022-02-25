@@ -54,7 +54,8 @@ impl VoxelDescription {
         }
     }
 
-    pub fn try_add(&mut self, other: &VoxelDescription) -> bool {
+    /// must only be used in the same pillar
+    fn try_add(&mut self, other: &VoxelDescription) -> bool {
         //dbg!(&self, &other);
         match (&mut self.voxel, other.voxel) {
             (VoxelRange::LandVoxel {}, VoxelRange::LandVoxel {}) => {
